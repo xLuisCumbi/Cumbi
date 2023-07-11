@@ -194,7 +194,6 @@ const expireTimedOutDeposits = () => {
 const checkPendingDeposits = async () => {
 
     try {
-        console.log('checkPendingDeposits cron job started');
     
         const pendingDeposits = await fetchPendingDeposits();
 

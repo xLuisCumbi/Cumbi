@@ -46,7 +46,7 @@ module.exports = consolidateAddressBalance = async (address, balance, privateKey
 
                 if (coin === "USDC") {
 
-                    status = await consolidateTrc20UsdtBalance(privateKey, balance, mainAddrObj, address);
+                    status = await consolidateTrc20UsdcBalance(privateKey, balance, mainAddrObj, address);
                 }
 
             }
@@ -155,7 +155,7 @@ const activateTronAddress = (mainAddrObj, address) => {
             fullHost: FULL_NODE_API,
             privateKey: mainAddrObj.privateKey
         });
-        const amount = 15 * 1000000;
+        const amount = 2 * 1000000;
         const txObj = await tronWeb.trx.sendTransaction(address, amount, mainAddrObj.privateKey);
 
         if (txObj.result === true) {
@@ -172,8 +172,6 @@ const activateTronAddress = (mainAddrObj, address) => {
             resolve(undefined);
 
         }
-
-
 
     })
 

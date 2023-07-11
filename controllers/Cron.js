@@ -3,9 +3,9 @@ const cron = require('node-cron');
 
 const start = () => {
 
+    console.log('deposit detection job successfully started');
     cron.schedule('*/2 * * * *', () => {
 
-        console.log('deposit detection cron job started')
         checkPendingDeposits();
 
     });
