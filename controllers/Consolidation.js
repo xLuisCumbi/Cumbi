@@ -26,13 +26,13 @@ module.exports = consolidateAddressBalance = async (address, balance, privateKey
 
                 if (coin === "USDT") {
 
-                    status = await consolidateErc20UsdtBalance(privateKey, balance, mainAddrObj);
+                    status = await consolidateErc20UsdtBalance(privateKey, balance, mainAddrObj, address);
 
                 }
 
                 if (coin === "USDC") {
 
-                    status = await consolidateErc20UsdcBalance(privateKey, balance, mainAddrObj);
+                    status = await consolidateErc20UsdcBalance(privateKey, balance, mainAddrObj, address);
                 }
 
             } else if (network === "TRON") {
@@ -143,6 +143,15 @@ const consolidateTrc20UsdcBalance = (privateKey, balance, mainAddrObj, address) 
     })
 
 }
+
+const consolidateErc20UsdtBalance = () =>{
+
+}
+
+const consolidateErc20UsdcBalance = () =>{
+    
+}
+
 
 
 const activateTronAddress = (mainAddrObj, address) => {
