@@ -17,14 +17,14 @@ const create = ({ amount, deposit_id, network, coin }) => {
             const balance = await getAddressBalance(d.address, d.privateKey, d.network, d.coin);
             const depositObj = {
                 address: d.address,
-                amount_usd: d.amount_usd,
-                amount: d.amount,
-                coin: d.coin,
-                network: d.network,
-                balance,
-                deposit_id,
                 coin_price: d.coin_price,
-                status: d.status
+                deposit_id: d.deposit_id,
+                balance: d.balance,
+                amount_usd: d.amount_usd,
+                status: d.status,
+                amount: d.amount,
+                coin: coin.toUpperCase(),
+                network: network.toUpperCase(),
             };
             resolve({ status: "success", depositObj });
         } else {
@@ -103,29 +103,21 @@ const getAmountCrypto = () => {
 const status = ({ deposit_id }) => {
     return new Promise((resolve) => {
         DepositModel.findOne({ where: { deposit_id }, raw: true }).then(
-            async (query) => {
-                if (query) {
-
-                    let balance = await getAddressBalance(query.address, query.privateKey, query.network, query.coin);
-                    balance = !balance ? 0 : balance;
-
-                    let status = query.status;
-                    if (balance >= query.amount) {
-                        status = "success";
-                        await DepositModel.update(
-                            { status: "success" },
-                            { where: { deposit_id } }
-                        );
-                    }
-
+            async (d) => {
+                if (d) {
+                    
                     resolve({
                         status: "success",
                         depositObj: {
-                            status,
-                            amount_paid: balance,
-                            amount_to_pay: query.amount,
-                            deposit_id,
-                            address: query.address,
+                            address: d.address,
+                            coin_price: d.coin_price,
+                            deposit_id: d.deposit_id,
+                            balance: d.balance,
+                            amount_usd: d.amount_usd,
+                            status: d.status,
+                            amount: d.amount,
+                            coin: coin.toUpperCase(),
+                            network: network.toUpperCase(),
                         },
                     });
                 } else {
@@ -203,8 +195,14 @@ const expireTimedOutDeposits = () => {
 const checkPendingDeposits = async () => {
 
     try {
+        console.log('checkPendingDeposits cron job started');
     
         const pendingDeposits = await fetchPendingDeposits();
+
+        if(pendingDeposits.length == 0) {
+            console.log('no pendingDeposits detected');
+            return;
+        }
 
         pendingDeposits.map(async (deposit) => {
             const address = deposit.address;
@@ -215,15 +213,16 @@ const checkPendingDeposits = async () => {
             let balance = await getAddressBalance(address, privateKey, network, coin);
             balance = !balance ? 0 : balance;
             let status = "pending";
+            consolidation_status = 'unconsolidated';
 
             if(balance >= deposit.amount){
                
                 status =  "success";
-               
-                await consolidateAddressBalance(address, balance, privateKey, network, coin);
+                console.log('successful deposit detected');
+                consolidation_status = await consolidateAddressBalance(address, balance, privateKey, network, coin);
 
             }
-           // updateDepositObj({ id, address, status, balance });
+            updateDepositObj({ id, address, status, balance, consolidation_status });
         });
 
         expireTimedOutDeposits();
@@ -242,10 +241,8 @@ const updateDepositObj = (depositObj) => {
 
         try {
 
-            const { id, status, balance } = depositObj;
-            const query = await DepositModel.update(
-                { status, balance },
-                { where: { id } }
+            const query = await DepositModel.update({ ...depositObj },
+                { where: { id: depositObj.id } }
             );
 
             resolve(query);

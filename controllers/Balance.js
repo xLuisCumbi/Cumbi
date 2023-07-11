@@ -21,7 +21,7 @@ module.exports = getAddressBalance = async (address, privateKeyToken, network, c
                 if (coin === "USDT") {
 
                     balance = await getErc20UsdtBalance(address, privateKey);
-
+                    
                 }
 
                 if (coin === "USDC") {
@@ -92,12 +92,12 @@ async function getErc20UsdcBalance(address, privateKey) {
 
             const provider = new ethers.getDefaultProvider();
             const wallet = new ethers.Wallet(privateKey).connect(provider);
-            const usdcContractAddress = '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d';
+            const usdcContractAddress = '0x7EA2be2df7BA6E54B1A9C70676f668455E329d29';
             const usdcContractAbi = [
                 'function balanceOf(address) view returns (uint256)'
             ];
-            const usdtContract = new ethers.Contract(usdcContractAddress, usdcContractAbi, wallet);
-            let balance = await usdtContract.balanceOf(address);
+            const usdcContract = new ethers.Contract(usdcContractAddress, usdcContractAbi, wallet);
+            let balance = await usdcContract.balanceOf(address);
             balance = ethers.formatEther(balance);
             resolve(balance);
 
@@ -107,6 +107,7 @@ async function getErc20UsdcBalance(address, privateKey) {
             resolve(undefined);
 
         }
+        
     });
 
 }

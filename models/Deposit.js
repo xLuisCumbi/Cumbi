@@ -45,6 +45,10 @@ module.exports = db.define('deposit', {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    consolidation_status: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     balance: {
         type: DataTypes.FLOAT,
         allowNull: false

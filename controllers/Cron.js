@@ -5,13 +5,13 @@ const start = () => {
 
     cron.schedule('*/5 * * * *', () => {
 
-        console.log('checkPendingDeposits cron job started');
+        console.log('deposit detection cron job started')
         checkPendingDeposits();
 
     });
 
 }
-checkPendingDeposits();
+
 module.exports = {
     start
 }

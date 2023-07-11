@@ -22,11 +22,14 @@ module.exports = getDepositAddress = (network, coin, index) => {
             coin = coin.toUpperCase();
 
             if (network === "ETHEREUM") {
+
                 derivationPath = `m/44'/60'/0'/0/${addressIndex}`;
                 derivedHDPrivateKey = hdPrivateKey.derive(derivationPath);
                 privateKey = derivedHDPrivateKey.privateKey.toString();
                 address = await getErc20Address(privateKey);
+
             } else if (network === "TRON") {
+
                 derivationPath = `m/44'/195'/0'/0/${addressIndex}`;
                 derivedHDPrivateKey = hdPrivateKey.derive(derivationPath);
                 privateKey = derivedHDPrivateKey.privateKey.toString();
