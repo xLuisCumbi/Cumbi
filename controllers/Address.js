@@ -2,9 +2,8 @@ const ethers = require("ethers");
 const TronWeb = require("tronweb");
 const Mnemonic = require("bitcore-mnemonic");
 const DepositModel = require("../models/Deposit");
-const FULL_NODE_API = "https://api.trongrid.io";
 const AdminModel = require("../models/Admin");
-const { verifyToken } = require("../utils");
+const { verifyToken, getProvider } = require("../utils");
 
 module.exports = getDepositAddress = (network, coin, index) => {
 
@@ -49,7 +48,7 @@ module.exports = getDepositAddress = (network, coin, index) => {
 const getErc20Address = (privateKey) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const provider = new ethers.getDefaultProvider();
+            const provider = getProvider('ethereum');
             const wallet = new ethers.Wallet(privateKey).connect(provider);
             resolve(wallet.address);
         } catch (error) {
@@ -62,7 +61,7 @@ const getTrc20Address = (privateKey) => {
     return new Promise((resolve, reject) => {
         try {
             const tronWeb = new TronWeb({
-                fullHost: FULL_NODE_API,
+                fullHost: getProvider('tron'),
                 privateKey,
             });
 

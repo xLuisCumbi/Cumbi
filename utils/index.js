@@ -1,6 +1,7 @@
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const ethers = require("ethers");
 
 
 const sendErrorMsg = (res, err) => {
@@ -88,11 +89,51 @@ const verifyToken = (token, secret) => {
    
 }
 
+const getProvider = (network) => {
+
+    const APP_MODE = process.env.APP_MODE || 'TESTNET';
+    
+    if(APP_MODE === 'TESTNET') {
+        
+        if(network == 'ethereum'){
+
+            return new ethers.JsonRpcProvider('https://goerli.infura.io/v3/f134b5932f8f4a0d86f99600140f5c42');
+
+        }else if(network == 'tron'){
+
+            return 'https://api.shasta.trongrid.io';
+
+        }else{
+
+            return undefined;
+            
+        }
+
+    }else{
+
+        if(network == 'ethereum'){
+
+            return new ethers.getDefaultProvider();
+
+        }else if(network == 'tron'){
+
+            return 'https://api.trongrid.io';
+
+        }else{
+
+            return undefined;
+        }
+
+    }
+
+}
+
 module.exports = {
     sendErrorMsg,
     validateField,
     signToken,
     verifyToken,
     genHash,
-    bcryptCompare
+    bcryptCompare,
+    getProvider
 }

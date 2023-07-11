@@ -6,7 +6,6 @@ const ethers = require("ethers");
 const TronWeb = require("tronweb");
 const { verifyToken } = require("../utils");
 const getDepositAddress = require('./Address');
-const FULL_NODE_API = "https://api.trongrid.io";
 
 
 module.exports = consolidateAddressBalance = async (address, balance, privateKeyToken, network, coin) => {
@@ -75,7 +74,7 @@ const consolidateTrc20UsdtBalance = (privateKey, balance, mainAddrObj, address) 
             if (activateAddrress) {
 
                 const tronWeb = new TronWeb({
-                    fullHost: FULL_NODE_API,
+                    fullHost: getProvider('tron'),
                     privateKey
                 });
                 balance = balance * 1000000;
@@ -115,7 +114,7 @@ const consolidateTrc20UsdcBalance = (privateKey, balance, mainAddrObj, address) 
             if (activateAddrress) {
 
                 const tronWeb = new TronWeb({
-                    fullHost: FULL_NODE_API,
+                    fullHost: getProvider('tron'),
                     privateKey
                 });
                 balance = balance * 1000000;
@@ -152,7 +151,7 @@ const activateTronAddress = (mainAddrObj, address) => {
         console.log('address activation process started');
 
         const tronWeb = new TronWeb({
-            fullHost: FULL_NODE_API,
+            fullHost: getProvider('tron'),
             privateKey: mainAddrObj.privateKey
         });
         const amount = 2 * 1000000;

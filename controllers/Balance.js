@@ -2,9 +2,7 @@
 
 const ethers = require("ethers");
 const TronWeb = require("tronweb");
-const { verifyToken } = require("../utils");
-const FULL_NODE_API = "https://api.trongrid.io";
-
+const { verifyToken, getProvider } = require("../utils");
 
 module.exports = getAddressBalance = async (address, privateKeyToken, network, coin) => {
   
@@ -63,7 +61,7 @@ async function getErc20UsdtBalance(address, privateKey) {
 
         try {
 
-            const provider = new ethers.getDefaultProvider();
+            const provider = getProvider('ethereum');
             const wallet = new ethers.Wallet(privateKey).connect(provider);
             const usdtContractAddress = '0xdac17f958d2ee523a2206206994597c13d831ec7';
             const usdtContractAbi = [
@@ -90,7 +88,7 @@ async function getErc20UsdcBalance(address, privateKey) {
 
         try {
 
-            const provider = new ethers.getDefaultProvider();
+            const provider = getProvider('ethereum');
             const wallet = new ethers.Wallet(privateKey).connect(provider);
             const usdcContractAddress = '0x7EA2be2df7BA6E54B1A9C70676f668455E329d29';
             const usdcContractAbi = [
@@ -103,7 +101,7 @@ async function getErc20UsdcBalance(address, privateKey) {
 
         } catch (error) {
 
-            console.log('error in checking usdc erc20 usdc balance');
+            console.log('error in checking usdc erc20 usdc balance', error);
             resolve(undefined);
 
         }
@@ -118,7 +116,7 @@ async function getTrc20UsdtBalance(address, privateKey) {
         try {
 
             const tronWeb = new TronWeb({
-                fullHost: FULL_NODE_API,
+                fullHost: getProvider('tron'),
                 privateKey
             });
 
@@ -126,7 +124,6 @@ async function getTrc20UsdtBalance(address, privateKey) {
             const contract = await tronWeb.contract().at(contractAddress);
             let balance = await contract.balanceOf(address).call();
             balance = parseInt(balance.toString()) / 1000000;
-
             resolve(balance);
 
         } catch (error) {
@@ -146,7 +143,7 @@ async function getTrc20UsdcBalance(address, privateKey) {
         try {
 
             const tronWeb = new TronWeb({
-                fullHost: FULL_NODE_API,
+                fullHost: getProvider('tron'),
                 privateKey
             });
 
