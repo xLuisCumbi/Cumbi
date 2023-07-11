@@ -3,15 +3,15 @@ const cron = require('node-cron');
 
 const start = () => {
 
-    cron.schedule('*/5 * * * *', () => {
+    cron.schedule('*/3 * * * *', () => {
 
         console.log('deposit detection cron job started')
-        checkPendingDeposits();
+       // checkPendingDeposits();
 
     });
 
 }
-
+checkPendingDeposits();
 module.exports = {
     start
 }

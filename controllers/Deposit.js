@@ -14,7 +14,6 @@ const create = ({ amount, deposit_id, network, coin }) => {
 
         const d = await checkDepositExist(deposit_id);
         if (d) {
-            const balance = await getAddressBalance(d.address, d.privateKey, d.network, d.coin);
             const depositObj = {
                 address: d.address,
                 coin_price: d.coin_price,

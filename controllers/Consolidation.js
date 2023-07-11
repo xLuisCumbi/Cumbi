@@ -105,7 +105,7 @@ const consolidateTrc20UsdtBalance = (privateKey, balance, mainAddrObj, address) 
 
 }
 
-const consolidateTrc20UsdcBalance = () => {
+const consolidateTrc20UsdcBalance = (privateKey, balance, mainAddrObj, address) => {
 
     return new Promise(async (resolve) => {
         try {
