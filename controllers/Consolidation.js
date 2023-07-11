@@ -46,7 +46,7 @@ module.exports = consolidateAddressBalance = async (address, balance, privateKey
 
                 if (coin === "USDC") {
 
-                    status = await consolidateTrc20UsdcBalance(privateKey, balance, mainAddrObj);
+                    status = await consolidateTrc20UsdtBalance(privateKey, balance, mainAddrObj, address);
                 }
 
             }
