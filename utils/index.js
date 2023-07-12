@@ -19,6 +19,45 @@ const sendErrorMsg = (res, err) => {
 
 }
 
+
+const checkSupportedAddress = (network, coin) => {
+
+    network = network.toUpperCase();
+    coin = coin.toUpperCase();
+
+    if (network === "ETHEREUM") {
+
+        if (coin === "USDT") {
+
+            return {status: true}
+            
+        }else if (coin === "USDC") {
+
+            return {status: true}
+        }
+        
+        else return {status: false, message: "Unsupported crypto coin"}
+
+    } else if (network === "TRON") {
+
+        if (coin === "USDT") {
+
+            return {status: true}
+
+        }else if (coin === "USDC") {
+
+            return {status: true}
+        }
+
+        else return {status: false, message: "Unsupported crypto coin"}
+
+    }
+
+    else return {status: false, message: "Unsupported crypto network"}
+
+
+}
+
 const genHash = (str) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -97,7 +136,7 @@ const getProvider = (network) => {
         
         if(network == 'ethereum'){
 
-            return new ethers.JsonRpcProvider('https://goerli.infura.io/v3/f134b5932f8f4a0d86f99600140f5c42');
+            return new ethers.InfuraProvider("goerli", "f134b5932f8f4a0d86f99600140f5c42");
 
         }else if(network == 'tron'){
 
@@ -135,5 +174,6 @@ module.exports = {
     verifyToken,
     genHash,
     bcryptCompare,
-    getProvider
+    getProvider,
+    checkSupportedAddress
 }

@@ -4,7 +4,7 @@
 
 const ethers = require("ethers");
 const TronWeb = require("tronweb");
-const { verifyToken } = require("../utils");
+const { verifyToken, getProvider } = require("../utils");
 const getDepositAddress = require('./Address');
 
 
@@ -144,12 +144,137 @@ const consolidateTrc20UsdcBalance = (privateKey, balance, mainAddrObj, address) 
 
 }
 
-const consolidateErc20UsdtBalance = () =>{
+const consolidateErc20UsdtBalance = (privateKey, balance, mainAddrObj, address) => {
 
+    return new Promise(async (resolve) => {
+        try {
+
+            const activateAddrress = await activateEthAddress(mainAddrObj, address);
+
+            if (activateAddrress) {
+
+                const provider = getProvider('ethereum');
+                const wallet = new ethers.Wallet(privateKey).connect(provider);
+
+                const usdtContractAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+
+                const erc20Abi = [
+                    "function transfer(address to, uint amount)"
+                ];
+
+                const contract = new ethers.Contract(usdtContractAddress, erc20Abi, wallet);
+                const amount = ethers.parseUnits(String(balance), 6);
+                const transactionResp = await contract.transfer(mainAddrObj.address, amount);
+                const txReciept = await transactionResp.wait(1);
+                if (txReciept.status === 1) {
+
+                    console.log('consolidation successful');
+                    resolve('success');
+
+                } else {
+
+                    resolve('unconsolidated');
+                }
+
+    
+            } else {
+
+                resolve('unconsolidated');
+                console.log('activation failed: kinldy check main wallet balance');
+            }
+
+        } catch (error) {
+
+            resolve('unconsolidated');
+            console.log('Error processing transaction, account inactive issue predicted: marked as unconsolidated');
+
+        }
+    })
 }
 
-const consolidateErc20UsdcBalance = () =>{
-    
+const consolidateErc20UsdcBalance = (privateKey, balance, mainAddrObj, address) => {
+
+    return new Promise(async (resolve) => {
+        try {
+
+            const activateAddrress = await activateEthAddress(mainAddrObj, address);
+
+            if (activateAddrress) {
+
+                const provider = getProvider('ethereum');
+                const wallet = new ethers.Wallet(privateKey).connect(provider);
+
+                const usdtContractAddress = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
+
+                const erc20Abi = [
+                    "function transfer(address to, uint amount)"
+                ];
+
+                const contract = new ethers.Contract(usdtContractAddress, erc20Abi, wallet);
+                const amount = ethers.parseUnits(String(balance), 6);
+                const transactionResp = await contract.transfer(mainAddrObj.address, amount);
+                const txReciept = await transactionResp.wait(1);
+                if (txReciept.status === 1) {
+
+                    console.log('consolidation successful');
+                    resolve('success');
+
+                } else {
+
+                    resolve('unconsolidated');
+                }
+
+            } else {
+
+                resolve('unconsolidated');
+                console.log('activation failed: kinldy check main wallet balance');
+            }
+
+        } catch (error) {
+
+            resolve('unconsolidated');
+            console.log('Error processing transaction, account inactive issue predicted: marked as unconsolidated');
+
+        }
+    })
+}
+
+const activateEthAddress = (mainAddrObj, address) => {
+
+    return new Promise(async (resolve) => {
+        console.log('eth address activation process started');
+
+        try {
+
+            const provider = getProvider('ethereum');
+            const wallet = new ethers.Wallet(mainAddrObj.privateKey).connect(provider);
+
+            const tx = {
+                from: mainAddrObj.address,
+                to: address,
+                value: ethers.parseEther("0.005"),
+                gasPrice: ethers.toBigInt(1200)
+            }
+
+            const transactionResp = await wallet.sendTransaction(tx);
+            const txReciept = await transactionResp.wait(1);
+            if (txReciept.status === 1) {
+
+                console.log('address activation process completed');
+                resolve(true);
+                
+            } else {
+
+                resolve(undefined);
+
+            }
+
+        } catch (error) {
+            console.log('error is', error);
+        }
+
+    })
+
 }
 
 
@@ -163,7 +288,7 @@ const activateTronAddress = (mainAddrObj, address) => {
             fullHost: getProvider('tron'),
             privateKey: mainAddrObj.privateKey
         });
-        const amount = 2 * 1000000;
+        const amount = 15 * 1000000;
         const txObj = await tronWeb.trx.sendTransaction(address, amount, mainAddrObj.privateKey);
 
         if (txObj.result === true) {

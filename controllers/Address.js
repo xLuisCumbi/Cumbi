@@ -3,12 +3,20 @@ const TronWeb = require("tronweb");
 const Mnemonic = require("bitcore-mnemonic");
 const DepositModel = require("../models/Deposit");
 const AdminModel = require("../models/Admin");
-const { verifyToken, getProvider } = require("../utils");
+const { verifyToken, getProvider, checkSupportedAddress } = require("../utils");
 
 module.exports = getDepositAddress = (network, coin, index) => {
 
     return new Promise(async (resolve, reject) => {
+
         try {
+
+            const supported = checkSupportedAddress(network, coin);
+            if(supported.status === false){
+
+                reject({ status: "failed", message: supported.message, statusCode: 400});
+
+            }
             const mnemonic = await getMnemonic();
             const addressIndex = index === undefined ? await getAddressIndex(network, coin) : index; 
             const code = new Mnemonic(mnemonic);

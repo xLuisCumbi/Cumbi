@@ -14,18 +14,9 @@ const create = ({ amount, deposit_id, network, coin }) => {
 
         const d = await checkDepositExist(deposit_id);
         if (d) {
-            const depositObj = {
-                address: d.address,
-                coin_price: d.coin_price,
-                deposit_id: d.deposit_id,
-                balance: d.balance,
-                amount_usd: d.amount_usd,
-                status: d.status,
-                amount: d.amount,
-                coin: coin.toUpperCase(),
-                network: network.toUpperCase(),
-            };
-            resolve({ status: "success", depositObj });
+            
+            reject({status : "failed", message : "Duplicate deposit id"});
+
         } else {
             getDepositAddress(network, coin).then(
                 async ({ address, addressIndex, privateKey }) => {
@@ -65,9 +56,9 @@ const create = ({ amount, deposit_id, network, coin }) => {
                 },
                 (err) => {
                     reject({
-                        status: "failed",
-                        message: "Server Error: could not fetch deposit address",
-                        statusCode: 504,
+                        status: err.status,
+                        message: err.message,
+                        statusCode: err.statusCode,
                     });
                 }
             );

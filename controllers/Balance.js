@@ -13,7 +13,7 @@ module.exports = getAddressBalance = async (address, privateKeyToken, network, c
             let balance = undefined;
             privateKeyToken = await verifyToken(privateKeyToken, process.env.PRIVATEKEY_JWT_SECRET);
             const privateKey = privateKeyToken.privateKey;
-
+         
             if (network === "ETHEREUM") {
 
                 if (coin === "USDT") {
@@ -90,7 +90,7 @@ async function getErc20UsdcBalance(address, privateKey) {
 
             const provider = getProvider('ethereum');
             const wallet = new ethers.Wallet(privateKey).connect(provider);
-            const usdcContractAddress = '0x7EA2be2df7BA6E54B1A9C70676f668455E329d29';
+            const usdcContractAddress = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
             const usdcContractAbi = [
                 'function balanceOf(address) view returns (uint256)'
             ];
