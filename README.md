@@ -45,12 +45,12 @@ To authenticate API requests, include the `Authorization` header with the `Beare
 
 ## Create a New Deposit
 
-Create a new deposit object by sending a POST request to the `/deposit/create` endpoint.
+Create a new deposit object by sending a POST request to the `${baseurl}/deposit/create` endpoint.
 
 ### Request
 
 - Method: POST
-- URL: `/deposit/create`
+- URL: `${baseurl}/deposit/create`
 - Headers:
   - Content-Type: application/json
   - Authorization: Bearer \<token\>
@@ -126,14 +126,14 @@ Create a new deposit object by sending a POST request to the `/deposit/create` e
 ```
 
 
-## Create a New Deposit
+## Check Deposit Status
 
-Create a new deposit object by sending a POST request to the `/deposit/create` endpoint.
+Check a deposit status by sending a POST request to the `${baseurl}/deposit/status` endpoint.
 
 ### Request
 
 - Method: POST
-- URL: `/deposit/create`
+- URL: `${baseurl}/deposit/status`
 - Headers:
   - Content-Type: application/json
   - Authorization: Bearer \<token\>
