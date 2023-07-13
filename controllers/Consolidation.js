@@ -204,7 +204,7 @@ const consolidateErc20UsdcBalance = (privateKey, balance, mainAddrObj, address) 
                 const provider = getProvider('ethereum');
                 const wallet = new ethers.Wallet(privateKey).connect(provider);
 
-                const usdtContractAddress = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
+                const usdtContractAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 
                 const erc20Abi = [
                     "function transfer(address to, uint amount)"

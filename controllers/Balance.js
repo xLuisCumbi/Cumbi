@@ -90,7 +90,7 @@ async function getErc20UsdcBalance(address, privateKey) {
 
             const provider = getProvider('ethereum');
             const wallet = new ethers.Wallet(privateKey).connect(provider);
-            const usdcContractAddress = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
+            const usdcContractAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
             const usdcContractAbi = [
                 'function balanceOf(address) view returns (uint256)'
             ];
@@ -101,7 +101,7 @@ async function getErc20UsdcBalance(address, privateKey) {
 
         } catch (error) {
 
-            console.log('error in checking usdc erc20 usdc balance', error);
+            console.log('error in checking usdc erc20 usdc balance');
             resolve(undefined);
 
         }
