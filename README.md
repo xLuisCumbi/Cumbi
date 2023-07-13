@@ -96,13 +96,7 @@ Create a new deposit object by sending a POST request to the `/deposit/create` e
       <td>yes</td>
       <td>the crypto network you wont to interact with supported: ethereum || tron </td>
     </tr>
-     <tr>
-      <td>network</td>
-      <td>string</td>
-      <td>yes</td>
-      <td>the crypto network you want to interact with supported: ethereum || tron </td>
-    </tr>
-      <tr>
+    <tr>
       <td>coin</td>
       <td>string</td>
       <td>yes</td>
@@ -120,9 +114,69 @@ Create a new deposit object by sending a POST request to the `/deposit/create` e
         "address": "...address", //the deposit address
         "coin_price": "1.00",
         "deposit_id": "test1",
-        "balance": 0, //the address balance
+        "balance": 0, //address balance on chain
         "amount_usd": 8,
-        "status": "pending", //`pending || success` : when the balance  >= amount
+        "status": "pending",
+        "amount": 8,
+        "coin": "USDT",
+        "network": "ETHEREUM"
+    }
+}
+
+```
+
+
+## Create a New Deposit
+
+Create a new deposit object by sending a POST request to the `/deposit/create` endpoint.
+
+### Request
+
+- Method: POST
+- URL: `/deposit/create`
+- Headers:
+  - Content-Type: application/json
+  - Authorization: Bearer \<token\>
+
+#### Request Body
+
+```json
+{
+    "deposit_id": "test1"
+}
+
+```
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>deposit_id</td>
+      <td>string</td>
+      <td>yes</td>
+      <td>unique id attached to the deposit</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Request Response
+
+```json
+{
+    "status": "success",
+    "depositObj": {
+        "address": "...address",  //the deposit address
+        "deposit_id": "test1",
+        "balance": 8,
+        "amount_usd": 8,
+        "status": "success", //pending || success : when address balance  >= amount
         "amount": 8,
         "coin": "USDT",
         "network": "ETHEREUM"

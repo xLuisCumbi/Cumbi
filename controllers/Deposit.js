@@ -106,8 +106,8 @@ const status = ({ deposit_id }) => {
                             amount_usd: d.amount_usd,
                             status: d.status,
                             amount: d.amount,
-                            coin: coin.toUpperCase(),
-                            network: network.toUpperCase(),
+                            coin: d.coin.toUpperCase(),
+                            network: d.network.toUpperCase(),
                         },
                     });
                 } else {
