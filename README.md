@@ -1,4 +1,4 @@
-# Project Name
+# Cumbi Crypto Gateway API
 
 A brief description of your project.
 
@@ -36,7 +36,7 @@ It allows users to create new deposit objects and retrieve existing deposit info
 
 ## Base URL
 
-http://localhost:3000/api/deposit/create
+http://localhost:3000/api
 
 
 ## Authentication
@@ -45,12 +45,12 @@ To authenticate API requests, include the `Authorization` header with the `Beare
 
 ## Create a New Deposit
 
-Create a new deposit object by sending a POST request to the `/deposits` endpoint.
+Create a new deposit object by sending a POST request to the `/deposit/create` endpoint.
 
 ### Request
 
 - Method: POST
-- URL: `/deposits`
+- URL: `/deposit/create`
 - Headers:
   - Content-Type: application/json
   - Authorization: Bearer \<token\>
@@ -66,8 +66,6 @@ Create a new deposit object by sending a POST request to the `/deposits` endpoin
 }
 
 ```
-
-```html
 
 <table>
   <thead>
@@ -93,4 +91,3 @@ Create a new deposit object by sending a POST request to the `/deposits` endpoin
     </tr>
   </tbody>
 </table>
-```
