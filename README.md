@@ -68,6 +68,7 @@ Create a new deposit object by sending a POST request to the `/deposit/create` e
 ```
 
 <table>
+<!-- add readme api documentation ✨✨ -->
   <thead>
     <tr>
       <th>Parameter</th>
@@ -78,16 +79,54 @@ Create a new deposit object by sending a POST request to the `/deposit/create` e
   </thead>
   <tbody>
     <tr>
-      <td>amount</td>
-      <td>number</td>
-      <td>yes</td>
-      <td>The deposit amount.</td>
-    </tr>
-    <tr>
-      <td>currency</td>
+      <td>deposit_id</td>
       <td>string</td>
       <td>yes</td>
-      <td>The currency of the deposit.</td>
+      <td>deposit unique id to attached to this deposit</td>
+    </tr>
+    <tr>
+      <td>amount</td>
+      <td>number(double)</td>
+      <td>yes</td>
+      <td>deposit amount in USD</td>
+    </tr>
+     <tr>
+      <td>network</td>
+      <td>string</td>
+      <td>yes</td>
+      <td>the crypto network you wont to interact with supported: ethereum || tron </td>
+    </tr>
+     <tr>
+      <td>network</td>
+      <td>string</td>
+      <td>yes</td>
+      <td>the crypto network you want to interact with supported: ethereum || tron </td>
+    </tr>
+      <tr>
+      <td>coin</td>
+      <td>string</td>
+      <td>yes</td>
+      <td>the crypto coin you want to interact with on the selected network supported: USDT || USDC</td>
     </tr>
   </tbody>
 </table>
+
+#### Request Response
+
+```json
+{
+    "status": "success",
+    "depositObj": {
+        "address": "...address", // the deposit address
+        "coin_price": "1.00",
+        "deposit_id": "test1",
+        "balance": 0, // the address balance
+        "amount_usd": 8,
+        "status": "pending", // pending || success : when the balance  >= amount
+        "amount": 8,
+        "coin": "USDT",
+        "network": "ETHEREUM"
+    }
+}
+
+```
