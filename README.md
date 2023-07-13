@@ -117,12 +117,12 @@ Create a new deposit object by sending a POST request to the `/deposit/create` e
 {
     "status": "success",
     "depositObj": {
-        "address": "...address", // the deposit address
+        "address": "...address", //the deposit address
         "coin_price": "1.00",
         "deposit_id": "test1",
-        "balance": 0, // the address balance
+        "balance": 0, //the address balance
         "amount_usd": 8,
-        "status": "pending", // pending || success : when the balance  >= amount
+        "status": "pending", //`pending || success` : when the balance  >= amount
         "amount": 8,
         "coin": "USDT",
         "network": "ETHEREUM"
