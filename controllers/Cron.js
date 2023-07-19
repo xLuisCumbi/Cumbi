@@ -13,9 +13,9 @@ const start = () => {
 
 function runCronJobs() {
 
-    // console.log('Cron Job Fired');
-    // checkPendingDeposits();
-    // updateAdminStats();
+    console.log('Cron Job Fired');
+    checkPendingDeposits();
+    updateAdminStats();
     
 }
 
