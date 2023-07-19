@@ -10,23 +10,23 @@ module.exports = db.define('deposit', {
     },
     address: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     address_index: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: true
     },
     privateKey: {
         type: DataTypes.STRING(500),
-        allowNull: false
+        allowNull: true
     },
     coin: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     network: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     amount: {
         type: DataTypes.FLOAT,
@@ -53,11 +53,26 @@ module.exports = db.define('deposit', {
         type: DataTypes.FLOAT,
         allowNull: false
     },
+    type: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    title: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    description: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    wp_order_received_url: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     createdAt: {
         type: DataTypes.DATE,
         allowNull: false
-    },
-    updatedAt: DataTypes.DATE
+    }
     
 }, 
 {

@@ -1,107 +1,290 @@
 
 const DepositModel = require("../models/Deposit");
 const AdminModel = require("../models/Admin");
-const jwt = require("jsonwebtoken");
-const { signToken } = require("../utils");
+const { signToken, bcryptCompare, verifyToken, genHash } = require("../utils");
+const { create } = require("./Deposit");
+const ApiTokenModel = require("../models/ApiToken");
 
 // AdminModel.sync({ alter: true});
 
-const validateToken = (token)=>{
-    return new Promise(resolve => {
-        try{
-            jwt.verify(token, process.env.JWT_SECRET, async function(err, adminObj){
-                if(err) {
-                    resolve({"status": "auth_failed", "message":"session expired kinldy login again 1"})
-                }else{
-                    if(adminObj.admin_id) {
-                        const admin_id = adminObj.admin_id
-                        const query = await AdminModel.findOne({ where: { admin_id: admin_id} }).catch()
-                        if(query){
-                            (query.admin_id == admin_id) 
-                            ? resolve({ "status": "success", admin_id})
-                            : resolve({ "status": "auth_failed", "message": "session expired kinldy login again"});
-                        }else resolve({ "status": "auth_failed", "message": "session expired kinldy login again"});
-                    }  
-                }
-            })      
-        }catch(e){
-            resolve({"status": "auth_failed", "message":"server error"})
-        }
-    })
-}
+// ApiTokenModel.sync({ alter: true});
 
-const login = ({email,  password})=>{
+const validateToken = (token) => {
     return new Promise(async resolve => {
-        try{
-            let passw = md5(process.env.LOGIN_SECRET + password);
-            const query = await AdminModel.findOne({ where: { email, password: passw} }).catch()
-            if(query){
-                const admin_id = query.admin_id;
-                const token = signToken({ admin_id }, process.env.JWT_SECRET, 5 * 60 * 60);
-                resolve({ "status": "success", "token": token, email}); 
-            }else resolve({ "status": "auth_failed", "message": "Incorrect username or password"}); 
-        }catch(e){
-            console.log(e);
-            resolve({"status": "auth_failed", "message":"server error"})
+        try {
+
+            const adminObj = await verifyToken(token, process.env.JWT_SECRET);
+            const admin_id = adminObj.admin_id;
+            const query = await AdminModel.findOne({ where: { admin_id, token } }).catch();
+            if (query) {
+
+                resolve({ "status": "success", admin_id });
+
+            } else {
+                resolve({ "status": "auth_failed", "message": "invalid token" });
+            }
+
+        } catch (e) {
+
+            resolve({ "status": "auth_failed", "message": "invalid token" });
+
+        }
+    })
+}
+
+const login = ({ email, password }) => {
+
+    return new Promise(async resolve => {
+        try {
+
+            const query = await AdminModel.findOne({ where: { email } });
+
+            if (query) {
+
+                const checkPassword = bcryptCompare(password, query.password);
+
+                if (checkPassword) {
+
+                    const admin_id = query.admin_id;
+                    const token = signToken({ admin_id, type: 'admin_token' }, process.env.JWT_SECRET, '5d');
+                    await AdminModel.update({ token }, { where: { admin_id } });
+                    resolve({ "status": "success", user: { authToken: token, email, username: query.username } });
+
+                } else {
+
+                    resolve({ "status": "auth_failed", "message": "Incorrect username or password" });
+                }
+
+            } else {
+                resolve({ "status": "auth_failed", "message": "Incorrect username or password" });
+            }
+            
+        } catch (e) {
+     
+            resolve({ "status": "auth_failed", "message": "server error" });
         }
     })
 }
 
 
-const fetchDeposits = ({fetchMode, token})=>{
+const fetchDeposits = ({ token }) => {
     return new Promise(async (resolve) => {
         try {
             const verify = await validateToken(token);
-            if(verify.status == 'success'){
-                const deposits = await DepositModel.findAll({raw: true, limit: 200});
-                resolve({status: "success", deposits});
-            }else resolve(verify);
+            if (verify.status == 'success') {
+                const deposits = await DepositModel.findAll({ raw: true, limit: 250, attributes: { exclude: ['privateKey', 'address_index'] } });
+                resolve({ status: "success", deposits });
+            } else resolve(verify);
         } catch (error) {
-            resolve({status: "failed" , message:"server error: kindly try again"});
+            resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
 }
 
-const update = ({ passphrase, email, password , token}) => {
-    return new Promise(async (resolve) => {
-        // try {
-        //     const verify = await validateToken(token);
-        //     if(verify.status == 'success'){
-        //         adminObj = {};
-        //         if(passphrase) adminObj.passphrase = passphrase;
-        //         if(password) adminObj.password = md5(process.env.LOGIN_SECRET + password);
-        //         if(email) adminObj.email = email;
-        //         console.log(adminObj);
-        //         await AdminModel.update(adminObj, {where: { admin_id : verify.admin_id } } );
-        //         resolve({status: "success"});
+const createToken = ({ token, token_name }) => {
 
-        //     }else resolve(verify);
-        // } catch (error) {
-        //     console.log(error);
-        //     resolve({status: "failed" , message:"server error: kindly try again"});
-        // }
+    return new Promise(async (resolve) => {
+        try {
+
+            const verify = await validateToken(token);
+
+            if (verify.status == 'success') {
+
+                const token = signToken({type: 'api_token', token_name}, process.env.API_JWT_SECRET, '100y');
+                const createdAt = new Date();
+
+                const createToken = await ApiTokenModel.create({ token_name, token, createdAt },{ raw: true, limit: 200 });
+
+                if(createToken){
+
+                    resolve({ status: "success" });
+
+                }else{
+                    resolve({ status: "failed", message: "Error Creating Token" });
+                }
+
+            } else {
+                resolve(verify);
+            }
+        } catch (error) {
+
+            resolve({ status: "failed", message: "server error: kindly try again" });
+        }
+    });
+}
+
+const fetchTokens = ({ token }) => {
+
+    return new Promise(async (resolve) => {
+        try {
+            const verify = await validateToken(token);
+
+            if (verify.status == 'success') {
+
+                const tokens = await ApiTokenModel.findAll({ raw: true, limit: 200 });
+                resolve({ status: "success", tokens });
+
+            } else {
+
+                resolve(verify);
+            }
+        } catch (error) {
+          
+            resolve({ status: "failed", message: "server error: kindly try again" });
+        }
+    });
+}
+
+const deleteToken = ({token,  token_id }) => {
+
+    return new Promise(async (resolve) => {
+        try {
+            const verify = await validateToken(token);
+
+            if (verify.status == 'success') {
+                    
+                await ApiTokenModel.destroy({where: {id: token_id}});
+                resolve({ status: "success" });
+
+            } else {
+
+                resolve(verify);
+            }
+        } catch (error) {
+  
+            resolve({ status: "failed", message: "server error: kindly try again" });
+        }
     });
 }
 
 
-const adminStats = (token) => {
+const update = ({ passphrase, email, username, password, token }) => {
     return new Promise(async (resolve) => {
         try {
+
             const verify = await validateToken(token);
-            if(verify.status == 'success'){
-                const num_deposit = await DepositModel.count();
-                const num_successful_deposit = await DepositModel.count({where :{status: 'success'}});
+
+            if (verify.status == 'success') {
+
+                adminObj = {};
+                if (passphrase) adminObj.passphrase = signToken({ mnemonic: passphrase, type: 'mnemonic-token' }, process.env.MNEMONIC_JWT_SECRET, '100y');
+                if (password) adminObj.password = await genHash(password);
+                if (email) adminObj.email = email;
+                if (username) adminObj.username = username;
+                adminObj.updatedAt = new Date();
+                await AdminModel.update(adminObj, { where: { admin_id: verify.admin_id } });
+                resolve({ status: "success" });
+
+            } else resolve(verify);
+
+        } catch (error) {
+
+            console.log(error);
+            resolve({ status: "failed", message: "server error: kindly try again" });
+        }
+    });
+}
+
+const createInvoice = ({ title, description, amount, network, coin, token }) => {
+
+    return new Promise(async (resolve, reject) => {
+
+        try {
+
+            const verify = await validateToken(token);
+
+            if (verify.status == 'success') {
+
+                const deposit_id = Date.now();
+                const respoonse = await create({ amount, deposit_id, network, coin, type: 'invoice', description, title });
+                const invoice_url = process.env.appUrl + '/invoice/' + deposit_id;
+                const invoiceObj = { status: 'success', invoiceObj: { ...respoonse.depositObj, invoice_url } };
+                resolve(invoiceObj);
+
+            } else {
+                resolve(verify);
+            }
+
+        } catch (error) {
+
+            reject({ message: 'error creating invoice' });
+
+        }
+
+
+    });
+
+}
+
+
+const adminStats = ({ token }) => {
+
+    return new Promise(async (resolve) => {
+
+        try {
+
+            const verify = await validateToken(token);
+
+            if (verify.status == 'success') {
+
+                const query = await AdminModel.findOne({ where: { admin_id: verify.admin_id } });
+                const s = JSON.parse(query.stats);
+                const updated = query.last_stats_update;
                 const stats = {
 
-                    num_deposit,
-                    num_successful_deposit,
-                    num_pending_deposit: num_deposit - num_successful_deposit,
-                    total_paid: Number(await DepositModel.sum('amount', { where: {status: 'success' }, raw: true }) ?? 0).toFixed(6)
+                    eth_balance: {
+                        value: s.eth_balance.value,
+                        updated
+                    },
+
+                    trx_balance: {
+                        value: s.trx_balance.value,
+                        updated
+                    },
+
+                    eth_usdt_balance: {
+                        value: s.eth_usdt_balance.value,
+                        updated
+                    },
+
+                    trx_usdt_balance: {
+                        value: s.trx_usdt_balance.value,
+                        updated
+                    },
+
+                    eth_usdc_balance: {
+                        value: s.eth_usdc_balance.value,
+                        updated
+                    },
+
+                    trx_usdc_balance: {
+                        value: s.trx_usdc_balance.value,
+                        updated
+                    },
+
+                    successful_deposits: {
+                        value: s.successful_deposits.value,
+                        updated,
+                    },
+
+                    total_paid: {
+                        value: s.total_paid.value,
+                        updated
+                    }
                 }
-                resolve({status: "success", stats});
-            }else resolve(verify)
+
+                resolve({ status: "success", stats });
+
+            } else {
+
+                resolve(verify);
+
+            }
+
         } catch (error) {
-            resolve({status: "failed" , message:"server error: kindly try again"});
+
+            resolve({ status: "failed", message: "server error: kindly try again" });
+
         }
     });
 }
@@ -114,5 +297,9 @@ module.exports = {
     login,
     validateToken,
     update,
-    adminStats
+    adminStats,
+    createInvoice,
+    createToken,
+    fetchTokens,
+    deleteToken
 }

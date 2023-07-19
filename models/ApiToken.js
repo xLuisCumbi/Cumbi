@@ -18,7 +18,13 @@ module.exports = db.define('api_token', {
     token: {
         type: DataTypes.STRING(500),
         allowNull: false,
-    }
+    },
+    
+    createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+    updatedAt: DataTypes.DATE
 
 },
     {

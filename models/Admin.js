@@ -32,14 +32,19 @@ module.exports = db.define('admin', {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    stats: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
+    last_stats_update: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
     createdAt: {
         type: DataTypes.DATE,
         allowNull: false
     },
-    updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: false
-    },
+    updatedAt: DataTypes.DATE
 },
 {
     freezeTableName: true,

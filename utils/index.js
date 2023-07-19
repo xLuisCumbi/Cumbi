@@ -61,7 +61,7 @@ const checkSupportedAddress = (network, coin) => {
 const genHash = (str) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const saltRounds = parseInt(process.env.LOGIN_SECRET);
+            const saltRounds = parseInt(process.env.SALT_ROUNDS);
             bcrypt.genSalt(saltRounds, function (err, salt) {
                 if (err) {
                     reject({ status: 'failed', statusCode: 500, message: err.message });
@@ -119,7 +119,8 @@ const verifyToken = (token, secret) => {
         jwt.verify(token, secret, async function(err, tokenData){
 
             if(err){
-                reject({ status: failed, statusCode: 504});
+                console.log(err);
+                reject({ status: 'failed', statusCode: 504});
             }
 
             resolve(tokenData);

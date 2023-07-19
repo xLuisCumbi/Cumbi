@@ -4,7 +4,7 @@ const ethers = require("ethers");
 const TronWeb = require("tronweb");
 const { verifyToken, getProvider } = require("../utils");
 
-module.exports = getAddressBalance = async (address, privateKeyToken, network, coin) => {
+ const getAddressBalance = async (address, privateKeyToken, network, coin) => {
   
     return new Promise(async (resolve) => {
 
@@ -162,4 +162,58 @@ async function getTrc20UsdcBalance(address, privateKey) {
         }
     });
 
+}
+
+function getEthBalance(address){
+
+    return new Promise(async (resolve, reject) => {
+
+        try {
+
+            const provider = getProvider('ethereum');
+            let balance = await provider.getBalance(address);
+            balance = ethers.formatEther(balance);
+
+            resolve(balance);
+         
+        } catch (error) {
+
+            resolve(null);
+        }
+
+    });
+
+}
+
+function getTrxBalance(address, privateKey){
+
+    return new Promise(async (resolve, reject) => {
+
+        try {
+
+            const tronWeb = new TronWeb({
+                fullHost: getProvider('tron'),
+                privateKey
+            });
+
+            const balance = await tronWeb.trx.getBalance(address); 
+            resolve(balance/ 1000000);
+
+        } catch (error) {
+
+            resolve(null);
+        }
+
+    });
+
+}
+
+module.exports = {
+    getAddressBalance,
+    getErc20UsdcBalance,
+    getErc20UsdtBalance,
+    getTrc20UsdcBalance,
+    getTrc20UsdtBalance,
+    getTrxBalance,
+    getEthBalance
 }

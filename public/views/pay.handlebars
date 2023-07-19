@@ -1,0 +1,213 @@
+<div class="col-sm-6 col-lg-4 bg-white mgn shadow-lg br-sm mt-sm-5 h-m-100 mb-sm-5 border d-normal">
+
+    <div class="col-12 mt-3 px-3">
+        <img src="/images/logo.png" height="50" alt="cumbi">
+    </div>
+     
+    <div class="bg-success p-1 col-11 mgn text-white rounded mt-3">
+        <div class="row px-3 status-bar-content">
+            <div class="col-8">
+                <div class="spinner-border text-white" role="status"></div>
+                <span class="status-text">Awaiting Payment...</span>
+            </div>
+            <div class="col-4 text-right" id="countTimer"></div>
+        </div>
+    </div>
+
+    <div class="row px-3 align-items-center py-2 mt-2">
+        <div class="col-6">
+            <span class="status-text">Pay With</span>
+        </div>
+        <div class="col-6 text-right">
+            <img height='25' src="{{icon}}">
+            <span> {{network_short}} {{coin}}</span>
+        </div>
+    </div>
+
+    {{#if is_invoice}}
+
+    <hr class="mt-0 p-0 mb-0">
+    <div class="row px-3 align-items-center py-2">
+        <div class="col-6">
+            <span class="status-text">Order Title</span>
+        </div>
+        <div class="col-6 text-right">
+            <span class='bold'>
+                {{title}}
+            </span>
+        </div>
+    </div>
+
+    {{/if}}
+
+    {{#if is_invoice}}
+    <hr class="mt-0 p-0 mb-0">
+    <div class="row px-3 align-items-center py-2">
+        <div class="col-6">
+            <span class="status-text">Order Description</span>
+        </div>
+        <div class="col-12 text-center mt-2">
+            <span>
+                {{description}}
+            </span>
+        </div>
+    </div>
+    {{/if}}
+    <hr class="mt-0 p-0 mb-0">
+    <div class="row px-3 align-items-center py-2">
+        <div class="col-6">
+            <span class="status-text">Total Amount</span>
+        </div>
+        <div class="col-6 text-right">
+            <span class="pay-in-crypto">
+                <span class='bold text-p'>
+                    {{amount}}
+                </span>
+                {{coin}}
+            </span>
+        </div>
+    </div>
+    <hr class="mt-0 p-0 mb-0">
+    <div class="row px-3 align-items-center py-2">
+        <div class="col-6">
+            <span class="status-text">Amount Paid</span>
+        </div>
+        <div class="col-6 text-right">
+            <span id='amount_paid' class='bold'>
+                {{balance}}
+            </span> {{coin}}
+        </div>
+    </div>
+
+    <hr class="mt-0 p-0 mb-3">
+    <div class="px-2 small p-2 text-center confirmation-section mt-2 dn address-section">
+        <div class='qr-container mgn bg-white d-flex align-items-center justify-content-between shadow'>
+            <div id="qrCode" class="mgn"></div>
+        </div>
+        <div class="bg-success col-11 mgn mt-3 text-white text-center p-2 rounded shadow">
+            <div onclick="copyToClipboard('{{address}}')" class="d-inline">
+                {{address}}
+            </div>
+        </div>
+
+        <p class="mt-1">Please Scan The Qr Code Above Or Click On The Address To Copy</p>
+    </div>
+
+
+    <div class="px-3 small p-3 text-center mt-3 dn success-section">
+        <i style="font-size: 70px" class="bi bi-check-circle text-success"></i>
+        <p class="mt-2"> <strong> Your Payment Was Successfully Received</strong></p>
+        {{#if is_invoice}}
+        <p>Thanks For Your Payment. Your Order is being processed </p>
+        {{else}}
+        <p> Redirecting In To Store....</p>
+        {{/if}}
+    </div>
+
+    <div class="px-3 small p-3 text-center mt-3 dn failed-section">
+        <i style="font-size: 70px" class="bi bi-x-circle text-danger"></i>
+        <p class="mt-2"> <strong>Opps Payment Failed</strong></p>
+        <p class="mt-2">Payment Timeout exceeded could not detect payment within specified time</p>
+    </div>
+
+</div>
+
+<script>
+
+    const deposit_id = window.location.pathname.split("/")[2];
+
+    setTimeout(() => {
+        new QRCode(document.getElementById("qrCode"), {
+            text: "{{address}}",
+            width: 150,
+            height: 150,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    }, 500);
+
+
+    const targetTime = new Date().getTime() + 60 * 60 * 1000;
+    let timeoutwarned = false;
+    function updateCountdown() {
+        // Get the current time in milliseconds
+        const currentTime = new Date().getTime();
+
+        // Convert the createdAt time to milliseconds (assuming it's already in a valid date format)
+        const createdAtTime = new Date("{{createdAt}}").getTime();
+
+        // Set the target time 1 hour (3600000 milliseconds) after the createdAt time
+        const targetTime = createdAtTime + 3600000; // 1 hour in milliseconds
+
+        // Calculate the remaining time in milliseconds
+        const remainingTime = targetTime - currentTime;
+
+        if (remainingTime <= 0) {
+
+            clearInterval(countdown);
+            clearInterval(checkPaymentIntv);
+            $("#amount_paid").addClass('text-danger');
+            $(".status-bar-content").html('<strong>Payment Failed</strong>');
+            $('.confirmation-section').hide();
+            $('.failed-section').show();
+        } else {
+            $('.address-section').show();
+        }
+        // Convert the remaining time to minutes and seconds
+        const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+
+        // Format the minutes and seconds as two-digit numbers (e.g., 05:03)
+        const formattedMinutes = String(minutes).padStart(2, '0');
+        const formattedSeconds = String(seconds).padStart(2, '0');
+
+        // Display the countdown in the element with the ID "countTimer"
+        $("#countTimer").html(formattedMinutes + ':' + formattedSeconds);
+        if (formattedMinutes < 15 && !timeoutwarned) {
+            $("#countTimer").addClass('text-danger bold');
+            timeoutwarned = true;
+        }
+    }
+
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text);
+    }
+
+    function checkPayment() {
+
+        $.post('/api/deposit/status', { deposit_id }, function (payment) {
+            try {
+
+                payment = payment.depositObj;
+                if (payment.status == 'success') {
+
+                    clearInterval(checkPaymentIntv);
+                    $("#amount_paid").html(payment.balance).addClass('text-success');
+                    $(".status-bar-content").html('<strong>Payment Received</strong>');
+                    $('.confirmation-section').hide();
+                    $('.success-section').show(300);
+
+                    if (payment.type === 'desposit') {
+                        setTimeout(() => { document.location = payment.wp_order_received_url }, 1500);
+                    }
+
+                } else {
+
+                    if (payment.balance > 0) $("#amount_paid").html(payment.balance).addClass('text-warning');
+
+                }
+            } catch (err) {
+
+                console.log(err);
+            }
+        });
+    }
+
+    const countdown = setInterval(updateCountdown, 1000);
+
+    var checkPaymentIntv = setInterval(checkPayment, 10000);
+
+
+</script>

@@ -61,6 +61,7 @@ const adminAuthMiddleware = (req, res, next) => {
         const decodedToken = jwt.verify(token,  process.env.JWT_SECRET);
         if(decodedToken.type === 'admin_token') {
 
+            req.body.token = token;
             next();
 
         }else{
@@ -71,7 +72,47 @@ const adminAuthMiddleware = (req, res, next) => {
     }
 }
 
+const sessionAuthMiddleware = (req, res, next) => {
+
+    if(req.headers.authorization){
+        
+        return apiAuthMiddleware(req, res, next);
+
+    }else{
+        
+        if (req.session.token && req.session.deposit_id) {
+
+            jwt.verify(req.session.token, process.env.SESSION_SECRET, (err, decoded) => {
+
+                if (err) {
+
+                    return res.status(401).json({status: "auth_failed", message: 'Authentication Failed: Invalid API KEY' });
+
+                } else {
+                
+                    if(req.session.deposit_id === decoded.deposit_id) {
+
+                        next();
+
+                    }else{
+
+                        return res.status(401).json({status: "auth_failed", message: 'Authentication Failed: Invalid API KEY' });
+                    }
+
+                }
+            });
+    
+        } else {
+    
+            return res.status(401).json({status: "auth_failed", message: 'Authentication Failed: Invalid API KEY' });
+    
+        }  
+    }
+
+}
+
 module.exports = {
     apiAuthMiddleware,
-    adminAuthMiddleware
+    adminAuthMiddleware,
+    sessionAuthMiddleware
 }

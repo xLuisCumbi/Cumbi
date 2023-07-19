@@ -1,6 +1,6 @@
 const DepositModel = require("../models/Deposit");
 const { validateField, signToken } = require("../utils");
-const getAddressBalance = require('./Balance');
+const { getAddressBalance } = require('./Balance');
 const consolidateAddressBalance = require('./Consolidation')
 const getDepositAddress = require('./Address');
 const moment = require('moment');
@@ -8,61 +8,115 @@ const Sequelize = require('sequelize');
 
 // DepositModel.sync({ alter: true });
 
-const create = ({ amount, deposit_id, network, coin }) => {
+const create = ({ amount, deposit_id, network, coin , type, description, title, wp_order_received_url}) => {
+
     return new Promise(async (resolve, reject) => {
-        validateField(reject, { amount, deposit_id, network, coin });
 
-        const d = await checkDepositExist(deposit_id);
-        if (d) {
+        try {
             
-            reject({status : "failed", message : "Duplicate deposit id"});
+            if(type == 'wp-payment'){
+            
+                const validate = validateField(reject, { amount, deposit_id, wp_order_received_url });
+                if(!validate) return;
 
-        } else {
-            getDepositAddress(network, coin).then(
-                async ({ address, addressIndex, privateKey }) => {
+            }else{
 
-                    privateKey = signToken({ privateKey }, process.env.PRIVATEKEY_JWT_SECRET, '100y');
-                    const coinPriceDouble = await getAmountCrypto();
-                    const coin_price = Number(coinPriceDouble).toFixed(2);
-                    const amount_crypto = Number((amount / coin_price).toFixed(6));
-
-                    const depositObj = {
-                        address,
-                        coin_price,
-                        deposit_id,
-                        privateKey,
-                        balance: 0,
-                        amount_usd: amount,
-                        status: "pending",
-                        amount: amount_crypto,
-                        address_index: addressIndex,
-                        coin: coin.toUpperCase(),
-                        network: network.toUpperCase(),
-                    };
-
-                    const save = await saveDepositObj(depositObj);
-
-                    if (save) {
-                        delete depositObj["address_index"];
-                        delete depositObj["privateKey"];
-                        resolve({ status: "success", depositObj });
-                    } else {
-                        reject({
-                            status: "failed",
-                            message: "Server Error: could not fetch deposit address",
-                            statusCode: 504,
-                        });
-                    }
-                },
-                (err) => {
+                const validate = validateField(reject, { amount, deposit_id, network, coin });
+                if(!validate) return;
+            }
+    
+            const d = await checkDepositExist(deposit_id);
+           
+            if (d) {
+                
+                reject({status : "failed", message : "Duplicate deposit id"});
+    
+            } else if(type === "wp-payment"){
+                
+                const depositObj = {
+                    coin_price: 1,
+                    deposit_id,
+                    balance: 0,
+                    amount_usd: amount,
+                    status: "inactive",
+                    type: "deposit",
+                    amount,
+                    wp_order_received_url
+                };
+    
+                const save = await saveDepositObj(depositObj);
+    
+                if (save) {
+                    delete depositObj["address_index"];
+                    delete depositObj["privateKey"];
+                    resolve({ status: "success", depositObj });
+                } else {
                     reject({
-                        status: err.status,
-                        message: err.message,
-                        statusCode: err.statusCode,
+                        status: "failed",
+                        message: "Server Error: could not fetch deposit address",
+                        statusCode: 504,
                     });
                 }
-            );
+    
+            }else {
+                
+                getDepositAddress(network, coin).then(
+    
+                    async ({ address, addressIndex, privateKey }) => {
+    
+                        privateKey = signToken({ privateKey }, process.env.PRIVATEKEY_JWT_SECRET, '100y');
+                        const coinPriceDouble = await getAmountCrypto();
+                        const coin_price = Number(coinPriceDouble).toFixed(2);
+                        const amount_crypto = Number((amount / coin_price).toFixed(6));
+    
+                        const depositObj = {
+                            address,
+                            coin_price,
+                            deposit_id,
+                            privateKey,
+                            balance: 0,
+                            amount_usd: amount,
+                            status: "pending",
+                            type: type ? type : "deposit",
+                            description: description ? description : "",
+                            title: title ? title : "",
+                            amount: amount_crypto,
+                            address_index: addressIndex,
+                            coin: coin.toUpperCase(),
+                            network: network.toUpperCase(),
+                        };
+    
+                        const save = await saveDepositObj(depositObj);
+    
+                        if (save) {
+                            delete depositObj["address_index"];
+                            delete depositObj["privateKey"];
+                            resolve({ status: "success", depositObj });
+                        } else {
+                            reject({
+                                status: "failed",
+                                message: "Server Error: could not fetch deposit address",
+                                statusCode: 504,
+                            });
+                        }
+                    },
+                    (err) => {
+                        reject({
+                            status: err.status,
+                            message: err.message,
+                            statusCode: err.statusCode,
+                        });
+                    }
+                );
+    
+            }
+
+        } catch (error) {
+
+            reject({status : "failed", message : "Server Error"});
+
         }
+        
     });
 };
 
@@ -90,8 +144,32 @@ const getAmountCrypto = () => {
     });
 };
 
+const setNetwork = ({ deposit_id, network, coin }) => {
+
+    return new Promise((resolve, reject) => {
+            
+        getDepositAddress(network, coin).then(
+
+            async ({ address, addressIndex, privateKey }) => {
+
+                await DepositModel.update({address, address_index: addressIndex, privateKey, network, coin, status: 'pending'}, {where: {deposit_id, status: 'inactive'}});
+
+                resolve({status: 'success'});
+
+            }, err => {
+
+                reject({status : "failed", message : "Server Error"}); 
+
+            }
+        );
+        
+    });
+
+}
+
 const status = ({ deposit_id }) => {
     return new Promise((resolve) => {
+        
         DepositModel.findOne({ where: { deposit_id }, raw: true }).then(
             async (d) => {
                 if (d) {
@@ -106,11 +184,18 @@ const status = ({ deposit_id }) => {
                             amount_usd: d.amount_usd,
                             status: d.status,
                             amount: d.amount,
-                            coin: d.coin.toUpperCase(),
-                            network: d.network.toUpperCase(),
-                        },
+                            description: d.description,
+                            title: d.title,
+                            type: d.type,
+                            coin_price: 1,
+                            createdAt: d.createdAt,
+                            wp_order_received_url: d.wp_order_received_url,
+                            coin: d.coin == null ? d.coin : d.coin.toUpperCase(),
+                            network: d.network == null ? d.network : d.network.toUpperCase(),
+                        }
                     });
                 } else {
+                    
                     resolve({
                         status: "failed",
                         message: "Could not find deposit",
@@ -249,5 +334,6 @@ module.exports = {
     create,
     status,
     checkPendingDeposits,
-    getDepositAddress
+    getDepositAddress,
+    setNetwork
 };

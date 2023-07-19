@@ -1,0 +1,64 @@
+<div class="col-sm-6 col-lg-4 bg-white mgn shadow-lg br-sm mt-sm-5 h-m-100 mb-sm-5 border d-normal">
+
+    <div class="bg-success p-1 col-11 mgn text-white rounded mt-3 d-none status-con">
+        <div class="status-bar-content text-center">
+            <div class="spinner-border text-white" role="status"></div>
+        </div>
+    </div>
+
+
+
+    <div class="px-3 align-items-center py-2 mt-2">
+
+        <div class="mt-3">
+
+            <p>Select Preffered Crypto</p>
+
+            <div class="col-12 text-right">
+
+                <select class="form-control form-select" id="selectedNetwork">
+                    <option value="ETHEREUM|USDT">USDT (ERC20)</option>
+                    <option value="ETHEREUM|USDC">USDC (ERC20)</option>
+                    <option value="TRON|USDT">USDT (TRC20)</option>
+                    <option value="TRON|USDC">USDC (TRC20)</option>
+                </select>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-12 text-center mt-4 mb-5">
+        <button onclick="setNetwork()" class="btn bg-success text-white col-10 col-sm-4">Continue</button>
+    </div>
+
+</div>
+
+<script>
+
+    const deposit_id = window.location.pathname.split("/")[2];
+
+    function setNetwork() {
+
+        const sn = $("#selectedNetwork").val();
+
+        if (sn === 'ETHEREUM|USDT' || sn === 'ETHEREUM|USDC' || sn === 'TRON|USDC' || sn === 'TRON|USDT') {
+
+            $(".status-con").removeClass("d-none");
+            const network = sn.split('|')[0];
+            const coin = sn.split('|')[1];
+
+            $.post('/api/deposit/set-network', { deposit_id, network, coin }, function (payment) {
+
+               location.reload();
+
+            });
+
+        } else {
+            alert('input valid crypto currency');
+        }
+
+    }
+
+
+</script>

@@ -242,6 +242,7 @@ const consolidateErc20UsdcBalance = (privateKey, balance, mainAddrObj, address) 
 const activateEthAddress = (mainAddrObj, address) => {
 
     return new Promise(async (resolve) => {
+
         console.log('eth address activation process started');
 
         try {
@@ -252,7 +253,7 @@ const activateEthAddress = (mainAddrObj, address) => {
             const tx = {
                 from: mainAddrObj.address,
                 to: address,
-                value: ethers.parseEther("0.005"),
+                value: ethers.parseEther("0.0004"),
                 gasPrice: ethers.toBigInt(1200)
             }
 
@@ -282,6 +283,7 @@ const activateEthAddress = (mainAddrObj, address) => {
 const activateTronAddress = (mainAddrObj, address) => {
 
     return new Promise(async (resolve) => {
+
         console.log('address activation process started');
 
         const tronWeb = new TronWeb({
@@ -334,7 +336,10 @@ const confirmTronTransaction = (transferTransactionId, tronWeb) => {
 
 
             } catch (error) {
+
+                resolve('unconsolidated');
                 console.log('transaction receipt not available yet', error, 're-checking transaction');
+                
             }
 
         }, 3000);
