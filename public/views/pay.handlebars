@@ -184,12 +184,13 @@
                 if (payment.status == 'success') {
 
                     clearInterval(checkPaymentIntv);
+                    clearInterval(countdown);
                     $("#amount_paid").html(payment.balance).addClass('text-success');
                     $(".status-bar-content").html('<strong>Payment Received</strong>');
                     $('.confirmation-section').hide();
                     $('.success-section').show(300);
 
-                    if (payment.type === 'desposit') {
+                    if (payment.type === 'deposit') {
                         setTimeout(() => { document.location = payment.wp_order_received_url }, 1500);
                     }
 
