@@ -290,7 +290,7 @@ const activateTronAddress = (mainAddrObj, address) => {
             fullHost: getProvider('tron'),
             privateKey: mainAddrObj.privateKey
         });
-        const amount = 15 * 1000000;
+        const amount = 30 * 1000000;
         const txObj = await tronWeb.trx.sendTransaction(address, amount, mainAddrObj.privateKey);
 
         if (txObj.result === true) {
