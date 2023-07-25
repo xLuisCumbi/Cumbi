@@ -1,13 +1,38 @@
+/**
+ * This file is a module that exports a function for updating admin stats.
+ * It updates the number of successful deposits, total paid, and the balances
+ * of different coins on different networks.
+ */
 const AdminModel = require("../models/Admin");
 const DepositModel = require("../models/Deposit");
 const bal = require('./Balance');
 const getDepositAddress = require('./Address');
 
+/**
+ * Updates the admin stats.
+ * The stats include the number of successful deposits, total paid, and the balances of different coins on different networks.
+ * The stats are stored in the database.
+ */
 const updateAdminStats = async () => {
-
     console.log('Updating admin stats in process');
-    const successful_deposit = await DepositModel.count({ where: { status: 'success' } });
-    const total_paid = Number(await DepositModel.sum('amount', { where: { status: 'success' }, raw: true }) ?? 0).toFixed(6);
+    const successful_deposit = await DepositModel.countDocuments({ status: 'success' });
+    let total_paid = await DepositModel.aggregate([
+        {
+            $match: {
+                status: 'success'
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                total: {
+                    $sum: '$amount'
+                }
+            }
+        }
+    ]);
+
+    total_paid = total_paid.length > 0 ? Number(total_paid[0].total.toFixed(6)) : 0;
     const eth_address = await getDepositAddress('ETHEREUM', 'USDT', 0);
     const trx_address = await getDepositAddress('TRON', 'USDT', 0);
     const eth_usdt_balance = await bal.getErc20UsdtBalance(eth_address.address, eth_address.privateKey);
@@ -18,47 +43,36 @@ const updateAdminStats = async () => {
     const trx_balance = await bal.getTrxBalance(trx_address.address, trx_address.privateKey);
 
     const stats = JSON.stringify({
-
         eth_balance: {
             value: eth_balance,
         },
-
         trx_balance: {
             value: trx_balance
         },
-
         eth_usdt_balance: {
             value: eth_usdt_balance
         },
-
         trx_usdt_balance: {
             value: trx_usdt_balance
         },
-
         eth_usdc_balance: {
             value: eth_usdc_balance
         },
-
         trx_usdc_balance: {
             value: trx_usdc_balance
         },
-
         successful_deposits: {
             value: successful_deposit
         },
-
         total_paid: {
             value: total_paid
         }
-
     });
 
-    const admin = await AdminModel.findOne();
+    const admin = await AdminModel.findOne({}).exec();
     const last_stats_update = new Date();
 
-    AdminModel.update({ stats, last_stats_update }, { where: { admin_id: admin.admin_id } });
-
+    AdminModel.updateOne({ admin_id: admin._id }, { stats, last_stats_update }).exec();
 }
-
 
 module.exports = { updateAdminStats }

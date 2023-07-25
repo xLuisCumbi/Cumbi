@@ -1,79 +1,72 @@
-const { DataTypes } = require('sequelize');
-const db = require('../config/db');
+// Import Mongoose
+const mongoose = require('mongoose');
 
-module.exports = db.define('deposit', {
-    id: {
-        type: DataTypes.INTEGER(11),
-        allowNull: false,
-        primaryKey: true,
-        autoIncrement: true
-    },
+// Define the Deposit schema
+const DepositSchema = new mongoose.Schema({
     address: {
-        type: DataTypes.STRING,
-        allowNull: true
+        type: String,
+        default: null
     },
     address_index: {
-        type: DataTypes.INTEGER,
-        allowNull: true
+        type: Number,
+        default: null
     },
     privateKey: {
-        type: DataTypes.STRING(500),
-        allowNull: true
+        type: String,
+        default: null
     },
     coin: {
-        type: DataTypes.STRING,
-        allowNull: true
+        type: String,
+        default: null
     },
     network: {
-        type: DataTypes.STRING,
-        allowNull: true
+        type: String,
+        default: null
     },
     amount: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
+        type: Number,
+        required: true,
     },
     amount_usd: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
+        type: Number,
+        required: true,
     },
     deposit_id: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: String,
+        required: true,
         unique: true,
     },
     status: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: String,
+        required: true,
     },
     consolidation_status: {
-        type: DataTypes.STRING,
-        allowNull: true
+        type: String,
+        default: null
     },
     balance: {
-        type: DataTypes.FLOAT,
-        allowNull: false
+        type: Number,
+        required: true
     },
     type: {
-        type: DataTypes.STRING,
-        allowNull: false
+        type: String,
+        required: true
     },
     title: {
-        type: DataTypes.STRING,
-        allowNull: true
+        type: String,
+        default: null
     },
     description: {
-        type: DataTypes.STRING,
-        allowNull: true
+        type: String,
+        default: null
     },
     wp_order_received_url: {
-        type: DataTypes.STRING,
-        allowNull: true
+        type: String,
+        default: null
     },
-    createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false
-    }
-},
-    {
-        freezeTableName: true
-    });
+}, {
+    timestamps: { createdAt: 'createdAt', updatedAt: false }
+});
+
+// Create the model from the schema and export it
+module.exports = mongoose.model('Deposit', DepositSchema);

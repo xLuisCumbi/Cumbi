@@ -1,8 +1,6 @@
 const jwt = require("jsonwebtoken");
 const ApiTokenModel = require("../../models/ApiToken");
 
-//ApiTokenModel.sync({ alter: true });
-
 const apiAuthMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
@@ -25,7 +23,7 @@ const apiAuthMiddleware = (req, res, next) => {
     try {
         const decodedToken = jwt.verify(token, process.env.API_JWT_SECRET);
         if (decodedToken.type === "api_token") {
-            ApiTokenModel.findOne({ where: { token } }).then(
+            ApiTokenModel.findOne({ token }).then(
                 (tokenObj) => {
                     if (tokenObj) {
                         next();

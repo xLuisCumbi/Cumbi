@@ -1,34 +1,19 @@
-const { DataTypes } = require('sequelize');
-const db = require('../config/db');
+// Import Mongoose
+const mongoose = require('mongoose');
 
-module.exports = db.define('api_token', {
-
-    id: {
-        type: DataTypes.INTEGER(11),
-        allowNull: false,
-        primaryKey: true,
-        autoIncrement: true
-    },
-
+// Define the ApiToken schema
+const ApiTokenSchema = new mongoose.Schema({
     token_name: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: String,
+        required: true,
     },
-
     token: {
-        type: DataTypes.STRING(500),
-        allowNull: false,
+        type: String,
+        required: true,
     },
-    
-    createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false
-    },
-    updatedAt: DataTypes.DATE
+}, {
+    timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
+});
 
-},
-    {
-        freezeTableName: true,
-        timestamps: false
-    }
-);
+// Create the model from the schema and export it
+module.exports = mongoose.model('ApiToken', ApiTokenSchema);

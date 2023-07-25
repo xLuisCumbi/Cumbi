@@ -1,53 +1,41 @@
-const { DataTypes }  = require('sequelize');
-const db = require('../config/db');
+// Import Mongoose
+const mongoose = require('mongoose');
 
-module.exports = db.define('admin', {
-    id: {
-        type: DataTypes.INTEGER(11),
-        allowNull: false,
-        primaryKey: true, 
-        autoIncrement: true
-    },
+// Define the Admin schema
+const AdminSchema = new mongoose.Schema({
     admin_id: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: String,
+        required: true,
     },
     username: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: String,
+        required: true,
     },
     email: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: String,
+        required: true,
     },
     password: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: String,
+        required: true,
     },
     passphrase: {
-        type: DataTypes.STRING(500),
-        allowNull: false,
+        type: String,
+        required: true,
     },
     token: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: String,
+        required: true,
     },
     stats: {
-        type: DataTypes.TEXT,
-        allowNull: true,
+        type: String,
     },
     last_stats_update: {
-        type: DataTypes.DATE,
-        allowNull: true,
+        type: Date,
     },
-    createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false
-    },
-    updatedAt: DataTypes.DATE
-},
-{
-    freezeTableName: true,
-    timestamps: false
-}
-);
+}, {
+    timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
+});
+
+// Create the model from the schema and export it
+module.exports = mongoose.model('Admin', AdminSchema);

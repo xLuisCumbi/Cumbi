@@ -1,44 +1,47 @@
-const express = require('express');
+const express = require("express");
 const Router = express.Router();
-const Deposit = require('../controllers/Deposit');
-const { sendErrorMsg } = require('../utils');
-const {  apiAuthMiddleware, sessionAuthMiddleware } = require('../middleware/auth');
+const Deposit = require("../controllers/Deposit");
+const { sendErrorMsg } = require("../utils");
+const {
+    apiAuthMiddleware,
+    sessionAuthMiddleware,
+} = require("../middleware/auth");
 
-Router.post('/create', apiAuthMiddleware , (req, res) => {
-
-    Deposit.create(req.body).then((resp) => {
-        res.json(resp);
-    }, err => {
-        sendErrorMsg(res, err);
-    });
-
+Router.post("/create", apiAuthMiddleware, (req, res) => {
+    Deposit.create(req.body).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
 });
 
-
-Router.post('/status', sessionAuthMiddleware, (req, res) => {
-
-    Deposit.status(req.body).then((resp) => {
-        res.json(resp);
-    }, err => {
-        sendErrorMsg(res, err);
-    });
-
+Router.post("/status", sessionAuthMiddleware, (req, res) => {
+    Deposit.status(req.body).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
 });
 
-
-Router.post('/set-network', sessionAuthMiddleware, (req, res) => {
-
-    Deposit.setNetwork(req.body).then((resp) => {
-        res.json(resp);
-    }, err => {
-        sendErrorMsg(res, err);
-    });
-
+Router.post("/set-network", sessionAuthMiddleware, (req, res) => {
+    Deposit.setNetwork(req.body).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
 });
 
-
-Router.use('**', (req, res)=>{
-    res.status(404).json({staus: "failed", messsage: "404 not found"});
+Router.use("**", (req, res) => {
+    res.status(404).json({ staus: "failed", messsage: "404 not found" });
 });
 
 module.exports = Router;

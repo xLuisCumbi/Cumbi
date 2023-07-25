@@ -8,30 +8,41 @@ const ApiTokenModel = require("../models/ApiToken");
 
 // ApiTokenModel.sync({ alter: true});
 
-const validateToken = (token) => {
-    return new Promise(async (resolve) => {
-        try {
-            const adminObj = await verifyToken(token, process.env.JWT_SECRET);
-            const admin_id = adminObj.admin_id;
-            const query = await AdminModel.findOne({
-                where: { admin_id, token },
-            }).catch();
-            if (query) {
-                resolve({ status: "success", admin_id });
-            } else {
-                resolve({ status: "auth_failed", message: "invalid token" });
-            }
-        } catch (e) {
-            resolve({ status: "auth_failed", message: "invalid token" });
+/**
+ * Validates a JWT token and returns the admin ID if the token is valid.
+ * @param {string} token - The JWT token to validate.
+ * @return {Promise<Object>} - The validation result.
+ */
+const validateToken = async (token) => {
+    try {
+        const adminObj = await verifyToken(token, process.env.JWT_SECRET);
+        const admin_id = adminObj.admin_id;
+        const query = await AdminModel.findOne({ admin_id, token });
+
+        if (query) {
+            return { status: "success", admin_id };
+        } else {
+            return { status: "auth_failed", message: "invalid token" };
         }
-    });
+    } catch (e) {
+        console.error("Error during token validation:", e);
+        return { status: "auth_failed", message: "invalid token" };
+    }
 };
 
+/**
+ * Handles admin login. Verifies email and password, and if correct, returns a JWT token.
+ * @param {Object} params - The login parameters.
+ * @param {string} params.email - The admin's email.
+ * @param {string} params.password - The admin's password.
+ * @return {Promise<Object>} - The login result.
+ */
 const login = ({ email, password }) => {
     return new Promise(async (resolve) => {
         try {
-            const query = await AdminModel.findOne({ where: { email } });
 
+            // ToDo no valida password?
+            const query = await AdminModel.findOne({ email });
             if (query) {
                 const checkPassword = bcryptCompare(password, query.password);
 
@@ -42,7 +53,7 @@ const login = ({ email, password }) => {
                         process.env.JWT_SECRET,
                         "5d"
                     );
-                    await AdminModel.update({ token }, { where: { admin_id } });
+                    await AdminModel.findOneAndUpdate({ admin_id }, { token });
                     resolve({
                         status: "success",
                         user: { authToken: token, email, username: query.username },
@@ -60,12 +71,19 @@ const login = ({ email, password }) => {
                 });
             }
         } catch (e) {
+            console.error("Error during login:", e);
+
             resolve({ status: "auth_failed", message: "server error" });
         }
     });
 };
 
-//show me db
+/**
+ * Returns all deposits from the database.
+ * @param {Object} params - The parameters.
+ * @param {string} params.token - The JWT token for authentication.
+ * @return {Promise<Object>} - The fetch result.
+ */
 const fetchDeposits = ({ token }) => {
     return new Promise(async (resolve) => {
         try {
@@ -79,11 +97,19 @@ const fetchDeposits = ({ token }) => {
                 resolve({ status: "success", deposits });
             } else resolve(verify);
         } catch (error) {
+            console.log('error', error.stack)
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
 };
 
+/**
+ * Creates a new API token and stores it in the database.
+ * @param {Object} params - The parameters.
+ * @param {string} params.token - The JWT token for authentication.
+ * @param {string} params.token_name - The name for the new API token.
+ * @return {Promise<Object>} - The creation result.
+ */
 const createToken = ({ token, token_name }) => {
     return new Promise(async (resolve) => {
         try {
@@ -111,11 +137,18 @@ const createToken = ({ token, token_name }) => {
                 resolve(verify);
             }
         } catch (error) {
+            console.log('error', error.stack)
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
 };
 
+/**
+ * Returns all API tokens from the database.
+ * @param {Object} params - The parameters.
+ * @param {string} params.token - The JWT token for authentication.
+ * @return {Promise<Object>} - The fetch result.
+ */
 const fetchTokens = ({ token }) => {
     return new Promise(async (resolve) => {
         try {
@@ -128,11 +161,20 @@ const fetchTokens = ({ token }) => {
                 resolve(verify);
             }
         } catch (error) {
+            console.log('error', error.stack)
+
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
 };
 
+/**
+ * Deletes an API token from the database.
+ * @param {Object} params - The parameters.
+ * @param {string} params.token - The JWT token for authentication.
+ * @param {string} params.token_id - The ID of the API token to delete.
+ * @return {Promise<Object>} - The deletion result.
+ */
 const deleteToken = ({ token, token_id }) => {
     return new Promise(async (resolve) => {
         try {
@@ -145,11 +187,23 @@ const deleteToken = ({ token, token_id }) => {
                 resolve(verify);
             }
         } catch (error) {
+            console.log('error', error.stack)
+
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
 };
 
+/**
+ * Updates the admin information in the database.
+ * @param {Object} params - The parameters.
+ * @param {string} params.passphrase - The new passphrase.
+ * @param {string} params.email - The new email.
+ * @param {string} params.username - The new username.
+ * @param {string} params.password - The new password.
+ * @param {string} params.token - The JWT token for authentication.
+ * @return {Promise<Object>} - The update result.
+ */
 const update = ({ passphrase, email, username, password, token }) => {
     return new Promise(async (resolve) => {
         try {
@@ -173,12 +227,23 @@ const update = ({ passphrase, email, username, password, token }) => {
                 resolve({ status: "success" });
             } else resolve(verify);
         } catch (error) {
-            console.log(error);
+            console.log('error', error.stack)
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
 };
 
+/**
+ * Creates a new invoice.
+ * @param {Object} params - The parameters.
+ * @param {string} params.title - The title of the invoice.
+ * @param {string} params.description - The description of the invoice.
+ * @param {number} params.amount - The amount of the invoice.
+ * @param {string} params.network - The network for the invoice.
+ * @param {string} params.coin - The coin for the invoice.
+ * @param {string} params.token - The JWT token for authentication.
+ * @return {Promise<Object>} - The creation result.
+ */
 const createInvoice = ({
     title,
     description,
@@ -217,15 +282,26 @@ const createInvoice = ({
     });
 };
 
+/**
+ * Returns the admin's statistics.
+ * @param {Object} params - The parameters.
+ * @param {string} params.token - The JWT token for authentication.
+ * @return {Promise<Object>} - The statistics.
+ */
 const adminStats = ({ token }) => {
     return new Promise(async (resolve) => {
         try {
             const verify = await validateToken(token);
-
             if (verify.status == "success") {
                 const query = await AdminModel.findOne({
                     where: { admin_id: verify.admin_id },
                 });
+
+                if (!query || query.stats === null) {
+                    resolve({ status: "failed", message: "Admin statistics not found" });
+                    return;
+                }
+
                 const s = JSON.parse(query.stats);
                 const updated = query.last_stats_update;
                 const stats = {
@@ -275,6 +351,8 @@ const adminStats = ({ token }) => {
                 resolve(verify);
             }
         } catch (error) {
+            console.log('error', error.stack)
+
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });

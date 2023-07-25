@@ -2,6 +2,14 @@ const ethers = require("ethers");
 const TronWeb = require("tronweb");
 const { verifyToken, getProvider } = require("../utils");
 
+/**
+ * Gets and returns the balance of an address on a specific network and coin.
+ * @param {string} address - The address to get the balance for.
+ * @param {string} privateKeyToken - The private key token for authentication.
+ * @param {string} network - The network to get the balance from.
+ * @param {string} coin - The coin to get the balance for.
+ * @return {Promise<number>} - The balance.
+ */
 const getAddressBalance = async (address, privateKeyToken, network, coin) => {
     return new Promise(async (resolve) => {
         try {
@@ -37,6 +45,12 @@ const getAddressBalance = async (address, privateKeyToken, network, coin) => {
     });
 };
 
+/**
+ * Gets and returns the balance of USDT ERC20 of an address on the Ethereum network.
+ * @param {string} address - The address to get the balance for.
+ * @param {string} privateKey - The private key to use for getting the balance.
+ * @return {Promise<number>} - The balance.
+ */
 async function getErc20UsdtBalance(address, privateKey) {
     return new Promise(async (resolve) => {
         try {
@@ -61,6 +75,12 @@ async function getErc20UsdtBalance(address, privateKey) {
     });
 }
 
+/**
+ * Gets and returns the balance of USDC ERC20 of an address on the Ethereum network.
+ * @param {string} address - The address to get the balance for.
+ * @param {string} privateKey - The private key to use for getting the balance.
+ * @return {Promise<number>} - The balance.
+ */
 async function getErc20UsdcBalance(address, privateKey) {
     return new Promise(async (resolve) => {
         try {
@@ -85,6 +105,12 @@ async function getErc20UsdcBalance(address, privateKey) {
     });
 }
 
+/**
+ * Gets and returns the balance of USDT TRC20 of an address on the Tron network.
+ * @param {string} address - The address to get the balance for.
+ * @param {string} privateKey - The private key to use for getting the balance.
+ * @return {Promise<number>} - The balance.
+ */
 async function getTrc20UsdtBalance(address, privateKey) {
     return new Promise(async (resolve) => {
         try {
@@ -105,6 +131,12 @@ async function getTrc20UsdtBalance(address, privateKey) {
     });
 }
 
+/**
+ * Gets and returns the balance of USDC TRC20 of an address on the Tron network.
+ * @param {string} address - The address to get the balance for.
+ * @param {string} privateKey - The private key to use for getting the balance.
+ * @return {Promise<number>} - The balance.
+ */
 async function getTrc20UsdcBalance(address, privateKey) {
     return new Promise(async (resolve) => {
         try {
@@ -126,6 +158,11 @@ async function getTrc20UsdcBalance(address, privateKey) {
     });
 }
 
+/**
+ * Gets and returns the balance of ETH of an address.
+ * @param {string} address - The address to get the balance for.
+ * @return {Promise<number>} - The balance.
+ */
 function getEthBalance(address) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -140,6 +177,12 @@ function getEthBalance(address) {
     });
 }
 
+/**
+ * Gets and returns the balance of TRX of an address.
+ * @param {string} address - The address to get the balance for.
+ * @param {string} privateKey - The private key to use for getting the balance.
+ * @return {Promise<number>} - The balance.
+ */
 function getTrxBalance(address, privateKey) {
     return new Promise(async (resolve, reject) => {
         try {
