@@ -2,11 +2,12 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const ethers = require("ethers");
+require('dotenv').config();
 
 
 const sendErrorMsg = (res, err) => {
 
-    let message = 'Server Error Kinldy Try Again Later';
+    let message = 'Server Error Kindly Try Again Later';
     message = err.message ? err.message : message;
 
     let statusCode = 504;
@@ -14,8 +15,8 @@ const sendErrorMsg = (res, err) => {
 
     let status = "failed";
     status = err.status ? err.status : status;
-    
-    res.status(statusCode).json({ status, message});
+
+    res.status(statusCode).json({ status, message });
 
 }
 
@@ -29,31 +30,31 @@ const checkSupportedAddress = (network, coin) => {
 
         if (coin === "USDT") {
 
-            return {status: true}
-            
-        }else if (coin === "USDC") {
+            return { status: true }
 
-            return {status: true}
+        } else if (coin === "USDC") {
+
+            return { status: true }
         }
-        
-        else return {status: false, message: "Unsupported crypto coin"}
+
+        else return { status: false, message: "Unsupported crypto coin" }
 
     } else if (network === "TRON") {
 
         if (coin === "USDT") {
 
-            return {status: true}
+            return { status: true }
 
-        }else if (coin === "USDC") {
+        } else if (coin === "USDC") {
 
-            return {status: true}
+            return { status: true }
         }
 
-        else return {status: false, message: "Unsupported crypto coin"}
+        else return { status: false, message: "Unsupported crypto coin" }
 
     }
 
-    else return {status: false, message: "Unsupported crypto network"}
+    else return { status: false, message: "Unsupported crypto network" }
 
 
 }
@@ -80,11 +81,11 @@ const genHash = (str) => {
     })
 }
 
-const bcryptCompare = (str1, str2)=>{
+const bcryptCompare = (str1, str2) => {
     return bcrypt.compareSync(str1, str2);
 }
 
-const validateField = (reject, field) => { 
+const validateField = (reject, field) => {
 
     let fieldValidated = true;
     for (let i in field) {
@@ -97,16 +98,16 @@ const validateField = (reject, field) => {
 
     if (!fieldValidated) {
 
-        reject({status: "failed", statusCode: 400, message: "BAD REQUEST : INCOMPLETE PAYLOAD"});
+        reject({ status: "failed", statusCode: 400, message: "BAD REQUEST : INCOMPLETE PAYLOAD" });
 
     }
 
     return fieldValidated;
-         
+
 }
 
 const signToken = (tokenData, secret, lifetime) => {
-    const token = jwt.sign({ ...tokenData },  secret, {
+    const token = jwt.sign({ ...tokenData }, secret, {
         expiresIn: lifetime,
     });
 
@@ -116,50 +117,50 @@ const signToken = (tokenData, secret, lifetime) => {
 const verifyToken = (token, secret) => {
 
     return new Promise((resolve, reject) => {
-        jwt.verify(token, secret, async function(err, tokenData){
+        jwt.verify(token, secret, async function (err, tokenData) {
 
-            if(err){
+            if (err) {
                 console.log(err);
-                reject({ status: 'failed', statusCode: 504});
+                reject({ status: 'failed', statusCode: 504 });
             }
 
             resolve(tokenData);
         });
     })
-   
+
 }
 
 const getProvider = (network) => {
 
     const APP_MODE = process.env.APP_MODE || 'TESTNET';
-    
-    if(APP_MODE === 'TESTNET') {
-        
-        if(network == 'ethereum'){
+
+    if (APP_MODE === 'TESTNET') {
+
+        if (network == 'ethereum') {
 
             return new ethers.InfuraProvider("goerli", "f134b5932f8f4a0d86f99600140f5c42");
 
-        }else if(network == 'tron'){
+        } else if (network == 'tron') {
 
             return 'https://api.shasta.trongrid.io';
 
-        }else{
+        } else {
 
             return undefined;
-            
+
         }
 
-    }else{
+    } else {
 
-        if(network == 'ethereum'){
+        if (network == 'ethereum') {
 
             return new ethers.getDefaultProvider();
 
-        }else if(network == 'tron'){
+        } else if (network == 'tron') {
 
             return 'https://api.trongrid.io';
 
-        }else{
+        } else {
 
             return undefined;
         }

@@ -1,5 +1,5 @@
 const { checkPendingDeposits } = require('./Deposit');
-const { updateAdminStats  } = require("./Stats");
+const { updateAdminStats } = require("./Stats");
 const cron = require('node-cron');
 
 const start = () => {
@@ -16,7 +16,7 @@ function runCronJobs() {
     console.log('Cron Job Fired');
     checkPendingDeposits();
     updateAdminStats();
-    
+
 }
 
 

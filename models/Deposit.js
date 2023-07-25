@@ -1,4 +1,4 @@
-const { DataTypes }  = require('sequelize');
+const { DataTypes } = require('sequelize');
 const db = require('../config/db');
 
 module.exports = db.define('deposit', {
@@ -73,8 +73,7 @@ module.exports = db.define('deposit', {
         type: DataTypes.DATE,
         allowNull: false
     }
-    
-}, 
-{
-    freezeTableName: true
-});
+},
+    {
+        freezeTableName: true
+    });

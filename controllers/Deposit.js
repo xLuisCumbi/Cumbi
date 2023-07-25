@@ -13,9 +13,9 @@ const create = ({ amount, deposit_id, network, coin , type, description, title, 
     return new Promise(async (resolve, reject) => {
 
         try {
-            
+
             if(type == 'wp-payment'){
-            
+
                 const validate = validateField(reject, { amount, deposit_id, wp_order_received_url });
                 if(!validate) return;
 
@@ -24,15 +24,15 @@ const create = ({ amount, deposit_id, network, coin , type, description, title, 
                 const validate = validateField(reject, { amount, deposit_id, network, coin });
                 if(!validate) return;
             }
-    
+
             const d = await checkDepositExist(deposit_id);
-           
+
             if (d) {
-                
+
                 reject({status : "failed", message : "Duplicate deposit id"});
-    
+
             } else if(type === "wp-payment"){
-                
+
                 const depositObj = {
                     coin_price: 1,
                     deposit_id,
@@ -43,9 +43,9 @@ const create = ({ amount, deposit_id, network, coin , type, description, title, 
                     amount,
                     wp_order_received_url
                 };
-    
+
                 const save = await saveDepositObj(depositObj);
-    
+
                 if (save) {
                     delete depositObj["address_index"];
                     delete depositObj["privateKey"];
@@ -57,18 +57,18 @@ const create = ({ amount, deposit_id, network, coin , type, description, title, 
                         statusCode: 504,
                     });
                 }
-    
+
             }else {
-                
+
                 getDepositAddress(network, coin).then(
-    
+
                     async ({ address, addressIndex, privateKey }) => {
-    
+
                         privateKey = signToken({ privateKey }, process.env.PRIVATEKEY_JWT_SECRET, '100y');
                         const coinPriceDouble = await getAmountCrypto();
                         const coin_price = Number(coinPriceDouble).toFixed(2);
                         const amount_crypto = Number((amount / coin_price).toFixed(6));
-    
+
                         const depositObj = {
                             address,
                             coin_price,
@@ -85,9 +85,9 @@ const create = ({ amount, deposit_id, network, coin , type, description, title, 
                             coin: coin.toUpperCase(),
                             network: network.toUpperCase(),
                         };
-    
+
                         const save = await saveDepositObj(depositObj);
-    
+
                         if (save) {
                             delete depositObj["address_index"];
                             delete depositObj["privateKey"];
@@ -108,7 +108,7 @@ const create = ({ amount, deposit_id, network, coin , type, description, title, 
                         });
                     }
                 );
-    
+
             }
 
         } catch (error) {
@@ -116,7 +116,7 @@ const create = ({ amount, deposit_id, network, coin , type, description, title, 
             reject({status : "failed", message : "Server Error"});
 
         }
-        
+
     });
 };
 
@@ -147,7 +147,7 @@ const getAmountCrypto = () => {
 const setNetwork = ({ deposit_id, network, coin }) => {
 
     return new Promise((resolve, reject) => {
-            
+
         getDepositAddress(network, coin).then(
 
             async ({ address, addressIndex, privateKey }) => {
@@ -158,22 +158,22 @@ const setNetwork = ({ deposit_id, network, coin }) => {
 
             }, err => {
 
-                reject({status : "failed", message : "Server Error"}); 
+                reject({status : "failed", message : "Server Error"});
 
             }
         );
-        
+
     });
 
 }
 
 const status = ({ deposit_id }) => {
     return new Promise((resolve) => {
-        
+
         DepositModel.findOne({ where: { deposit_id }, raw: true }).then(
             async (d) => {
                 if (d) {
-                    
+
                     resolve({
                         status: "success",
                         depositObj: {
@@ -195,7 +195,7 @@ const status = ({ deposit_id }) => {
                         }
                     });
                 } else {
-                    
+
                     resolve({
                         status: "failed",
                         message: "Could not find deposit",
@@ -270,7 +270,7 @@ const expireTimedOutDeposits = () => {
 const checkPendingDeposits = async () => {
 
     try {
-    
+
         const pendingDeposits = await fetchPendingDeposits();
 
         if(pendingDeposits.length == 0) {
@@ -290,7 +290,7 @@ const checkPendingDeposits = async () => {
             consolidation_status = 'unconsolidated';
 
             if(balance >= deposit.amount){
-               
+
                 status =  "success";
                 console.log('successful deposit detected');
                 consolidation_status = await consolidateAddressBalance(address, balance, privateKey, network, coin);

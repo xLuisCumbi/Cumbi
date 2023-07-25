@@ -176,7 +176,7 @@ const consolidateErc20UsdtBalance = (privateKey, balance, mainAddrObj, address) 
                     resolve('unconsolidated');
                 }
 
-    
+
             } else {
 
                 resolve('unconsolidated');
@@ -263,7 +263,7 @@ const activateEthAddress = (mainAddrObj, address) => {
 
                 console.log('address activation process completed');
                 resolve(true);
-                
+
             } else {
 
                 resolve(undefined);
@@ -290,7 +290,8 @@ const activateTronAddress = (mainAddrObj, address) => {
             fullHost: getProvider('tron'),
             privateKey: mainAddrObj.privateKey
         });
-        const amount = 15 * 1000000;
+        const amount = 20 * 1000000;
+
         const txObj = await tronWeb.trx.sendTransaction(address, amount, mainAddrObj.privateKey);
 
         if (txObj.result === true) {
@@ -339,7 +340,7 @@ const confirmTronTransaction = (transferTransactionId, tronWeb) => {
 
                 resolve('unconsolidated');
                 console.log('transaction receipt not available yet', error, 're-checking transaction');
-                
+
             }
 
         }, 3000);

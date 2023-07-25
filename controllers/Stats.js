@@ -4,7 +4,7 @@ const bal = require('./Balance');
 const getDepositAddress = require('./Address');
 
 const updateAdminStats = async () => {
-    
+
     console.log('Updating admin stats in process');
     const successful_deposit = await DepositModel.count({ where: { status: 'success' } });
     const total_paid = Number(await DepositModel.sum('amount', { where: { status: 'success' }, raw: true }) ?? 0).toFixed(6);
@@ -56,7 +56,7 @@ const updateAdminStats = async () => {
     const admin = await AdminModel.findOne();
     const last_stats_update = new Date();
 
-    AdminModel.update({ stats, last_stats_update }, {where: {admin_id: admin.admin_id}});
+    AdminModel.update({ stats, last_stats_update }, { where: { admin_id: admin.admin_id } });
 
 }
 

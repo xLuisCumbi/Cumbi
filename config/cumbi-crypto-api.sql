@@ -26,18 +26,21 @@ SET time_zone = "+00:00";
 --
 -- Table structure for table `admin`
 --
-
 CREATE TABLE `admin` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `admin_id` varchar(255) NOT NULL,
   `username` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `passphrase` varchar(500) NOT NULL,
   `token` varchar(255) NOT NULL,
+  `stats` text,
+  `last_stats_update` datetime DEFAULT NULL,
   `createdAt` datetime NOT NULL,
-  `updatedAt` datetime NOT NULL
+  `updatedAt` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 --
 -- Dumping data for table `admin`
@@ -53,9 +56,12 @@ INSERT INTO `admin` (`id`, `admin_id`, `username`, `email`, `password`, `passphr
 --
 
 CREATE TABLE `api_token` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `token_name` varchar(255) NOT NULL,
-  `token` varchar(500) NOT NULL
+  `token` varchar(500) NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -72,68 +78,24 @@ INSERT INTO `api_token` (`id`, `token_name`, `token`) VALUES
 --
 
 CREATE TABLE `deposit` (
-  `id` int(11) NOT NULL,
-  `address` varchar(255) NOT NULL,
-  `address_index` int(11) NOT NULL,
-  `privateKey` varchar(500) NOT NULL,
-  `coin` varchar(255) NOT NULL,
-  `network` varchar(255) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `address` varchar(255) DEFAULT NULL,
+  `address_index` int(11) DEFAULT NULL,
+  `privateKey` varchar(500) DEFAULT NULL,
+  `coin` varchar(255) DEFAULT NULL,
+  `network` varchar(255) DEFAULT NULL,
   `amount` float NOT NULL,
   `amount_usd` float NOT NULL,
   `deposit_id` varchar(255) NOT NULL,
   `status` varchar(255) NOT NULL,
   `consolidation_status` varchar(255) DEFAULT NULL,
   `balance` float NOT NULL,
+  `type` varchar(255) NOT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `wp_order_received_url` varchar(255) DEFAULT NULL,
   `createdAt` datetime NOT NULL,
-  `updatedAt` datetime DEFAULT NULL
+  `updatedAt` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `deposit_id` (`deposit_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `admin`
---
-ALTER TABLE `admin`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `api_token`
---
-ALTER TABLE `api_token`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `deposit`
---
-ALTER TABLE `deposit`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `deposit_id` (`deposit_id`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `admin`
---
-ALTER TABLE `admin`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `api_token`
---
-ALTER TABLE `api_token`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `deposit`
---
-ALTER TABLE `deposit`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
-COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
