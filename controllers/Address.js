@@ -4,21 +4,22 @@ const Mnemonic = require("bitcore-mnemonic");
 const DepositModel = require("../models/Deposit");
 const AdminModel = require("../models/Admin");
 const { verifyToken, getProvider, checkSupportedAddress } = require("../utils");
+require("dotenv").config();
 
 module.exports = getDepositAddress = (network, coin, index) => {
-
     return new Promise(async (resolve, reject) => {
-
         try {
-
             const supported = checkSupportedAddress(network, coin);
-            if(supported.status === false){
-
-                reject({ status: "failed", message: supported.message, statusCode: 400});
-
+            if (supported.status === false) {
+                reject({
+                    status: "failed",
+                    message: supported.message,
+                    statusCode: 400,
+                });
             }
             const mnemonic = await getMnemonic();
-            const addressIndex = index === undefined ? await getAddressIndex(network, coin) : index; 
+            const addressIndex =
+                index === undefined ? await getAddressIndex(network, coin) : index;
             const code = new Mnemonic(mnemonic);
             const hdPrivateKey = code.toHDPrivateKey();
             let derivationPath;
@@ -29,22 +30,18 @@ module.exports = getDepositAddress = (network, coin, index) => {
             coin = coin.toUpperCase();
 
             if (network === "ETHEREUM") {
-
                 derivationPath = `m/44'/60'/0'/0/${addressIndex}`;
                 derivedHDPrivateKey = hdPrivateKey.derive(derivationPath);
                 privateKey = derivedHDPrivateKey.privateKey.toString();
                 address = await getErc20Address(privateKey);
-
             } else if (network === "TRON") {
-
                 derivationPath = `m/44'/195'/0'/0/${addressIndex}`;
                 derivedHDPrivateKey = hdPrivateKey.derive(derivationPath);
                 privateKey = derivedHDPrivateKey.privateKey.toString();
                 address = await getTrc20Address(privateKey);
             }
-           
-            resolve({ address, addressIndex, privateKey });
 
+            resolve({ address, addressIndex, privateKey });
         } catch (error) {
             console.log(error);
             reject({ status: "failed", message: "Error generating address" });
@@ -52,11 +49,10 @@ module.exports = getDepositAddress = (network, coin, index) => {
     });
 };
 
-
 const getErc20Address = (privateKey) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const provider = getProvider('ethereum');
+            const provider = getProvider("ethereum");
             const wallet = new ethers.Wallet(privateKey).connect(provider);
             resolve(wallet.address);
         } catch (error) {
@@ -69,7 +65,7 @@ const getTrc20Address = (privateKey) => {
     return new Promise((resolve, reject) => {
         try {
             const tronWeb = new TronWeb({
-                fullHost: getProvider('tron'),
+                fullHost: getProvider("tron"),
                 privateKey,
             });
 
@@ -82,7 +78,6 @@ const getTrc20Address = (privateKey) => {
 };
 
 const getAddressIndex = (network, coin) => {
-    
     return new Promise((resolve, reject) => {
         DepositModel.findOne({
             where: { network, coin },

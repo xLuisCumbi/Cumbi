@@ -1,7 +1,10 @@
-const Sequelize  = require('sequelize');
+const Sequelize = require('sequelize');
+require('dotenv').config();
+
 const db = new Sequelize(process.env.DB, process.env.DBUSER, process.env.DBPASS, {
     host: process.env.DBHOST,
-    dialect: 'mariadb',
+    port: process.env.DBPORT,
+    dialect: 'mysql',
     logging: false,
     define: {
         charset: 'utf8',
