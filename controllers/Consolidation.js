@@ -107,6 +107,7 @@ const consolidateTrc20UsdtBalance = (
 ) => {
     return new Promise(async (resolve) => {
         try {
+            
             const activateAddrress = await activateTronAddress(mainAddrObj, address);
 
             if (activateAddrress) {
