@@ -80,6 +80,7 @@ const create = ({
                     delete depositObj["privateKey"];
                     resolve({ status: "success", depositObj });
                 } else {
+                    console.log('error in Deposit.js');
                     reject({
                         status: "failed",
                         message: "Server Error: could not fetch deposit address",
@@ -122,6 +123,7 @@ const create = ({
                             delete depositObj["privateKey"];
                             resolve({ status: "success", depositObj });
                         } else {
+                            console.log('error in: getDepositAddress', );
                             reject({
                                 status: "failed",
                                 message: "Server Error: could not fetch deposit address",
@@ -222,8 +224,8 @@ const setNetwork = ({ deposit_id, network, coin }) => {
  */
 const status = ({ deposit_id }) => {
     return new Promise((resolve) => {
-        DepositModel.findOne({ where: { deposit_id }, raw: true }).then(
-            async (d) => {
+        DepositModel.findOne({ deposit_id })
+            .then(d => {
                 if (d) {
                     resolve({
                         status: "success",
@@ -251,14 +253,14 @@ const status = ({ deposit_id }) => {
                         message: "Could not find deposit",
                     });
                 }
-            },
-            (err) => {
+            })
+            .catch(err => {
+                console.log('error:', err.stack);
                 resolve({
                     status: "failed",
                     message: "Server Error: kindly try again later",
                 });
-            }
-        );
+            });
     });
 };
 
@@ -298,7 +300,7 @@ const fetchPendingDeposits = () => {
             }).lean();
 
             resolve(pendingDeposits);
-            console.log("pendingDeposits", pendingDeposits);
+            console.log("pending Deposits", pendingDeposits);
         } catch (error) {
             resolve([]);
             console.log(error);
@@ -344,7 +346,7 @@ const checkPendingDeposits = async () => {
         const pendingDeposits = await fetchPendingDeposits();
 
         if (pendingDeposits.length == 0) {
-            console.log("no pendingDeposits detected");
+            console.log("no pending Deposits detected");
             return;
         }
 

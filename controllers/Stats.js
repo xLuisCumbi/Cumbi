@@ -39,6 +39,7 @@ const updateAdminStats = async () => {
     const eth_usdc_balance = await bal.getErc20UsdcBalance(eth_address.address, eth_address.privateKey);
     const trx_usdt_balance = await bal.getTrc20UsdtBalance(trx_address.address, trx_address.privateKey);
     const trx_usdc_balance = await bal.getTrc20UsdcBalance(trx_address.address, trx_address.privateKey);
+
     const eth_balance = await bal.getEthBalance(eth_address.address);
     const trx_balance = await bal.getTrxBalance(trx_address.address, trx_address.privateKey);
 

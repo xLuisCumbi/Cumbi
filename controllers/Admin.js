@@ -88,16 +88,14 @@ const fetchDeposits = ({ token }) => {
     return new Promise(async (resolve) => {
         try {
             const verify = await validateToken(token);
-            if (verify.status == "success") {
-                const deposits = await DepositModel.findAll({
-                    raw: true,
-                    limit: 250,
-                    attributes: { exclude: ["privateKey", "address_index"] },
-                });
+            if (verify.status === "success") {
+                const deposits = await DepositModel.find({}, { privateKey: 0, address_index: 0 })
+                    .limit(250)
+                    .lean();
                 resolve({ status: "success", deposits });
             } else resolve(verify);
         } catch (error) {
-            console.log('error', error.stack)
+            console.error("Error while fetching deposits:", error);
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
@@ -121,12 +119,17 @@ const createToken = ({ token, token_name }) => {
                     process.env.API_JWT_SECRET,
                     "100y"
                 );
+
                 const createdAt = new Date();
+                console.log('token:', token);
+                console.log('token_name:', token_name);
+                console.log('createdAt:', createdAt);
 
                 const createToken = await ApiTokenModel.create(
-                    { token_name, token, createdAt },
-                    { raw: true, limit: 200 }
+                    { token_name, token, createdAt }
                 );
+
+                console.log('createToken:', createToken);
 
                 if (createToken) {
                     resolve({ status: "success" });
@@ -137,7 +140,8 @@ const createToken = ({ token, token_name }) => {
                 resolve(verify);
             }
         } catch (error) {
-            console.log('error', error.stack)
+            console.log('error admin', error);
+            console.log('error stack', error.stack);
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
@@ -154,15 +158,14 @@ const fetchTokens = ({ token }) => {
         try {
             const verify = await validateToken(token);
 
-            if (verify.status == "success") {
-                const tokens = await ApiTokenModel.findAll({ raw: true, limit: 200 });
+            if (verify.status === "success") {
+                const tokens = await ApiTokenModel.find({}).limit(200).lean();
                 resolve({ status: "success", tokens });
             } else {
                 resolve(verify);
             }
         } catch (error) {
-            console.log('error', error.stack)
-
+            console.error("Error while fetching tokens:", error);
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
@@ -181,14 +184,13 @@ const deleteToken = ({ token, token_id }) => {
             const verify = await validateToken(token);
 
             if (verify.status == "success") {
-                await ApiTokenModel.destroy({ where: { id: token_id } });
+                await ApiTokenModel.findByIdAndDelete(token_id);
                 resolve({ status: "success" });
             } else {
                 resolve(verify);
             }
         } catch (error) {
             console.log('error', error.stack)
-
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
@@ -294,7 +296,7 @@ const adminStats = ({ token }) => {
             const verify = await validateToken(token);
             if (verify.status == "success") {
                 const query = await AdminModel.findOne({
-                    where: { admin_id: verify.admin_id },
+                    admin_id: verify.admin_id,
                 });
 
                 if (!query || query.stats === null) {
@@ -352,7 +354,6 @@ const adminStats = ({ token }) => {
             }
         } catch (error) {
             console.log('error', error.stack)
-
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
