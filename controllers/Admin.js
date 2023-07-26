@@ -40,7 +40,6 @@ const validateToken = async (token) => {
 const login = ({ email, password }) => {
     return new Promise(async (resolve) => {
         try {
-
             // ToDo no valida password?
             const query = await AdminModel.findOne({ email });
             if (query) {
@@ -89,7 +88,10 @@ const fetchDeposits = ({ token }) => {
         try {
             const verify = await validateToken(token);
             if (verify.status === "success") {
-                const deposits = await DepositModel.find({}, { privateKey: 0, address_index: 0 })
+                const deposits = await DepositModel.find(
+                    {},
+                    { privateKey: 0, address_index: 0 }
+                )
                     .limit(250)
                     .lean();
                 resolve({ status: "success", deposits });
@@ -121,15 +123,11 @@ const createToken = ({ token, token_name }) => {
                 );
 
                 const createdAt = new Date();
-                console.log('token:', token);
-                console.log('token_name:', token_name);
-                console.log('createdAt:', createdAt);
-
-                const createToken = await ApiTokenModel.create(
-                    { token_name, token, createdAt }
-                );
-
-                console.log('createToken:', createToken);
+                const createToken = await ApiTokenModel.create({
+                    token_name,
+                    token,
+                    createdAt,
+                });
 
                 if (createToken) {
                     resolve({ status: "success" });
@@ -140,8 +138,7 @@ const createToken = ({ token, token_name }) => {
                 resolve(verify);
             }
         } catch (error) {
-            console.log('error admin', error);
-            console.log('error stack', error.stack);
+            console.log("error stack", error.stack);
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
@@ -190,7 +187,7 @@ const deleteToken = ({ token, token_id }) => {
                 resolve(verify);
             }
         } catch (error) {
-            console.log('error', error.stack)
+            console.log("error", error.stack);
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
@@ -223,13 +220,15 @@ const update = ({ passphrase, email, username, password, token }) => {
                 if (email) adminObj.email = email;
                 if (username) adminObj.username = username;
                 adminObj.updatedAt = new Date();
-                await AdminModel.update(adminObj, {
-                    where: { admin_id: verify.admin_id },
-                });
+                await AdminModel.updateOne(
+                    { admin_id: verify.admin_id },
+                    adminObj
+                ).exec();
+
                 resolve({ status: "success" });
             } else resolve(verify);
         } catch (error) {
-            console.log('error', error.stack)
+            console.log("error", error.stack);
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
@@ -353,7 +352,7 @@ const adminStats = ({ token }) => {
                 resolve(verify);
             }
         } catch (error) {
-            console.log('error', error.stack)
+            console.log("error", error.stack);
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });

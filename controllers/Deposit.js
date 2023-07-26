@@ -62,6 +62,7 @@ const create = ({
             if (d) {
                 reject({ status: "failed", message: "Duplicate deposit id" });
             } else if (type === "wp-payment") {
+
                 const depositObj = {
                     coin_price: 1,
                     deposit_id,
@@ -93,7 +94,7 @@ const create = ({
                         privateKey = signToken(
                             { privateKey },
                             process.env.PRIVATEKEY_JWT_SECRET,
-                            "100y"
+                            "1y"
                         );
                         const coinPriceDouble = await getAmountCrypto();
                         const coin_price = Number(coinPriceDouble).toFixed(2);
@@ -123,7 +124,7 @@ const create = ({
                             delete depositObj["privateKey"];
                             resolve({ status: "success", depositObj });
                         } else {
-                            console.log('error in: getDepositAddress', );
+                            console.log('error in: getDepositAddress',);
                             reject({
                                 status: "failed",
                                 message: "Server Error: could not fetch deposit address",
@@ -194,6 +195,11 @@ const setNetwork = ({ deposit_id, network, coin }) => {
     return new Promise((resolve, reject) => {
         getDepositAddress(network, coin).then(
             async ({ address, addressIndex, privateKey }) => {
+                privateKey = signToken(
+                    { privateKey },
+                    process.env.PRIVATEKEY_JWT_SECRET,
+                    "1y"
+                );
                 await DepositModel.updateOne(
                     { deposit_id, status: "inactive" },
                     {
@@ -356,6 +362,7 @@ const checkPendingDeposits = async () => {
             const network = deposit.network;
             const coin = deposit.coin;
             const privateKey = deposit.privateKey;
+
             let balance = await getAddressBalance(address, privateKey, network, coin);
             balance = !balance ? 0 : balance;
             let status = "pending";

@@ -393,7 +393,9 @@ const activateTronAddress = (mainAddrObj, address) => {
  * @param {object} tronWeb - The TronWeb instance.
  * @returns {Promise<string>} A promise that resolves to the consolidation status.
  *
- * This function confirms a Tron transaction by checking the transaction receipt. If the transaction was successful, it resolves to 'success'. If not, it resolves to 'unconsolidated'.
+ * This function confirms a Tron transaction by checking the transaction receipt.
+ * If the transaction was successful, it resolves to 'success'.
+ * If not, it resolves to 'unconsolidated'.
  */
 const confirmTronTransaction = (transferTransactionId, tronWeb) => {
     return new Promise(async (resolve) => {
