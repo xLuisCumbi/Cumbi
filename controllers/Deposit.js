@@ -367,7 +367,7 @@ const checkPendingDeposits = async () => {
             balance = !balance ? 0 : balance;
             let status = "pending";
             consolidation_status = "unconsolidated";
-
+            
             if (balance >= deposit.amount) {
                 status = "success";
                 console.log("successful deposit detected");
@@ -379,6 +379,7 @@ const checkPendingDeposits = async () => {
                     coin
                 );
             }
+            
             updateDepositObj({ id, address, status, balance, consolidation_status });
         });
 
@@ -400,7 +401,7 @@ const updateDepositObj = (depositObj) => {
         try {
             // Change the Sequelize update to Mongoose updateOne
             const query = await DepositModel.updateOne(
-                { _id: depositObj._id },
+                { _id: depositObj.id },
                 { ...depositObj }
             );
 
