@@ -299,14 +299,14 @@ const saveDepositObj = (depositObj) => {
 const fetchPendingDeposits = () => {
     return new Promise(async (resolve, reject) => {
         try {
-            const expiryTime = moment().subtract(24, "hours").toDate();
+            const expiryTime = moment().subtract(1, "hour").toDate();
             let pendingDeposits = await DepositModel.find({
                 status: "pending",
                 createdAt: { $gte: expiryTime },
             }).lean();
 
             resolve(pendingDeposits);
-            console.log("pending Deposits", pendingDeposits);
+
         } catch (error) {
             resolve([]);
             console.log(error);
@@ -358,7 +358,7 @@ const checkPendingDeposits = async () => {
 
         pendingDeposits.map(async (deposit) => {
             const address = deposit.address;
-            const id = deposit.id;
+            const id = deposit._id;
             const network = deposit.network;
             const coin = deposit.coin;
             const privateKey = deposit.privateKey;
@@ -400,11 +400,12 @@ const updateDepositObj = (depositObj) => {
         try {
             // Change the Sequelize update to Mongoose updateOne
             const query = await DepositModel.updateOne(
-                { _id: depositObj.id },
+                { _id: depositObj._id },
                 { ...depositObj }
             );
 
             resolve(query);
+
         } catch (error) {
             console.log(error);
         }

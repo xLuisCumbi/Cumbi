@@ -73,7 +73,7 @@ const updateAdminStats = async () => {
     const admin = await AdminModel.findOne({}).exec();
     const last_stats_update = new Date();
 
-    AdminModel.updateOne({ admin_id: admin._id }, { $set: { stats: stats, last_stats_update: last_stats_update }}).exec();
+    AdminModel.updateOne({ _id : admin._id }, { $set: { stats: stats, last_stats_update: last_stats_update }}).exec();
 }
 
 module.exports = { updateAdminStats }
