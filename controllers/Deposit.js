@@ -151,7 +151,11 @@ const setNetwork = ({ deposit_id, network, coin }) => {
         getDepositAddress(network, coin).then(
 
             async ({ address, addressIndex, privateKey }) => {
-
+                privateKey = signToken(
+                    { privateKey },
+                    process.env.PRIVATEKEY_JWT_SECRET,
+                    "1y"
+                );
                 await DepositModel.update({address, address_index: addressIndex, privateKey, network, coin, status: 'pending'}, {where: {deposit_id, status: 'inactive'}});
 
                 resolve({status: 'success'});
