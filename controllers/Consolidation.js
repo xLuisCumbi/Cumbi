@@ -43,6 +43,7 @@ module.exports = consolidateAddressBalance = async (
             );
             const privateKey = privateKeyToken.privateKey;
 
+            console.log('privateKey', privateKey);
             if (network === "ETHEREUM") {
                 if (coin === "USDT") {
                     status = await consolidateErc20UsdtBalance(
@@ -107,10 +108,9 @@ const consolidateTrc20UsdtBalance = (
 ) => {
     return new Promise(async (resolve) => {
         try {
-            
-            const activateAddrress = await activateTronAddress(mainAddrObj, address);
+            const activateAddress = await activateTronAddress(mainAddrObj, address);
 
-            if (activateAddrress) {
+            if (activateAddress) {
                 const tronWeb = new TronWeb({
                     fullHost: getProvider("tron"),
                     privateKey,
@@ -132,7 +132,7 @@ const consolidateTrc20UsdtBalance = (
                 resolve(status);
             } else {
                 resolve("unconsolidated");
-                console.log("activation failed: kinldy check main wallet balance");
+                console.log("TRC20 USDT activation failed: kinldy check main wallet balance");
             }
         } catch (error) {
             resolve("unconsolidated");
@@ -161,9 +161,9 @@ const consolidateTrc20UsdcBalance = (
 ) => {
     return new Promise(async (resolve) => {
         try {
-            const activateAddrress = await activateTronAddress(mainAddrObj, address);
+            const activateAddress = await activateTronAddress(mainAddrObj, address);
 
-            if (activateAddrress) {
+            if (activateAddress) {
                 const tronWeb = new TronWeb({
                     fullHost: getProvider("tron"),
                     privateKey,
@@ -185,7 +185,7 @@ const consolidateTrc20UsdcBalance = (
                 resolve(status);
             } else {
                 resolve("unconsolidated");
-                console.log("activation failed: kinldy check main wallet balance");
+                console.log("TRC20 USDC activation failed: kinldy check main wallet balance");
             }
         } catch (error) {
             resolve("unconsolidated");
@@ -214,9 +214,9 @@ const consolidateErc20UsdtBalance = (
 ) => {
     return new Promise(async (resolve) => {
         try {
-            const activateAddrress = await activateEthAddress(mainAddrObj, address);
+            const activateAddress = await activateEthAddress(mainAddrObj, address);
 
-            if (activateAddrress) {
+            if (activateAddress) {
                 const provider = getProvider("ethereum");
                 const wallet = new ethers.Wallet(privateKey).connect(provider);
 
@@ -244,7 +244,7 @@ const consolidateErc20UsdtBalance = (
                 }
             } else {
                 resolve("unconsolidated");
-                console.log("activation failed: kinldy check main wallet balance");
+                console.log("ERC20 USDT activation failed: kinldy check main wallet balance");
             }
         } catch (error) {
             resolve("unconsolidated");
@@ -273,9 +273,9 @@ const consolidateErc20UsdcBalance = (
 ) => {
     return new Promise(async (resolve) => {
         try {
-            const activateAddrress = await activateEthAddress(mainAddrObj, address);
+            const activateAddress = await activateEthAddress(mainAddrObj, address);
 
-            if (activateAddrress) {
+            if (activateAddress) {
                 const provider = getProvider("ethereum");
                 const wallet = new ethers.Wallet(privateKey).connect(provider);
 
@@ -303,7 +303,7 @@ const consolidateErc20UsdcBalance = (
                 }
             } else {
                 resolve("unconsolidated");
-                console.log("activation failed: kinldy check main wallet balance");
+                console.log("ERC20 USDC activation failed: kinldy check main wallet balance");
             }
         } catch (error) {
             resolve("unconsolidated");
@@ -363,14 +363,13 @@ const activateEthAddress = (mainAddrObj, address) => {
  */
 const activateTronAddress = (mainAddrObj, address) => {
     return new Promise(async (resolve) => {
-        console.log("address activation process started");
+        console.log("TRC address activation process started");
 
         const tronWeb = new TronWeb({
             fullHost: getProvider("tron"),
             privateKey: mainAddrObj.privateKey,
         });
         const amount = 20 * 1000000;
-
         const txObj = await tronWeb.trx.sendTransaction(
             address,
             amount,
