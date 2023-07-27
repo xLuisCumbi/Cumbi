@@ -110,6 +110,7 @@ const consolidateTrc20UsdtBalance = (
         try {
             const activateAddress = await activateTronAddress(mainAddrObj, address);
 
+            console.log('activateAddress', activateAddress);
             if (activateAddress) {
                 const tronWeb = new TronWeb({
                     fullHost: getProvider("tron"),
@@ -136,6 +137,8 @@ const consolidateTrc20UsdtBalance = (
             }
         } catch (error) {
             resolve("unconsolidated");
+            console.log('error', error);
+            console.log('error', error.stack)
             console.log(
                 "Error processing transaction, account inactive issue predicted: marked as unconsolidated"
             );
@@ -369,19 +372,22 @@ const activateTronAddress = (mainAddrObj, address) => {
             fullHost: getProvider("tron"),
             privateKey: mainAddrObj.privateKey,
         });
+        let balance = await tronWeb.trx.getBalance(mainAddrObj.address);
+        console.log('Balance is', balance / 1000000, 'TRX');
+
         const amount = 20 * 1000000;
         const txObj = await tronWeb.trx.sendTransaction(
             address,
             amount,
             mainAddrObj.privateKey
         );
-
         if (txObj.result === true) {
             setTimeout(() => {
                 console.log("address activation process completed");
                 resolve(true);
             }, 30000);
         } else {
+            console.log('Error message:', Buffer.from(txObj.message, 'hex').toString());
             resolve(undefined);
         }
     });
