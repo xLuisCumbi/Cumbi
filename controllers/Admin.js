@@ -268,7 +268,7 @@ const createInvoice = ({
                     description,
                     title,
                 });
-                const invoice_url = process.env.appUrl + "/invoice/" + deposit_id;
+                const invoice_url = process.env.APPURL + "/invoice/" + deposit_id;
                 const invoiceObj = {
                     status: "success",
                     invoiceObj: { ...respoonse.depositObj, invoice_url },
