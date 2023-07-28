@@ -1,0 +1,35 @@
+name: Deploy Images to GHCR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  push-store-image:
+    name: Build and push image to registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v3
+
+      - name: 'Login to GitHub Container Registry'
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: 'Build Image'
+        run: |
+          REPO_NAME=${{ github.repository }}
+          IMAGE_URL="ghcr.io/${REPO_NAME,,}:latest"
+          docker build . --tag ${IMAGE_URL}
+          docker push ${IMAGE_URL}
+  redeploy:
+    name: Redeploy
+    runs-on: self-hosted
+    needs: [push-store-image]
+    steps:
+      - name: Pull Latest Images
+        run: bash /home/ubuntu/redeploy.sh
