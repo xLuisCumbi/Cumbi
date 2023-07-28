@@ -64,6 +64,17 @@ Router.post("/update", adminAuthMiddleware, (req, res) => {
     );
 });
 
+Router.post("/consolidate-payment", adminAuthMiddleware, (req, res) => {
+    Admin.consolidatePayment(req.body).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
 /**
  * Validates an admin's JWT token.
  * Returns a response containing the admin's data if the token is valid.

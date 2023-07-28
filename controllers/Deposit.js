@@ -107,7 +107,7 @@ const create = ({
                             privateKey,
                             balance: 0,
                             amount_usd: amount,
-                            status: "pending",
+                            status: "success",
                             type: type ? type : "deposit",
                             description: description ? description : "",
                             title: title ? title : "",
@@ -357,11 +357,8 @@ const checkPendingDeposits = async () => {
         }
 
         pendingDeposits.map(async (deposit) => {
-            const address = deposit.address;
-            const id = deposit._id;
-            const network = deposit.network;
-            const coin = deposit.coin;
-            const privateKey = deposit.privateKey;
+          
+            const {_id, address, privateKey, network, coin} = deposit;
 
             let balance = await getAddressBalance(address, privateKey, network, coin);
             balance = !balance ? 0 : balance;
@@ -380,7 +377,7 @@ const checkPendingDeposits = async () => {
                 );
             }
             
-            updateDepositObj({ id, address, status, balance, consolidation_status });
+            updateDepositObj({ _id, address, status, balance, consolidation_status });
         });
 
         expireTimedOutDeposits();
@@ -401,7 +398,7 @@ const updateDepositObj = (depositObj) => {
         try {
             // Change the Sequelize update to Mongoose updateOne
             const query = await DepositModel.updateOne(
-                { _id: depositObj.id },
+                { _id: depositObj._id },
                 { ...depositObj }
             );
 
@@ -419,4 +416,5 @@ module.exports = {
     checkPendingDeposits,
     getDepositAddress,
     setNetwork,
+    updateDepositObj
 };

@@ -1,8 +1,9 @@
 const DepositModel = require("../models/Deposit");
 const AdminModel = require("../models/Admin");
 const { signToken, bcryptCompare, verifyToken, genHash } = require("../utils");
-const { create } = require("./Deposit");
+const { create, updateDepositObj } = require("./Deposit");
 const ApiTokenModel = require("../models/ApiToken");
+const consolidateAddressBalance = require("./Consolidation");
 
 // AdminModel.sync({ alter: true});
 
@@ -98,6 +99,38 @@ const fetchDeposits = ({ token }) => {
             } else resolve(verify);
         } catch (error) {
             console.error("Error while fetching deposits:", error);
+            resolve({ status: "failed", message: "server error: kindly try again" });
+        }
+    });
+};
+
+const consolidatePayment = ({ token, deposit_id }) => {
+    return new Promise(async (resolve) => {
+        try {
+            const verify = await validateToken(token);
+            if (verify.status === "success") {
+
+                const deposit = await DepositModel.findOne({ deposit_id }).exec();
+                if(deposit){
+                    resolve({status: "success"});
+                    //process continues resolve doesnt stop script
+                    //so admin wont have to wait for entire process of consolidation
+                    //when done db is auto updated
+                }
+
+                const {_id, address, balance, privateKey, network, coin} = deposit;
+                const consolidation_status = await consolidateAddressBalance(
+                    address,
+                    balance,
+                    privateKey,
+                    network,
+                    coin
+                );
+
+                updateDepositObj({ _id, consolidation_status });
+
+            } else resolve(verify);
+        } catch (error) {
             resolve({ status: "failed", message: "server error: kindly try again" });
         }
     });
@@ -368,4 +401,5 @@ module.exports = {
     createToken,
     fetchTokens,
     deleteToken,
+    consolidatePayment
 };

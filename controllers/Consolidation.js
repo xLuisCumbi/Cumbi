@@ -338,8 +338,7 @@ const activateEthAddress = (mainAddrObj, address) => {
             const tx = {
                 from: mainAddrObj.address,
                 to: address,
-                value: ethers.parseEther("0.0004"),
-                gasPrice: ethers.toBigInt(1200),
+                value: ethers.parseEther("0.0004")
             };
 
             const transactionResp = await wallet.sendTransaction(tx);
