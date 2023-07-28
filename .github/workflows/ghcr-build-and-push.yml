@@ -9,6 +9,7 @@ jobs:
   push-store-image:
     name: Build and push image to registry
     runs-on: ubuntu-latest
+    permissions: write-all
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@v3
