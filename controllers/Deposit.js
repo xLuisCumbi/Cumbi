@@ -107,7 +107,7 @@ const create = ({
                             privateKey,
                             balance: 0,
                             amount_usd: amount,
-                            status: "success",
+                            status: "pending",
                             type: type ? type : "deposit",
                             description: description ? description : "",
                             title: title ? title : "",
