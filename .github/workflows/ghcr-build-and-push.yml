@@ -33,4 +33,4 @@ jobs:
     needs: [push-store-image]
     steps:
       - name: Pull Latest Images
-        run: bash /home/ubuntu/redeploy.sh
+        run: cd /home/ubuntu && bash redeploy.sh
