@@ -41,7 +41,7 @@ Router.post("/set-network", sessionAuthMiddleware, (req, res) => {
 });
 
 Router.use("**", (req, res) => {
-    res.status(404).json({ staus: "failed", messsage: "404 not found" });
+    res.status(404).json({ status: "failed", messsage: "404 not found" });
 });
 
 module.exports = Router;

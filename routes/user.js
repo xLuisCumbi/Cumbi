@@ -1,6 +1,6 @@
 const express = require("express");
 const Router = express.Router();
-const Admin = require("../controllers/Admin");
+const User = require("../controllers/User");
 const { sendErrorMsg } = require("../utils");
 const { adminAuthMiddleware } = require("../middleware/auth");
 
@@ -9,7 +9,22 @@ const { adminAuthMiddleware } = require("../middleware/auth");
  * If successful, returns a response containing the admin's information and a JWT token.
  */
 Router.post("/login", (req, res) => {
-    Admin.login(req.body).then(
+    User.login(req.body).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+/**
+ * Handles user signup requests.
+ * If successful, returns a response containing the user's information.
+ */
+Router.post("/signup", (req, res) => {
+    User.signUp(req.body).then(
         (resp) => {
             res.json(resp);
         },
@@ -24,7 +39,7 @@ Router.post("/login", (req, res) => {
  * Returns a response containing the requested deposit data.
  */
 Router.post("/fetch-deposits", adminAuthMiddleware, (req, res) => {
-    Admin.fetchDeposits(req.body).then(
+    User.fetchDeposits(req.body).then(
         (resp) => {
             res.json(resp);
         },
@@ -39,7 +54,7 @@ Router.post("/fetch-deposits", adminAuthMiddleware, (req, res) => {
  * Returns a response containing the details of the new invoice.
  */
 Router.post("/create-invoice", adminAuthMiddleware, (req, res) => {
-    Admin.createInvoice(req.body).then(
+    User.createInvoice(req.body).then(
         (resp) => {
             res.json(resp);
         },
@@ -54,7 +69,7 @@ Router.post("/create-invoice", adminAuthMiddleware, (req, res) => {
  * Returns a response containing the updated admin data.
  */
 Router.post("/update", adminAuthMiddleware, (req, res) => {
-    Admin.update(req.body).then(
+    User.update(req.body).then(
         (resp) => {
             res.json(resp);
         },
@@ -65,7 +80,7 @@ Router.post("/update", adminAuthMiddleware, (req, res) => {
 });
 
 Router.post("/consolidate-payment", adminAuthMiddleware, (req, res) => {
-    Admin.consolidatePayment(req.body).then(
+    User.consolidatePayment(req.body).then(
         (resp) => {
             res.json(resp);
         },
@@ -80,7 +95,7 @@ Router.post("/consolidate-payment", adminAuthMiddleware, (req, res) => {
  * Returns a response containing the admin's data if the token is valid.
  */
 Router.post("/auth-token", adminAuthMiddleware, (req, res) => {
-    Admin.validateToken(req.body.token).then(
+    User.validateToken(req.body.token).then(
         (resp) => {
             delete resp["admin_id"];
             res.json(resp);
@@ -96,7 +111,7 @@ Router.post("/auth-token", adminAuthMiddleware, (req, res) => {
  * Returns a response containing the admin's statistics.
  */
 Router.post("/stats", adminAuthMiddleware, (req, res) => {
-    Admin.adminStats(req.body).then(
+    User.adminStats(req.body).then(
         (resp) => {
             res.json(resp);
         },
@@ -111,7 +126,7 @@ Router.post("/stats", adminAuthMiddleware, (req, res) => {
  * Returns a response containing the details of the new API token.
  */
 Router.post("/create-token", adminAuthMiddleware, (req, res) => {
-    Admin.createToken(req.body).then(
+    User.createToken(req.body).then(
         (resp) => {
             res.json(resp);
         },
@@ -126,7 +141,7 @@ Router.post("/create-token", adminAuthMiddleware, (req, res) => {
  * Returns a response containing the requested API token data.
  */
 Router.post("/fetch-tokens", adminAuthMiddleware, (req, res) => {
-    Admin.fetchTokens(req.body).then(
+    User.fetchTokens(req.body).then(
         (resp) => {
             res.json(resp);
         },
@@ -141,7 +156,7 @@ Router.post("/fetch-tokens", adminAuthMiddleware, (req, res) => {
  * Returns a response containing the result of the deletion operation.
  */
 Router.post("/delete-token", adminAuthMiddleware, (req, res) => {
-    Admin.deleteToken(req.body).then(
+    User.deleteToken(req.body).then(
         (resp) => {
             res.json(resp);
         },
@@ -156,7 +171,7 @@ Router.post("/delete-token", adminAuthMiddleware, (req, res) => {
  * Returns a 404 response.
  */
 Router.use("**", (req, res) => {
-    res.status(404).json({ staus: "failed", messsage: "404 not found" });
+    res.status(404).json({ status: "failed", messsage: "404 not found" });
 });
 
 module.exports = Router;

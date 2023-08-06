@@ -139,7 +139,9 @@ const create = ({
                             statusCode: err.statusCode,
                         });
                     }
-                );
+                ).catch((error)=>{
+                    reject({ status: "failed", message: "Server Error" });;
+                });;
             }
         } catch (error) {
             reject({ status: "failed", message: "Server Error" });
@@ -216,7 +218,9 @@ const setNetwork = ({ deposit_id, network, coin }) => {
             (err) => {
                 reject({ status: "failed", message: "Server Error" });
             }
-        );
+        ).catch((error)=>{
+            reject({ status: "failed", message: "Server Error" });;
+        });;;
     });
 };
 

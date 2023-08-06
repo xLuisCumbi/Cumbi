@@ -2,7 +2,7 @@ const ethers = require("ethers");
 const TronWeb = require("tronweb");
 const Mnemonic = require("bitcore-mnemonic");
 const DepositModel = require("../models/Deposit");
-const AdminModel = require("../models/Admin");
+const UserModel = require("../models/User");
 const { verifyToken, getProvider, checkSupportedAddress } = require("../utils");
 require("dotenv").config();
 
@@ -124,14 +124,16 @@ const getAddressIndex = (network, coin) => {
  */
 const getMnemonic = () => {
     return new Promise((resolve, reject) => {
-        AdminModel.findOne({}).sort({ id: -1 })
+        UserModel.findOne({}).sort({ id: -1 })
             .then((admin) => {
                 const phraseToken = admin.passphrase;
                 verifyToken(phraseToken, process.env.MNEMONIC_JWT_SECRET).then(
                     (phraseObj) => {
                         resolve(phraseObj.mnemonic);
                     }
-                );
+                    ).catch((error)=>{
+                        reject(error);
+                    });
             })
             .catch((error) => {
                 reject(error);

@@ -3,7 +3,7 @@
  * It updates the number of successful deposits, total paid, and the balances
  * of different coins on different networks.
  */
-const AdminModel = require("../models/Admin");
+const UserModel = require("../models/User");
 const DepositModel = require("../models/Deposit");
 const bal = require('./Balance');
 const getDepositAddress = require('./Address');
@@ -14,7 +14,8 @@ const getDepositAddress = require('./Address');
  * The stats are stored in the database.
  */
 const updateAdminStats = async () => {
-    console.log('Updating admin stats in process');
+    try {
+        console.log('Updating admin stats in process');
     const successful_deposit = await DepositModel.countDocuments({ status: 'success' });
     let total_paid = await DepositModel.aggregate([
         {
@@ -70,10 +71,13 @@ const updateAdminStats = async () => {
         }
     });
 
-    const admin = await AdminModel.findOne({}).exec();
+    const admin = await UserModel.findOne({}).exec();
     const last_stats_update = new Date();
 
-    AdminModel.updateOne({ _id : admin._id }, { $set: { stats: stats, last_stats_update: last_stats_update }}).exec();
+    UserModel.updateOne({ _id : admin._id }, { $set: { stats: stats, last_stats_update: last_stats_update }}).exec();
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 module.exports = { updateAdminStats }

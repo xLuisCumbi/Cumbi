@@ -3,29 +3,32 @@ require('dotenv').config({ path: './config/.env' });
 
 // Import required packages and modules
 const cronController = require('./controllers/Cron');
-const { engine }  = require('express-handlebars');
+const { engine } = require('express-handlebars');
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
-const connectDB = require('./config/db'); // Import the connectDB function
+const morgan = require('morgan');
 
 // Apply middlewares
 app.use(cors());
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static('public'));
 app.engine('handlebars', engine());
 app.set('view engine', 'handlebars');
 app.set('views', './public/views');
-app.use(session({
+app.use(morgan('dev'));
+app.use(
+  session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
-    cookie: { maxAge: 70 * 60 * 1000 }
-}));
+    cookie: { maxAge: 70 * 60 * 1000 },
+  })
+);
 
 // Define port number
 const PORT = process.env.PORT;
@@ -33,8 +36,8 @@ const PORT = process.env.PORT;
 // Import routes and database connection
 const paymentUIController = require('./controllers/PaymentUI');
 const depositRoute = require('./routes/deposit');
-const adminRoute = require('./routes/admin');
-const dbConnection = require('./config/db');
+const userRoute = require('./routes/user');
+const dbConnection = require('./config/db'); // Import the connectDB function
 
 // Connect to the database
 dbConnection();
@@ -43,17 +46,17 @@ dbConnection();
 app.get('/invoice/:depositID', paymentUIController);
 app.get('/payment/:depositID', paymentUIController);
 app.use('/api/deposit', depositRoute);
-app.use('/api/admin', adminRoute);
+app.use('/api/user', userRoute);
 app.get('*', (req, res) => {
-    res.status(404).json({message: "NOT FOUND"});
+  res.status(404).json({ message: 'NOT FOUND' });
 });
 
 // Start the cron job
 cronController.start();
 
 // Start the server
-app.listen(PORT, ()=> {
-    console.log(`Server started listening to port ${PORT} successfully`);
-    const APP_MODE = process.env.APP_MODE || 'TESTNET';
-    console.log('App is running on', APP_MODE);
+app.listen(PORT, () => {
+  console.log(`Server started listening to port ${PORT} successfully`);
+  const APP_MODE = process.env.APP_MODE || 'TESTNET';
+  console.log('App is running on', APP_MODE);
 });
