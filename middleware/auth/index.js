@@ -52,7 +52,6 @@ const apiAuthMiddleware = (req, res, next) => {
             .json({ status: "auth_failed", message: "Authentication failed" });
     }
 };
-
 const adminAuthMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -76,11 +75,8 @@ const adminAuthMiddleware = (req, res, next) => {
         if (decodedToken.type === "business_token" || decodedToken.type === "admin_token") {
             req.body.token = token;
 
-            // Determine the field to search by
-            const searchField = decodedToken.type === "business_token" ? "_id" : "admin_id";
-
             // Fetch the user from the database and attach it to the request object
-            User.findOne({ [searchField]: decodedToken[searchField === "_id" ? "id" : "admin_id"] })
+            User.findOne({ _id: decodedToken.id })
                 .then(user => {
                     if (!user) {
                         return res.status(401).json({
