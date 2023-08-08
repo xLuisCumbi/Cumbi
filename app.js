@@ -12,7 +12,8 @@ const app = express();
 const morgan = require('morgan');
 
 // Apply middlewares
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.options('*', cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());

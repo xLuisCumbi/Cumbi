@@ -15,7 +15,7 @@ const getDepositAddress = require('./Address');
  */
 const updateAdminStats = async () => {
     try {
-        console.log('Updating admin stats in process');
+    console.log('Updating admin stats in process');
     const successful_deposit = await DepositModel.countDocuments({ status: 'success' });
     let total_paid = await DepositModel.aggregate([
         {

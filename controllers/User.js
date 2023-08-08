@@ -12,25 +12,43 @@ const bcrypt = require('bcryptjs');
 
 /**
  * Validates a JWT token and returns the admin ID if the token is valid.
- * @param {string} token - The JWT token to validate.
- * @return {Promise<Object>} - The validation result.
+ * @async
+ * @function validateToken
+ * @param {string} token - The token to be validated.
+ * @returns {Promise<Object>} The result of the validation.
+ * @throws Will throw an error if the token verification fails.
+
  */
 const validateToken = async (token) => {
   try {
-    const adminObj = await verifyToken(token, process.env.JWT_SECRET);
-    const admin_id = adminObj.admin_id;
+    const decodedObj = await verifyToken(token, process.env.JWT_SECRET);
+
+    // If it's a business_token, handle its validation
+    if (decodedObj.type === "business_token") {
+      // Here, you can add any specific logic for business tokens.
+      // For now, I'm just returning success if it's a valid business_token.
+      return { status: 'success', type: 'business' };
+    }
+
+    // If it's an admin_token, proceed with the current logic
+    const admin_id = decodedObj.admin_id;
     const query = await UserModel.findOne({ admin_id, token });
+
+    console.log('validateToken token', token);
+    console.log('query', query);
+    console.log('decodedObj', decodedObj);
 
     if (query) {
       return { status: 'success', admin_id };
     } else {
-      return { status: 'auth_failed', message: 'invalid token' };
+      return { status: 'auth_failed', message: 'invalid token query' };
     }
   } catch (e) {
     console.error('Error during token validation:', e);
-    return { status: 'auth_failed', message: 'invalid token' };
+    return { status: 'auth_failed', message: 'invalid token triggered catch' };
   }
 };
+
 
 /**
  * Handles admin login. Verifies email and password, and if correct, returns a JWT token.
@@ -44,6 +62,8 @@ const login = ({ email, password }) => {
     try {
       // ToDo no valida password?
       const query = await UserModel.findOne({ email });
+      console.log('email', email);
+      console.log('query', query);
       if (query) {
         const checkPassword = bcryptCompare(password, query.password);
 
@@ -58,9 +78,10 @@ const login = ({ email, password }) => {
             await UserModel.findOneAndUpdate({ admin_id }, { token });
             resolve({
               status: 'success',
-              user: { authToken: token, email, username: query.username },
+              user: { authToken: token, email, username: query.username, role: query.role },
             });
           } else {
+
             const token = signToken(
               { id: query._id, type: 'business_token' },
               process.env.JWT_SECRET,
@@ -369,44 +390,60 @@ const adminStats = ({ token }) => {
           return;
         }
 
-        const s = JSON.parse(query.stats);
+        let s;
+        if (query.stats) {
+          try {
+            s = JSON.parse(query.stats);
+          } catch (error) {
+            console.error('Error parsing stats:', error);
+            resolve({ status: 'failed', message: 'Error parsing stats' });
+            return;
+          }
+        } else {
+          // Default values for stats
+          s = {
+            eth_balance: { value: 0 },
+            trx_balance: { value: 0 },
+            eth_usdt_balance: { value: 0 },
+            trx_usdt_balance: { value: 0 },
+            eth_usdc_balance: { value: 0 },
+            trx_usdc_balance: { value: 0 },
+            successful_deposits: { value: 0 },
+            total_paid: { value: 0 }
+          };
+        }
+
+        console.log('s', s);
         const updated = query.last_stats_update;
         const stats = {
           eth_balance: {
             value: s.eth_balance.value,
             updated,
           },
-
           trx_balance: {
             value: s.trx_balance.value,
             updated,
           },
-
           eth_usdt_balance: {
             value: s.eth_usdt_balance.value,
             updated,
           },
-
           trx_usdt_balance: {
             value: s.trx_usdt_balance.value,
             updated,
           },
-
           eth_usdc_balance: {
             value: s.eth_usdc_balance.value,
             updated,
           },
-
           trx_usdc_balance: {
             value: s.trx_usdc_balance.value,
             updated,
           },
-
           successful_deposits: {
             value: s.successful_deposits.value,
             updated,
           },
-
           total_paid: {
             value: s.total_paid.value,
             updated,
@@ -418,7 +455,8 @@ const adminStats = ({ token }) => {
         resolve(verify);
       }
     } catch (error) {
-      console.log('error', error.stack);
+      console.log('error stats', error);
+      console.log('error stats', error.stack);
       resolve({ status: 'failed', message: 'server error: kindly try again' });
     }
   });
