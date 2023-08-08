@@ -31,15 +31,11 @@ const validateToken = async (token) => {
     }
 
     // If it's an admin_token, proceed with the current logic
-    const admin_id = decodedObj.admin_id;
-    const query = await UserModel.findOne({ admin_id, token });
-
-    console.log('validateToken token', token);
-    console.log('query', query);
-    console.log('decodedObj', decodedObj);
+    const id = decodedObj.id; // Use id instead of admin_id
+    const query = await UserModel.findOne({ _id: id, token });
 
     if (query) {
-      return { status: 'success', admin_id };
+      return { status: 'success', id };
     } else {
       return { status: 'auth_failed', message: 'invalid token query' };
     }
@@ -60,38 +56,21 @@ const validateToken = async (token) => {
 const login = ({ email, password }) => {
   return new Promise(async (resolve) => {
     try {
-      // ToDo no valida password?
       const query = await UserModel.findOne({ email });
-      console.log('email', email);
-      console.log('query', query);
       if (query) {
         const checkPassword = bcryptCompare(password, query.password);
 
         if (checkPassword) {
-          if (query.admin_id) {
-            const admin_id = query.admin_id;
-            const token = signToken(
-              { admin_id, type: 'admin_token' },
-              process.env.JWT_SECRET,
-              '5d'
-            );
-            await UserModel.findOneAndUpdate({ admin_id }, { token });
-            resolve({
-              status: 'success',
-              user: { authToken: token, email, username: query.username, role: query.role },
-            });
-          } else {
-
-            const token = signToken(
-              { id: query._id, type: 'business_token' },
-              process.env.JWT_SECRET,
-              '5d'
-            );
-            resolve({
-              status: 'success',
-              user: { authToken: token, email, username: query.username },
-            });
-          }
+          const token = signToken(
+            { id: query._id, type: 'admin_token' }, // Use _id instead of admin_id
+            process.env.JWT_SECRET,
+            '5d'
+          );
+          await UserModel.findOneAndUpdate({ _id: query._id }, { token }); // Use _id instead of admin_id
+          resolve({
+            status: 'success',
+            user: { id: query._id, authToken: token, email, username: query.username, role: query.role },
+          });
         } else {
           resolve({
             status: 'auth_failed',
@@ -106,7 +85,6 @@ const login = ({ email, password }) => {
       }
     } catch (e) {
       console.error('Error during login:', e);
-
       resolve({ status: 'auth_failed', message: 'server error' });
     }
   });
@@ -308,7 +286,7 @@ const update = ({ passphrase, email, username, password, token }) => {
         if (username) adminObj.username = username;
         adminObj.updatedAt = new Date();
         await UserModel.updateOne(
-          { admin_id: verify.admin_id },
+          { _id: verify._id }, // Use _id instead of admin_id
           adminObj
         ).exec();
 
@@ -339,6 +317,7 @@ const createInvoice = ({
   network,
   coin,
   token,
+  user
 }) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -346,7 +325,15 @@ const createInvoice = ({
 
       if (verify.status == 'success') {
         const deposit_id = Date.now();
-        const respoonse = await create({
+
+        // Fetch the user from the database
+        const userObj = await UserModel.findById(user);
+        if (!userObj) {
+          reject({ message: 'User not found' });
+          return;
+        }
+
+        const response = await create({
           amount,
           deposit_id,
           network,
@@ -354,17 +341,21 @@ const createInvoice = ({
           type: 'invoice',
           description,
           title,
+          user: userObj // Use the fetched user's _id
         });
+
         const invoice_url = process.env.APPURL + '/invoice/' + deposit_id;
         const invoiceObj = {
           status: 'success',
-          invoiceObj: { ...respoonse.depositObj, invoice_url },
+          invoiceObj: { ...response.depositObj, invoice_url },
         };
         resolve(invoiceObj);
       } else {
         resolve(verify);
       }
     } catch (error) {
+      console.log('error create invoice ', error);
+      console.error('Error Stack Trace: ', error.stack); // print the error stack trace
       reject({ message: 'error creating invoice' });
     }
   });
@@ -380,9 +371,10 @@ const adminStats = ({ token }) => {
   return new Promise(async (resolve) => {
     try {
       const verify = await validateToken(token);
+      console.log('verify stats id', verify);
       if (verify.status == 'success') {
         const query = await UserModel.findOne({
-          admin_id: verify.admin_id,
+          _id: verify.id, // Use _id instead of admin_id
         });
 
         if (!query || query.stats === null) {
@@ -413,7 +405,6 @@ const adminStats = ({ token }) => {
           };
         }
 
-        console.log('s', s);
         const updated = query.last_stats_update;
         const stats = {
           eth_balance: {

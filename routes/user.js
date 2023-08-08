@@ -59,6 +59,7 @@ Router.post("/create-invoice", adminAuthMiddleware, (req, res) => {
             res.json(resp);
         },
         (err) => {
+            console.log('err route create invoice', err);
             sendErrorMsg(res, err);
         }
     );

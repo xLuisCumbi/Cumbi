@@ -4,10 +4,6 @@ const mongoose = require('mongoose');
 // Define the Admin schema
 const UserSchema = new mongoose.Schema(
   {
-    admin_id: {
-      type: String,
-      required: false,
-    },
     business: {
       type: String,
       required: true,

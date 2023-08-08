@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const ApiTokenModel = require("../../models/ApiToken");
+const User = require('../../models/User'); // adjust the path to match your project structure
 
 const apiAuthMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -71,20 +72,40 @@ const adminAuthMiddleware = (req, res, next) => {
     try {
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-        // If it's a business_token, continue without further checks
-        if (decodedToken.type === "business_token") {
+        // If it's a business_token or admin_token, fetch the user and attach it to the request
+        if (decodedToken.type === "business_token" || decodedToken.type === "admin_token") {
             req.body.token = token;
-            return next();
-        } else if (decodedToken.type === "admin_token") {
-            req.body.token = token;
-            next();
+
+            // Determine the field to search by
+            const searchField = decodedToken.type === "business_token" ? "_id" : "admin_id";
+
+            // Fetch the user from the database and attach it to the request object
+            User.findOne({ [searchField]: decodedToken[searchField === "_id" ? "id" : "admin_id"] })
+                .then(user => {
+                    if (!user) {
+                        return res.status(401).json({
+                            status: "auth_failed",
+                            message: "Authentication Failed: User not found",
+                        });
+                    }
+
+                    req.user = user;
+                    next();
+                })
+                .catch(err => {
+                    // Handle error
+                    console.error(err);
+                    res.status(500).json({ status: "error", message: "Internal server error" });
+                });
         } else {
             return res.status(401).json({
                 status: "auth_failed",
-                message: "Authentication Failed: Invalid API KEY (no admin_token in admin middleware)",
+                message: "Authentication Failed: Invalid API KEY (no admin_token or business_token in middleware)",
             });
         }
     } catch (error) {
+        console.log('admin middleware error', error);
+        console.log('error.stack', error.stack);
         return res
             .status(401)
             .json({ status: "auth_failed", message: "Authentication failed - triggered an error" });

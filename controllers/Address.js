@@ -51,7 +51,8 @@ module.exports = getDepositAddress = (network, coin, index) => {
 
             resolve({ address, addressIndex, privateKey });
         } catch (error) {
-            console.log(error);
+            console.log('Error in getDepositAddress:', error);
+            console.log('Error stack in getDepositAddress:', error.stack);
             reject({ status: "failed", message: "Error generating address" });
         }
     });

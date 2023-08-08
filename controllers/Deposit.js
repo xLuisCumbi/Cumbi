@@ -8,7 +8,6 @@ const { getAddressBalance } = require("./Balance");
 const consolidateAddressBalance = require("./Consolidation");
 const getDepositAddress = require("./Address");
 const moment = require("moment");
-const Sequelize = require("sequelize");
 
 // DepositModel.sync({ alter: true });
 
@@ -37,6 +36,7 @@ const create = ({
     description,
     title,
     wp_order_received_url,
+    user
 }) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -53,6 +53,7 @@ const create = ({
                     deposit_id,
                     network,
                     coin,
+                    user,
                 });
                 if (!validate) return;
             }
@@ -72,6 +73,7 @@ const create = ({
                     type: "deposit",
                     amount,
                     wp_order_received_url,
+                    user
                 };
 
                 const save = await saveDepositObj(depositObj);
@@ -115,6 +117,7 @@ const create = ({
                             address_index: addressIndex,
                             coin: coin.toUpperCase(),
                             network: network.toUpperCase(),
+                            user: user,
                         };
 
                         const save = await saveDepositObj(depositObj);
@@ -139,7 +142,7 @@ const create = ({
                             statusCode: err.statusCode,
                         });
                     }
-                ).catch((error)=>{
+                ).catch((error) => {
                     reject({ status: "failed", message: "Server Error" });;
                 });;
             }
@@ -218,7 +221,7 @@ const setNetwork = ({ deposit_id, network, coin }) => {
             (err) => {
                 reject({ status: "failed", message: "Server Error" });
             }
-        ).catch((error)=>{
+        ).catch((error) => {
             reject({ status: "failed", message: "Server Error" });;
         });;;
     });
@@ -265,7 +268,7 @@ const status = ({ deposit_id }) => {
                 }
             })
             .catch(err => {
-                console.log('error:', err.stack);
+                console.log('error in status:', err.stack);
                 resolve({
                     status: "failed",
                     message: "Server Error: kindly try again later",
@@ -361,14 +364,14 @@ const checkPendingDeposits = async () => {
         }
 
         pendingDeposits.map(async (deposit) => {
-          
-            const {_id, address, privateKey, network, coin} = deposit;
+
+            const { _id, address, privateKey, network, coin } = deposit;
 
             let balance = await getAddressBalance(address, privateKey, network, coin);
             balance = !balance ? 0 : balance;
             let status = "pending";
             consolidation_status = "unconsolidated";
-            
+
             if (balance >= deposit.amount) {
                 status = "success";
                 console.log("successful deposit detected");
@@ -380,7 +383,7 @@ const checkPendingDeposits = async () => {
                     coin
                 );
             }
-            
+
             updateDepositObj({ _id, address, status, balance, consolidation_status });
         });
 

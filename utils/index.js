@@ -4,7 +4,6 @@ const ethers = require("ethers");
 require("dotenv").config();
 
 const sendErrorMsg = (res, err) => {
-    console.log('res', res);
     console.log('err', err);
     console.log('Error Stack Trace:', err.stack);
 
