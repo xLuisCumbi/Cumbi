@@ -2,7 +2,7 @@
  * This file is a module that exports a function called start. It sets up cron jobs that run every 5 minutes to perform certain tasks.
  */
 const { checkPendingDeposits } = require("./Deposit");
-const { updateAdminStats } = require("./stats");
+const { updateAdminStats } = require("./Stats");
 const cron = require("node-cron");
 
 /**

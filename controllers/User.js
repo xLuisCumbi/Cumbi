@@ -124,9 +124,11 @@ const fetchDeposits = ({ token, user }) => {
       const verify = await validateToken(token);
       if (verify.status === 'success') {
         let query = {};
+
         if (user.role !== 'admin') {
-          query.user = user._id;
+          query.user = user.id;
         }
+
         const deposits = await DepositModel.find(query, { privateKey: 0, address_index: 0 })
           .limit(250)
           .lean();
