@@ -118,15 +118,16 @@ const signUp = (userData) => {
  * @param {string} params.token - The JWT token for authentication.
  * @return {Promise<Object>} - The fetch result.
  */
-const fetchDeposits = ({ token }) => {
+const fetchDeposits = ({ token, user }) => {
   return new Promise(async (resolve) => {
     try {
       const verify = await validateToken(token);
       if (verify.status === 'success') {
-        const deposits = await DepositModel.find(
-          {},
-          { privateKey: 0, address_index: 0 }
-        )
+        let query = {};
+        if (user.role !== 'admin') {
+          query.user = user._id;
+        }
+        const deposits = await DepositModel.find(query, { privateKey: 0, address_index: 0 })
           .limit(250)
           .lean();
         resolve({ status: 'success', deposits });
