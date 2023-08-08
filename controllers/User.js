@@ -176,9 +176,10 @@ const consolidatePayment = ({ token, deposit_id }) => {
  * @param {Object} params - The parameters.
  * @param {string} params.token - The JWT token for authentication.
  * @param {string} params.token_name - The name for the new API token.
+ * @param {string} params.user - The id of the user.
  * @return {Promise<Object>} - The creation result.
  */
-const createToken = ({ token, token_name }) => {
+const createToken = ({ token, token_name, user }) => {
   return new Promise(async (resolve) => {
     try {
       const verify = await validateToken(token);
@@ -194,6 +195,7 @@ const createToken = ({ token, token_name }) => {
         const createToken = await ApiTokenModel.create({
           token_name,
           token,
+          user, // The user is associated with the token here
           createdAt,
         });
 

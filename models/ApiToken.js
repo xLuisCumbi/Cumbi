@@ -1,8 +1,7 @@
-// Import Mongoose
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-// Define the ApiToken schema
-const ApiTokenSchema = new mongoose.Schema({
+const ApiTokenSchema = new Schema({
     token_name: {
         type: String,
         required: true,
@@ -11,9 +10,13 @@ const ApiTokenSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
 }, {
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
 });
 
-// Create the model from the schema and export it
 module.exports = mongoose.model('ApiToken', ApiTokenSchema);

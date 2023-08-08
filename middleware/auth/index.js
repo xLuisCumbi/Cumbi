@@ -21,10 +21,16 @@ const apiAuthMiddleware = (req, res, next) => {
 
     try {
         const decodedToken = jwt.verify(token, process.env.API_JWT_SECRET);
+        console.log('decodedToken', decodedToken);
         if (decodedToken.type === "api_token") {
             ApiTokenModel.findOne({ token }).then(
                 (tokenObj) => {
                     if (tokenObj) {
+                        // Here you can access the user associated with the API token
+                        const user = tokenObj.user;
+                        // You can attach the user to the request for use in other middleware or the route handler
+                        req.user = user;
+                        console.log('user', user);
                         next();
                     } else {
                         return res.status(401).json({
@@ -49,9 +55,11 @@ const apiAuthMiddleware = (req, res, next) => {
     } catch (error) {
         return res
             .status(401)
-            .json({ status: "auth_failed", message: "Authentication failed" });
+            .json({ status: "auth_failed", message: "Authentication failed apiAuthMiddleware" });
     }
 };
+
+
 const adminAuthMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
