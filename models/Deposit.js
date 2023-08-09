@@ -64,6 +64,10 @@ const DepositSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    url: {
+        type: String,
+        default: null
+    },
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

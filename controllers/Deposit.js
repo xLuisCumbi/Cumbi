@@ -253,7 +253,6 @@ const status = ({ deposit_id }) => {
                             description: d.description,
                             title: d.title,
                             type: d.type,
-                            coin_price: 1,
                             createdAt: d.createdAt,
                             wp_order_received_url: d.wp_order_received_url,
                             coin: d.coin == null ? d.coin : d.coin.toUpperCase(),

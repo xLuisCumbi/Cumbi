@@ -43,7 +43,6 @@ module.exports = consolidateAddressBalance = async (
             );
             const privateKey = privateKeyToken.privateKey;
 
-            console.log('privateKey', privateKey);
             if (network === "ETHEREUM") {
                 if (coin === "USDT") {
                     status = await consolidateErc20UsdtBalance(
@@ -133,7 +132,7 @@ const consolidateTrc20UsdtBalance = (
                 resolve(status);
             } else {
                 resolve("unconsolidated");
-                console.log("TRC20 USDT activation failed: kinldy check main wallet balance");
+                console.log("TRC20 USDT activation failed: kindly check main wallet balance");
             }
         } catch (error) {
             resolve("unconsolidated");

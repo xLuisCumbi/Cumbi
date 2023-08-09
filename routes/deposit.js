@@ -9,7 +9,6 @@ const {
 
 Router.post("/create", apiAuthMiddleware, (req, res) => {
 
-    console.log('req.user', req.user);
     const depositData = {
         ...req.body,
         user: req.user._id, // add the user's ID to the deposit data

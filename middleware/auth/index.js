@@ -21,7 +21,6 @@ const apiAuthMiddleware = (req, res, next) => {
 
     try {
         const decodedToken = jwt.verify(token, process.env.API_JWT_SECRET);
-        console.log('decodedToken', decodedToken);
         if (decodedToken.type === "api_token") {
             ApiTokenModel.findOne({ token }).then(
                 (tokenObj) => {
@@ -30,7 +29,6 @@ const apiAuthMiddleware = (req, res, next) => {
                         const user = tokenObj.user;
                         // You can attach the user to the request for use in other middleware or the route handler
                         req.user = user;
-                        console.log('user', user);
                         next();
                     } else {
                         return res.status(401).json({
@@ -117,11 +115,6 @@ const adminAuthMiddleware = (req, res, next) => {
 };
 
 const sessionAuthMiddleware = (req, res, next) => {
-    console.log(
-        "back sessionAuthMiddleware req.headers.authorization",
-        req.headers.authorization
-    );
-
     if (req.headers.authorization) {
         return apiAuthMiddleware(req, res, next);
     } else {
