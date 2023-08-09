@@ -128,12 +128,8 @@ const getMnemonic = () => {
         UserModel.findOne({}).sort({ id: -1 })
             .then((admin) => {
                 const phraseToken = admin.passphrase;
-                console.log('admin', admin);
-                console.log('phraseToken', phraseToken);
-                console.log('process.env.MNEMONIC_JWT_SECRET', process.env.MNEMONIC_JWT_SECRET);
                 verifyToken(phraseToken, process.env.MNEMONIC_JWT_SECRET).then(
                     (phraseObj) => {
-                        console.log('phraseObj.mnemonic', phraseObj.mnemonic);
                         resolve(phraseObj.mnemonic);
                     }
                     ).catch((error)=>{
