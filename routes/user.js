@@ -23,7 +23,7 @@ Router.post("/login", (req, res) => {
  * Handles user signup requests.
  * If successful, returns a response containing the user's information.
  */
-Router.post("/signup", (req, res) => {
+Router.post("/signup", adminAuthMiddleware, (req, res) => {
     User.signUp(req.body).then(
         (resp) => {
             res.json(resp);
