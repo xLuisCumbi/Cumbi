@@ -65,7 +65,6 @@ const create = ({
             } else if (type === "wp-payment") {
 
                 const depositObj = {
-                    coin_price: 1,
                     deposit_id,
                     balance: 0,
                     amount_usd: amount,
