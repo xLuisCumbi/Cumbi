@@ -12,8 +12,8 @@ const app = express();
 const morgan = require('morgan');
 
 // Apply middlewares
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
-app.options('*', cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({ origin: 'https://dash.cumbi.co.', credentials: true }));
+app.options('*', cors({ origin: 'https://dash.cumbi.co', credentials: true }));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
