@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema(
     business: {
       type: String,
       required: true,
-      unique: true,
+      unique: false,
     },
     domain: {
       type: String,
@@ -51,5 +51,6 @@ const UserSchema = new mongoose.Schema(
   }
 );
 
+
 // Create the model from the schema and export it
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model('User', UserSchema)

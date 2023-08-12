@@ -69,7 +69,7 @@ const login = ({ email, password }) => {
           await UserModel.findOneAndUpdate({ _id: query._id }, { token }); // Use _id instead of admin_id
           resolve({
             status: 'success',
-            user: { id: query._id, authToken: token, email, username: query.username, role: query.role },
+            user: { id: query._id, authToken: token, email, username: query.username, role: query.role, business: query.business },
           });
         } else {
           resolve({
@@ -469,11 +469,11 @@ const getByBusiness = ({ id }) => {
 
   return new Promise(async (resolve) => {
     try {
-      console.log("test:" + id)
-      const query = await UserModel.findById(id)
+      const { business } = await UserModel.findById(id)
+      const users = await UserModel.find({ business: business })
       resolve({
         status: 'success',
-        users: query,
+        users,
       });
     } catch (e) {
       console.error('Error during login:', e);

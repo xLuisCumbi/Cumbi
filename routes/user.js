@@ -6,11 +6,10 @@ const { adminAuthMiddleware } = require("../middleware/auth");
 
 
 /**
- * TODO obtener de un api y revisar donde hacer el llamado
+ * TODO revisar como hacerlo con GET
  */
-Router.get("/business", (req, res) => {
-    console.log("test2:" + req.params)
-    User.getByBusiness(req.params).then(
+Router.post("/business", (req, res) => {
+    User.getByBusiness(req.body).then(
         (resp) => {
             res.json(resp);
         },
