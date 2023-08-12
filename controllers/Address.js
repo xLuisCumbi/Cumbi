@@ -28,6 +28,7 @@ module.exports = getDepositAddress = (network, coin, index) => {
             const mnemonic = await getMnemonic();
             const addressIndex =
                 index === undefined ? await getAddressIndex(network, coin) : index;
+            console.log(mnemonic)
             const code = new Mnemonic(mnemonic);
             const hdPrivateKey = code.toHDPrivateKey();
             let derivationPath;
@@ -125,6 +126,7 @@ const getAddressIndex = (network, coin) => {
  */
 const getMnemonic = () => {
     return new Promise((resolve, reject) => {
+        //TODO Guardar en otro lado el passphrase, en este momento obtiene el primer usuario(luis@cumbi.co)
         UserModel.findOne({}).sort({ id: -1 })
             .then((admin) => {
                 const phraseToken = admin.passphrase;
@@ -132,9 +134,9 @@ const getMnemonic = () => {
                     (phraseObj) => {
                         resolve(phraseObj.mnemonic);
                     }
-                    ).catch((error)=>{
-                        reject(error);
-                    });
+                ).catch((error) => {
+                    reject(error);
+                });
             })
             .catch((error) => {
                 reject(error);

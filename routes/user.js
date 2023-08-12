@@ -4,6 +4,29 @@ const User = require("../controllers/User");
 const { sendErrorMsg } = require("../utils");
 const { adminAuthMiddleware } = require("../middleware/auth");
 
+
+/**
+ * TODO obtener de un api y revisar donde hacer el llamado
+ */
+Router.get("/business", (req, res) => {
+    console.log("test2:" + req.params)
+    User.getByBusiness(req.params).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+/**
+ * TODO obtener de un api y revisar donde hacer el llamado
+ */
+Router.get("/trm", (req, res) => {
+    res.status(200).json({ status: "success", value: 3955.23 });
+});
+
 /**
  * Handles admin login requests.
  * If successful, returns a response containing the admin's information and a JWT token.
@@ -172,7 +195,7 @@ Router.post("/delete-token", adminAuthMiddleware, (req, res) => {
  * Returns a 404 response.
  */
 Router.use("**", (req, res) => {
-    res.status(404).json({ status: "failed", messsage: "404 not found" });
+    res.status(404).json({ status: "failed", message: "404 not found" });
 });
 
 module.exports = Router;

@@ -280,18 +280,19 @@ const update = ({ passphrase, email, username, password, token }) => {
 
       if (verify.status == 'success') {
         adminObj = {};
-        if (passphrase)
+        if (passphrase) {
           adminObj.passphrase = signToken(
             { mnemonic: passphrase, type: 'mnemonic-token' },
             process.env.MNEMONIC_JWT_SECRET,
             '100y'
           );
+        }
         if (password) adminObj.password = await genHash(password);
         if (email) adminObj.email = email;
         if (username) adminObj.username = username;
         adminObj.updatedAt = new Date();
         await UserModel.updateOne(
-          { _id: verify._id }, // Use _id instead of admin_id
+          { _id: verify.id }, // Use _id instead of admin_id
           adminObj
         ).exec();
 
@@ -327,6 +328,11 @@ const createInvoice = ({
   return new Promise(async (resolve, reject) => {
     try {
       const verify = await validateToken(token);
+
+      if (amount / trm < 100) {
+        reject({ message: 'error creating invoice' });
+        return
+      }
 
       if (verify.status == 'success') {
         const deposit_id = Date.now();
@@ -458,6 +464,61 @@ const adminStats = ({ token }) => {
   });
 };
 
+
+const getByBusiness = ({ id }) => {
+
+  return new Promise(async (resolve) => {
+    try {
+      console.log("test:" + id)
+      const query = await UserModel.findById(id)
+      resolve({
+        status: 'success',
+        users: query,
+      });
+    } catch (e) {
+      console.error('Error during login:', e);
+      resolve({ status: 'auth_failed', message: 'server error' });
+    }
+    // const id = req.params.id_user;
+
+  })
+
+  return new Promise(async (resolve) => {
+    try {
+      const query = await UserModel.findOne({ email });
+      if (query) {
+        const checkPassword = bcryptCompare(password, query.password);
+
+        if (checkPassword) {
+          const token = signToken(
+            { id: query._id, type: 'admin_token' }, // Use _id instead of admin_id
+            process.env.JWT_SECRET,
+            '5d'
+          );
+          await UserModel.findOneAndUpdate({ _id: query._id }, { token }); // Use _id instead of admin_id
+          resolve({
+            status: 'success',
+            user: { id: query._id, authToken: token, email, username: query.username, role: query.role },
+          });
+        } else {
+          resolve({
+            status: 'auth_failed',
+            message: 'Incorrect username or password',
+          });
+        }
+      } else {
+        resolve({
+          status: 'auth_failed',
+          message: 'Incorrect username or password',
+        });
+      }
+    } catch (e) {
+      console.error('Error during login:', e);
+      resolve({ status: 'auth_failed', message: 'server error' });
+    }
+  });
+};
+
 module.exports = {
   fetchDeposits,
   login,
@@ -470,4 +531,5 @@ module.exports = {
   deleteToken,
   consolidatePayment,
   signUp,
+  getByBusiness,
 };
