@@ -90,7 +90,6 @@ const adminAuthMiddleware = (req, res, next) => {
                             message: "Authentication Failed: User not found",
                         });
                     }
-
                     req.user = user;
                     next();
                 })

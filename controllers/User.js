@@ -5,6 +5,7 @@ const { create, updateDepositObj } = require('./Deposit');
 const ApiTokenModel = require('../models/ApiToken');
 const consolidateAddressBalance = require('./Consolidation');
 const bcrypt = require('bcryptjs');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 // UserModel.sync({ alter: true});
 
@@ -35,7 +36,7 @@ const validateToken = async (token) => {
     const query = await UserModel.findOne({ _id: id, token });
 
     if (query) {
-      return { status: 'success', id };
+      return { status: 'success', id, role: query.role };
     } else {
       return { status: 'auth_failed', message: 'invalid token query' };
     }
@@ -225,8 +226,9 @@ const fetchTokens = ({ token }) => {
     try {
       const verify = await validateToken(token);
 
-      if (verify.status === 'success') {
-        const tokens = await ApiTokenModel.find({}).limit(200).lean();
+      if (verify.status === 'success' && verify.role === 'admin') {
+        console.log(verify)
+        const tokens = await ApiTokenModel.find({ user: new ObjectId(verify.id) }).limit(200).lean();
         resolve({ status: 'success', tokens });
       } else {
         resolve(verify);
