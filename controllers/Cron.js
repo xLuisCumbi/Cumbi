@@ -10,7 +10,8 @@ const cron = require("node-cron");
  * The cron jobs run every 5 minutes and call the runCronJobs function.
  */
 const start = () => {
-    cron.schedule("*/2 * * * *", () => {
+    //cron.schedule("*/2 * * * *", () => {
+    cron.schedule("0 0 * * *", () => {
         runCronJobs();
     });
 };
