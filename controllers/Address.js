@@ -129,7 +129,9 @@ const getMnemonic = () => {
         //TODO Guardar en otro lado el passphrase, en este momento obtiene el primer usuario(luis@cumbi.co)
         UserModel.findOne({}).sort({ id: -1 })
             .then((admin) => {
-                const phraseToken = admin.passphrase;
+                // const phraseToken = admin.passphrase;
+                // const phraseToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtbmVtb25pYyI6IjEgMiAzIDQgNSA2IDcgOCA5IDEwIDExIDEyIiwidHlwZSI6Im1uZW1vbmljLXRva2VuIiwiaWF0IjoxNjkxNzcxNjczLCJleHAiOjQ4NDc1MzE2NzN9.T-e-bA6JAa60VEsUtTLEj8huuuKUsL_3o31GXOhCh04";
+                const phraseToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtbmVtb25pYyI6Imhvb2Qgc25vdyBncmF2aXR5IGZhbHNlIGFkZGljdCBjb2xvciBlbGV2YXRvciBicmljayBuZWVkIGZydWl0IGJsdXNoIGJlZWYiLCJ0eXBlIjoibW5lbW9uaWMtdG9rZW4iLCJpYXQiOjE2OTIyODM2NzgsImV4cCI6NDg0ODA0MzY3OH0.v3Puo3MxvY9uoZGOfiDS0tyzBPJFYJ_Zn-PbeUAneYQ"
                 verifyToken(phraseToken, process.env.MNEMONIC_JWT_SECRET).then(
                     (phraseObj) => {
                         resolve(phraseObj.mnemonic);

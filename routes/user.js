@@ -24,20 +24,20 @@ Router.post("/business", (req, res) => {
  */
 Router.get("/trm", (req, res) => {
 
-    const API_KEY_TRM = "8f90c2331c91553053ceb36af0c3ca1e"
-    const endpoint = `http://api.exchangeratesapi.io/v1/latest?access_key=${API_KEY_TRM}&symbols=USD,COP`
-    fetch(endpoint)
-        .then(response => response.json())
-        .then(data => {
-            const { USD, COP } = data.rates;
-            console.log(`1 USD = ${COP / USD} COP`);
-            return res.status(200).json({ status: "success", value: (COP / USD).toFixed(2) })
+    // const API_KEY_TRM = "8f90c2331c91553053ceb36af0c3ca1e"
+    // const endpoint = `http://api.exchangeratesapi.io/v1/latest?access_key=${API_KEY_TRM}&symbols=USD,COP`
+    // fetch(endpoint)
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         const { USD, COP } = data.rates;
+    //         console.log(`1 USD = ${COP / USD} COP`);
+    //         return res.status(200).json({ status: "success", value: (COP / USD).toFixed(2) })
 
-        })
-        .catch(error => console.error(error));
+    //     })
+    //     .catch(error => console.error(error));
 
 
-    // res.status(200).json({ status: "success", value: 3955.23 });
+    res.status(200).json({ status: "success", value: 3955.23 });
 });
 
 /**

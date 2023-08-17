@@ -325,7 +325,8 @@ const createInvoice = ({
   network,
   coin,
   token,
-  user
+  user,
+  trm
 }) => {
   return new Promise(async (resolve, reject) => {
     try {
