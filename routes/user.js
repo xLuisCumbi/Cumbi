@@ -1,6 +1,7 @@
 const express = require("express");
 const Router = express.Router();
 const User = require("../controllers/User");
+const Setting = require("../controllers/Setting");
 const { sendErrorMsg } = require("../utils");
 const { adminAuthMiddleware } = require("../middleware/auth");
 
@@ -38,6 +39,31 @@ Router.get("/trm", (req, res) => {
 
 
     res.status(200).json({ status: "success", value: 3955.23 });
+});
+
+
+Router.post("/update-setting", adminAuthMiddleware, (req, res) => {
+
+    Setting.update(req.body).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+Router.get("/fetch-setting", adminAuthMiddleware, (req, res) => {
+
+    Setting.fetchOne().then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
 });
 
 /**

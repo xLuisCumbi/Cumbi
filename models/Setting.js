@@ -6,7 +6,7 @@ const feeSchema = new mongoose.Schema({
     value_from: Number,
     value_to: Number,
     perc_commission: Number
-  });
+});
 
 // Define the Admin schema
 const SettingSchema = new mongoose.Schema(
@@ -23,14 +23,14 @@ const SettingSchema = new mongoose.Schema(
             type: Number,
             required: true,
         },
-        fee: {
-            type: feeSchema,
+        fees: {
+            type: [feeSchema],
             required: false,
         },
         passphrase: {
             type: String,
             required: false,
-            unique: true,
+            unique: false,
         }
     },
     {
