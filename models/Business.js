@@ -2,37 +2,35 @@
 const mongoose = require('mongoose');
 
 // Define the Admin schema
-const UserSchema = new mongoose.Schema(
+const BusinessSchema = new mongoose.Schema(
   {
-    business: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Business',
-    },
-    domain: {
-      type: String,
-      required: false,
-    },
-    role: {
-      type: String,
-      enum: ['person', 'business', 'admin', 'superadmin'],
-    },
-    username: {
+    id_tax: {
       type: String,
       required: true,
       unique: true,
+    },
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    web: {
+      type: String,
+      required: false,
+    },
+    country: {
+      type: String,
+      required: false,
     },
     email: {
       type: String,
       required: true,
       unique: true,
     },
-    password: {
-      type: String,
+    payment_fee: {
+      type: Number,
+      default: 0.03,
       required: true,
-    },
-    passphrase: {
-      type: String,
-      required: false,
     },
     token: {
       type: String,
@@ -52,4 +50,4 @@ const UserSchema = new mongoose.Schema(
 
 
 // Create the model from the schema and export it
-module.exports = mongoose.model('User', UserSchema)
+module.exports = mongoose.model('Business', BusinessSchema)
