@@ -30,6 +30,20 @@ Router.get("", (req, res) => {
 });
 
 /**
+ * Get the business for people (Persona Natural)
+ */
+Router.get("/person", (req, res) => {
+    Business.fetchPerson().then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+/**
  * TODO obtener de un api y revisar donde hacer el llamado
  */
 Router.get("/trm", (req, res) => {

@@ -7,9 +7,37 @@ const consolidateAddressBalance = require('./Consolidation');
 const bcrypt = require('bcryptjs');
 const ObjectId = require('mongoose').Types.ObjectId;
 
-// UserModel.sync({ alter: true});
+/**
+ * Get all users
+ * @returns 
+ */
+const fetch = () => {
+  return new Promise(async (resolve) => {
+    try {
+      const users = await UserModel.find({}, { password: 0 }).limit(20)
+      resolve({ status: 'success', users });
+    } catch (error) {
+      console.error('Error while fetching business:', error);
+      resolve({ status: 'failed', message: 'server error: kindly try again' });
+    }
+  });
+};
 
-// ApiTokenModel.sync({ alter: true});
+/**
+ * Delete user by ID
+ */
+const deleteById = (id) => {
+  // console.log(id)
+  return new Promise(async (resolve) => {
+    try {
+      await UserModel.deleteOne({ _id: id })
+      resolve({ status: 'success' });
+    } catch (error) {
+      console.error('Error while fetching business:', error);
+      resolve({ status: 'failed', message: 'server error: kindly try again' });
+    }
+  });
+};
 
 /**
  * Validates a JWT token and returns the admin ID if the token is valid.
@@ -488,6 +516,8 @@ const getByBusiness = ({ id }) => {
 };
 
 module.exports = {
+  fetch,
+  deleteById,
   fetchDeposits,
   login,
   validateToken,

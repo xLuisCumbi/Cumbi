@@ -7,6 +7,31 @@ const { adminAuthMiddleware } = require("../middleware/auth");
 
 
 /**
+ * Get all users
+ */
+Router.get("", (req, res) => {
+    User.fetch().then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+Router.delete("/:id", (req, res) => {
+    User.deleteById(req.params.id).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+/**
  * TODO revisar como hacerlo con GET
  */
 Router.post("/business", (req, res) => {

@@ -5,8 +5,13 @@ const mongoose = require('mongoose');
 const UserSchema = new mongoose.Schema(
   {
     business: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Business',
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Business',
+      },
+      name: {
+        type: String
+      }
     },
     domain: {
       type: String,
