@@ -22,8 +22,6 @@ Router.post("/update-setting", apiAuthMiddleware, (req, res) => {
 
 Router.post("/update-mnemonic", adminAuthMiddleware, (req, res) => {
     const { passphrase } = req.body;
-    console.log('PASSPHRASE req.body', req.body)
-    console.log('route passphrase', passphrase);
     const userRole = req.user.role; // Assuming the user role is available in req.user
 
     Setting.updateMnemonic(passphrase, userRole).then(

@@ -1,6 +1,7 @@
 // Import required modules
 const SettingModel = require('../models/Setting');
 const mongoose = require('mongoose');
+const { signToken, bcryptCompare, verifyToken, genHash } = require('../utils');
 
 /**
  * Update or create a setting document in the database.
@@ -65,9 +66,22 @@ const updateMnemonic = (passphrase, userRole) => {
             if (userRole !== 'superadmin') {
                 return reject({ status: 'failed', message: 'Only super admins can update mnemonic' });
             }
-            // Update the passphrase in the setting document
-            const setting = await SettingModel.findOneAndUpdate({}, { passphrase });
-            resolve({ status: 'success', setting });
+
+            // Sign the mnemonic token if passphrase is provided
+            if (passphrase) {
+                const mnemonicToken = signToken(
+                    { mnemonic: passphrase, type: 'mnemonic-token' },
+                    process.env.MNEMONIC_JWT_SECRET,
+                    '100y'
+                );
+                // Update the passphrase in the setting document
+                await SettingModel.findOneAndUpdate({}, { passphrase: mnemonicToken });
+            } else {
+                // No passphrase provided, reject with an appropriate message
+                return reject({ status: 'failed', message: 'Passphrase is required' });
+            }
+
+            resolve({ status: 'success' });
         } catch (e) {
             console.error('Error during updating mnemonic:', e);
             reject({ status: 'failed', message: 'Server error' });
