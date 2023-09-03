@@ -39,6 +39,7 @@ const paymentUIController = require('./controllers/PaymentUI');
 const depositRoute = require('./routes/deposit');
 const userRoute = require('./routes/user');
 const businessRoute = require('./routes/business');
+const settingsRoute = require('./routes/setting');
 const dbConnection = require('./config/db'); // Import the connectDB function
 
 // Connect to the database
@@ -50,6 +51,7 @@ app.get('/payment/:depositID', paymentUIController);
 app.use('/api/deposit', depositRoute);
 app.use('/api/user', userRoute);
 app.use('/api/business', businessRoute);
+app.use('/api/settings', settingsRoute);
 app.get('*', (req, res) => {
   res.status(404).json({ message: 'NOT FOUND' });
 });

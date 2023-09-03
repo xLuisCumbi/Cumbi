@@ -340,11 +340,6 @@ const createInvoice = ({
     try {
       const verify = await validateToken(token);
 
-      if (amount / trm < 100) {
-        reject({ message: 'error creating invoice' });
-        return
-      }
-
       if (verify.status == 'success') {
         const deposit_id = Date.now();
 
