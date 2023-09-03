@@ -104,8 +104,16 @@ const signUp = (userData) => {
   return new Promise(async (resolve, reject) => {
     try {
       userData.password = await bcrypt.hash(userData.password, 10);
-      const query = await UserModel.create(userData);
-      resolve({ status: 'signUp_success', user: query });
+
+      // Only include the "business" field in userData if the role is not "person"
+      if (userData.role !== 'person') {
+        const query = await UserModel.create(userData);
+        resolve({ status: 'signUp_success', user: query });
+      } else {
+        const { business, ...userDataWithoutBusiness } = userData;
+        const query = await UserModel.create(userDataWithoutBusiness);
+        resolve({ status: 'signUp_success', user: query });
+      }
     } catch (e) {
       console.error('Error during login:', e);
       reject({ status: 'signUp_failed', message: 'server error' });
@@ -467,24 +475,40 @@ const adminStats = ({ token }) => {
   });
 };
 
+/**
+ * Retrieves users based on the business they are associated with. If the user making the request is a superadmin,
+ * all users are retrieved regardless of their associated business.
+ * @param {Object} params - The parameters.
+ * @param {string} params.id - The ID of the user making the request.
+ * @return {Promise<Object>} - The result containing the retrieved users.
+ */
+const getByBusiness = async ({ id }) => {
+  try {
+    // Fetch the user's role based on their ID
+    const { role, business } = await UserModel.findById(id);
 
-const getByBusiness = ({ id }) => {
+    // Determine whether the user is a superadmin based on their role
+    const isSuperAdmin = role === 'superadmin';
 
-  return new Promise(async (resolve) => {
-    try {
-      const { business } = await UserModel.findById(id)
-      const users = await UserModel.find({ business: business })
-      resolve({
-        status: 'success',
-        users,
-      });
-    } catch (e) {
-      console.error('Error during login:', e);
-      resolve({ status: 'auth_failed', message: 'server error' });
+    let usersQuery = {};
+
+    // If the user is not a superadmin, fetch their associated business and query users by business
+    if (!isSuperAdmin) {
+      usersQuery.business = business;
     }
-    // const id = req.params.id_user;
 
-  })
+    // Fetch users based on the constructed query
+    const users = await UserModel.find(usersQuery);
+
+    // Return the success status along with the retrieved users
+    return {
+      status: 'success',
+      users,
+    };
+  } catch (e) {
+    console.error('Error during login:', e);
+    return { status: 'auth_failed', message: 'server error' };
+  }
 };
 
 module.exports = {

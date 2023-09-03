@@ -7,6 +7,9 @@ const UserSchema = new mongoose.Schema(
     business: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Business',
+      required: function () {
+        return this.role !== 'person'; // El campo es requerido si el rol no es "person".
+      },
     },
     domain: {
       type: String,
@@ -20,7 +23,7 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-    },
+  },
     email: {
       type: String,
       required: true,
