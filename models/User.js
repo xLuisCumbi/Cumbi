@@ -10,6 +10,7 @@ const UserSchema = new mongoose.Schema(
       required: function () {
         return this.role !== 'person'; // El campo es requerido si el rol no es "person".
       },
+      unique: false,
     },
     domain: {
       type: String,
