@@ -134,7 +134,7 @@ const fetchDeposits = ({ token, user }) => {
       if (verify.status === 'success') {
         let query = {};
 
-        if (user.role !== 'admin') {
+        if (user.role !== 'superadmin' ) {
           query.user = user.id;
         }
 
