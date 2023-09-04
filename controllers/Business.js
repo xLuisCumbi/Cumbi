@@ -1,11 +1,36 @@
 const DepositModel = require('../models/Deposit');
-const UserModel = require('../models/User');
+const BusinessModel = require('../models/Business');
 const { signToken, bcryptCompare, verifyToken, genHash } = require('../utils');
-const { create, updateDepositObj } = require('./Deposit');
+// const { create, updateDepositObj } = require('./Deposit');
 const ApiTokenModel = require('../models/ApiToken');
 const consolidateAddressBalance = require('./Consolidation');
 const bcrypt = require('bcryptjs');
 const ObjectId = require('mongoose').Types.ObjectId;
+
+
+const create = (businessData) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const query = await BusinessModel.create(businessData);
+      resolve({ status: 'success', business: query });
+    } catch (e) {
+      console.error('Error during login:', e);
+      reject({ status: 'failed', message: 'server error' });
+    }
+  });
+};
+
+const fetch = () => {
+  return new Promise(async (resolve) => {
+    try {
+      const businesses = await BusinessModel.find().limit(250)
+      resolve({ status: 'success', businesses });
+    } catch (error) {
+      console.error('Error while fetching business:', error);
+      resolve({ status: 'failed', message: 'server error: kindly try again' });
+    }
+  });
+};
 
 // UserModel.sync({ alter: true});
 
@@ -104,16 +129,8 @@ const signUp = (userData) => {
   return new Promise(async (resolve, reject) => {
     try {
       userData.password = await bcrypt.hash(userData.password, 10);
-
-      // Only include the "business" field in userData if the role is not "person"
-      if (userData.role !== 'person') {
-        const query = await UserModel.create(userData);
-        resolve({ status: 'signUp_success', user: query });
-      } else {
-        const { business, ...userDataWithoutBusiness } = userData;
-        const query = await UserModel.create(userDataWithoutBusiness);
-        resolve({ status: 'signUp_success', user: query });
-      }
+      const query = await UserModel.create(userData);
+      resolve({ status: 'signUp_success', user: query });
     } catch (e) {
       console.error('Error during login:', e);
       reject({ status: 'signUp_failed', message: 'server error' });
@@ -469,43 +486,64 @@ const adminStats = ({ token }) => {
   });
 };
 
-/**
- * Retrieves users based on the business they are associated with. If the user making the request is a superadmin,
- * all users are retrieved regardless of their associated business.
- * @param {Object} params - The parameters.
- * @param {string} params.id - The ID of the user making the request.
- * @return {Promise<Object>} - The result containing the retrieved users.
- */
-const getByBusiness = async ({ id }) => {
-  try {
-    // Fetch the user's role based on their ID
-    const { role, business } = await UserModel.findById(id);
 
-    // Determine whether the user is a superadmin based on their role
-    const isSuperAdmin = role === 'superadmin';
+const getByBusiness = ({ id }) => {
 
-    let usersQuery = {};
-
-    // If the user is not a superadmin, fetch their associated business and query users by business
-    if (!isSuperAdmin) {
-      usersQuery.business = business;
+  return new Promise(async (resolve) => {
+    try {
+      const { business } = await UserModel.findById(id)
+      const users = await UserModel.find({ business: business })
+      resolve({
+        status: 'success',
+        users,
+      });
+    } catch (e) {
+      console.error('Error during login:', e);
+      resolve({ status: 'auth_failed', message: 'server error' });
     }
+    // const id = req.params.id_user;
 
-    // Fetch users based on the constructed query
-    const users = await UserModel.find(usersQuery);
+  })
 
-    // Return the success status along with the retrieved users
-    return {
-      status: 'success',
-      users,
-    };
-  } catch (e) {
-    console.error('Error during login:', e);
-    return { status: 'auth_failed', message: 'server error' };
-  }
+  return new Promise(async (resolve) => {
+    try {
+      const query = await UserModel.findOne({ email });
+      if (query) {
+        const checkPassword = bcryptCompare(password, query.password);
+
+        if (checkPassword) {
+          const token = signToken(
+            { id: query._id, type: 'admin_token' }, // Use _id instead of admin_id
+            process.env.JWT_SECRET,
+            '5d'
+          );
+          await UserModel.findOneAndUpdate({ _id: query._id }, { token }); // Use _id instead of admin_id
+          resolve({
+            status: 'success',
+            user: { id: query._id, authToken: token, email, username: query.username, role: query.role },
+          });
+        } else {
+          resolve({
+            status: 'auth_failed',
+            message: 'Incorrect username or password',
+          });
+        }
+      } else {
+        resolve({
+          status: 'auth_failed',
+          message: 'Incorrect username or password',
+        });
+      }
+    } catch (e) {
+      console.error('Error during login:', e);
+      resolve({ status: 'auth_failed', message: 'server error' });
+    }
+  });
 };
 
 module.exports = {
+  create,
+  fetch,
   fetchDeposits,
   login,
   validateToken,

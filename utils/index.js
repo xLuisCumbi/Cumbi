@@ -128,6 +128,11 @@ const getProvider = (network) => {
     }
 };
 
+// TODO Obtener el valor desde una API y guardarla en la BD
+const getTRM = () => {
+    return 3955.23
+};
+
 module.exports = {
     sendErrorMsg,
     validateField,
@@ -137,4 +142,5 @@ module.exports = {
     bcryptCompare,
     getProvider,
     checkSupportedAddress,
+    getTRM,
 };

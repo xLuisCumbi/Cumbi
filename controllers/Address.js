@@ -2,7 +2,7 @@ const ethers = require("ethers");
 const TronWeb = require("tronweb");
 const Mnemonic = require("bitcore-mnemonic");
 const DepositModel = require("../models/Deposit");
-const UserModel = require("../models/User");
+const SettingModel = require('../models/Setting'); // Reemplaza la ruta con la correcta
 const { verifyToken, getProvider, checkSupportedAddress } = require("../utils");
 require("dotenv").config();
 
@@ -124,20 +124,24 @@ const getAddressIndex = (network, coin) => {
  * @return {Promise<string>} - The mnemonic phrase.
  */
 const getMnemonic = () => {
-    return new Promise((resolve, reject) => {
-        UserModel.findOne({}).sort({ id: -1 })
-            .then((admin) => {
-                const phraseToken = admin.passphrase;
-                verifyToken(phraseToken, process.env.MNEMONIC_JWT_SECRET).then(
-                    (phraseObj) => {
-                        resolve(phraseObj.mnemonic);
-                    }
-                    ).catch((error)=>{
-                        reject(error);
-                    });
-            })
-            .catch((error) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const setting = await SettingModel.findOne({});
+
+            if (!setting || !setting.passphrase) {
+                return reject({ status: 'failed', message: 'Mnemonic passphrase not found in settings' });
+            }
+
+            const phraseToken = setting.passphrase;
+            verifyToken(phraseToken, process.env.MNEMONIC_JWT_SECRET).then(
+                (phraseObj) => {
+                    resolve(phraseObj.mnemonic);
+                }
+            ).catch((error) => {
                 reject(error);
             });
+        } catch (error) {
+            reject(error);
+        }
     });
 };

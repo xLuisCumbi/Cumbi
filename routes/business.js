@@ -1,16 +1,25 @@
 const express = require("express");
 const Router = express.Router();
-const User = require("../controllers/User");
-const Setting = require("../controllers/Setting");
+const Business = require("../controllers/Business");
 const { sendErrorMsg } = require("../utils");
 const { adminAuthMiddleware } = require("../middleware/auth");
 
 
-/**
- * TODO revisar como hacerlo con GET
- */
-Router.post("/business", (req, res) => {
-    User.getByBusiness(req.body).then(
+
+Router.post("/create", (req, res) => {
+    Business.create(req.body).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+
+Router.get("", (req, res) => {
+    Business.fetch().then(
         (resp) => {
             res.json(resp);
         },
@@ -41,9 +50,6 @@ Router.get("/trm", (req, res) => {
     res.status(200).json({ status: "success", value: 3955.23 });
 });
 
-Router.post("/trm", (req, res) => {
-    res.status(200).json({ status: "success", value: 3955.23 });
-});
 
 Router.post("/update-setting", adminAuthMiddleware, (req, res) => {
 
@@ -88,7 +94,7 @@ Router.post("/login", (req, res) => {
  * Handles user signup requests.
  * If successful, returns a response containing the user's information.
  */
-Router.post("/signup", adminAuthMiddleware, (req, res) => {
+Router.post("/signup", (req, res) => {
     User.signUp(req.body).then(
         (resp) => {
             res.json(resp);

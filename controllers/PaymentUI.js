@@ -39,6 +39,7 @@ module.exports = async (req, res) => {
         depositObj.network_short =
             depositObj.network === "TRON" ? "TRC20" : "ERC20";
         depositObj.is_invoice = depositObj.type === "invoice" ? true : false;
+        //depositObj.amount += 3;
         res.render("pay", depositObj);
     }
 };
