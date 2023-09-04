@@ -2,7 +2,7 @@ const ethers = require("ethers");
 const TronWeb = require("tronweb");
 const Mnemonic = require("bitcore-mnemonic");
 const DepositModel = require("../models/Deposit");
-const UserModel = require("../models/User");
+const SettingModel = require('../models/Setting'); // Reemplaza la ruta con la correcta
 const { verifyToken, getProvider, checkSupportedAddress } = require("../utils");
 require("dotenv").config();
 
@@ -28,7 +28,6 @@ module.exports = getDepositAddress = (network, coin, index) => {
             const mnemonic = await getMnemonic();
             const addressIndex =
                 index === undefined ? await getAddressIndex(network, coin) : index;
-            console.log(mnemonic)
             const code = new Mnemonic(mnemonic);
             const hdPrivateKey = code.toHDPrivateKey();
             let derivationPath;
@@ -125,23 +124,24 @@ const getAddressIndex = (network, coin) => {
  * @return {Promise<string>} - The mnemonic phrase.
  */
 const getMnemonic = () => {
-    return new Promise((resolve, reject) => {
-        //TODO Guardar en otro lado el passphrase, en este momento obtiene el primer usuario(luis@cumbi.co)
-        UserModel.findOne({}).sort({ id: -1 })
-            .then((admin) => {
-                // const phraseToken = admin.passphrase;
-                // const phraseToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtbmVtb25pYyI6IjEgMiAzIDQgNSA2IDcgOCA5IDEwIDExIDEyIiwidHlwZSI6Im1uZW1vbmljLXRva2VuIiwiaWF0IjoxNjkxNzcxNjczLCJleHAiOjQ4NDc1MzE2NzN9.T-e-bA6JAa60VEsUtTLEj8huuuKUsL_3o31GXOhCh04";
-                const phraseToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtbmVtb25pYyI6Imhvb2Qgc25vdyBncmF2aXR5IGZhbHNlIGFkZGljdCBjb2xvciBlbGV2YXRvciBicmljayBuZWVkIGZydWl0IGJsdXNoIGJlZWYiLCJ0eXBlIjoibW5lbW9uaWMtdG9rZW4iLCJpYXQiOjE2OTIyODM2NzgsImV4cCI6NDg0ODA0MzY3OH0.v3Puo3MxvY9uoZGOfiDS0tyzBPJFYJ_Zn-PbeUAneYQ"
-                verifyToken(phraseToken, process.env.MNEMONIC_JWT_SECRET).then(
-                    (phraseObj) => {
-                        resolve(phraseObj.mnemonic);
-                    }
-                ).catch((error) => {
-                    reject(error);
-                });
-            })
-            .catch((error) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const setting = await SettingModel.findOne({});
+
+            if (!setting || !setting.passphrase) {
+                return reject({ status: 'failed', message: 'Mnemonic passphrase not found in settings' });
+            }
+
+            const phraseToken = setting.passphrase;
+            verifyToken(phraseToken, process.env.MNEMONIC_JWT_SECRET).then(
+                (phraseObj) => {
+                    resolve(phraseObj.mnemonic);
+                }
+            ).catch((error) => {
                 reject(error);
             });
+        } catch (error) {
+            reject(error);
+        }
     });
 };

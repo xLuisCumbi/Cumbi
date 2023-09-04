@@ -388,7 +388,6 @@ const adminStats = ({ token }) => {
   return new Promise(async (resolve) => {
     try {
       const verify = await validateToken(token);
-      console.log('verify stats id', verify);
       if (verify.status == 'success') {
         const query = await UserModel.findOne({
           _id: verify.id, // Use _id instead of admin_id
