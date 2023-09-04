@@ -10,10 +10,20 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 const morgan = require('morgan');
+const allowedOrigins = ['https://dash.cumbi.co', 'http://localhost:3000'];
 
 // Apply middlewares
-app.use(cors({ origin: 'https://dash.cumbi.co', credentials: true }));
-app.options('*', cors({ origin: 'https://dash.cumbi.co', credentials: true }));
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+app.options('*', cors({
+  origin: allowedOrigins,
+  credentials: true,
+  optionsSuccessStatus: 200,
+  maxAge: 0,
+}));
+
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
