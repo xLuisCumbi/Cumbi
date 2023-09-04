@@ -10,10 +10,20 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 const morgan = require('morgan');
+const allowedOrigins = ['https://dash.cumbi.co', 'http://localhost:3000'];
 
 // Apply middlewares
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
-app.options('*', cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+app.options('*', cors({
+  origin: allowedOrigins,
+  credentials: true,
+  optionsSuccessStatus: 200,
+  maxAge: 0,
+}));
+
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -39,6 +49,7 @@ const paymentUIController = require('./controllers/PaymentUI');
 const depositRoute = require('./routes/deposit');
 const userRoute = require('./routes/user');
 const businessRoute = require('./routes/business');
+const settingsRoute = require('./routes/setting');
 const dbConnection = require('./config/db'); // Import the connectDB function
 
 // Connect to the database
@@ -50,6 +61,7 @@ app.get('/payment/:depositID', paymentUIController);
 app.use('/api/deposit', depositRoute);
 app.use('/api/user', userRoute);
 app.use('/api/business', businessRoute);
+app.use('/api/settings', settingsRoute);
 app.get('*', (req, res) => {
   res.status(404).json({ message: 'NOT FOUND' });
 });

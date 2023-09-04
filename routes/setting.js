@@ -4,6 +4,7 @@ const Setting = require("../controllers/Setting");
 const { sendErrorMsg } = require("../utils");
 const {
     apiAuthMiddleware,
+    adminAuthMiddleware,
     sessionAuthMiddleware,
 } = require("../middleware/auth");
 
@@ -19,6 +20,19 @@ Router.post("/update-setting", apiAuthMiddleware, (req, res) => {
     );
 });
 
+Router.post("/update-mnemonic", adminAuthMiddleware, (req, res) => {
+    const { passphrase } = req.body;
+    const userRole = req.user.role; // Assuming the user role is available in req.user
+
+    Setting.updateMnemonic(passphrase, userRole).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
 
 
 Router.use("**", (req, res) => {

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const ApiTokenModel = require("../../models/ApiToken");
-const User = require('../../models/User'); // adjust the path to match your project structure
+const User = require('../../models/User');
 
 const apiAuthMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -56,7 +56,6 @@ const apiAuthMiddleware = (req, res, next) => {
             .json({ status: "auth_failed", message: "Authentication failed apiAuthMiddleware" });
     }
 };
-
 
 const adminAuthMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;

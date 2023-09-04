@@ -5,13 +5,12 @@ const mongoose = require('mongoose');
 const UserSchema = new mongoose.Schema(
   {
     business: {
-      _id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Business',
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Business',
+      required: function () {
+        return this.role !== 'person'; // El campo es requerido si el rol no es "person".
       },
-      name: {
-        type: String
-      }
+      unique: false,
     },
     domain: {
       type: String,
@@ -25,7 +24,7 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-    },
+  },
     email: {
       type: String,
       required: true,
