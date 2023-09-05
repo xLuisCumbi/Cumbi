@@ -24,6 +24,22 @@ const fetch = () => {
 };
 
 /**
+ * Get user by ID
+ * @returns 
+ */
+const fetchByID = (id) => {
+  return new Promise(async (resolve) => {
+    try {
+      const user = await UserModel.findById(id, { password: 0 })
+      resolve({ status: 'success', user });
+    } catch (error) {
+      console.error('Error while fetching business:', error);
+      resolve({ status: 'failed', message: 'server error: kindly try again' });
+    }
+  });
+};
+
+/**
  * Delete user by ID
  */
 const deleteById = (id) => {
@@ -162,7 +178,7 @@ const fetchDeposits = ({ token, user }) => {
       if (verify.status === 'success') {
         let query = {};
 
-        if (user.role !== 'superadmin' ) {
+        if (user.role !== 'superadmin') {
           query.user = user.id;
         }
 
@@ -535,6 +551,7 @@ const getByBusiness = async ({ id }) => {
 
 module.exports = {
   fetch,
+  fetchByID,
   deleteById,
   fetchDeposits,
   login,

@@ -48,6 +48,13 @@ const UserSchema = new mongoose.Schema(
     last_stats_update: {
       type: Date,
     },
+    payment_fee: {
+      type: Number,
+      default: 3,
+      required: function () {
+        return this.role === 'person'; // El campo es requerido si el rol es "person".
+      },
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },

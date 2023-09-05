@@ -29,7 +29,7 @@ const BusinessSchema = new mongoose.Schema(
     },
     payment_fee: {
       type: Number,
-      default: 0.03,
+      default: 3,
       required: true,
     },
     token: {

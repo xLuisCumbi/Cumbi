@@ -20,6 +20,17 @@ Router.get("", (req, res) => {
     );
 });
 
+Router.get("/:id", (req, res) => {
+    User.fetchByID(req.params.id).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
 Router.delete("/:id", (req, res) => {
     User.deleteById(req.params.id).then(
         (resp) => {
@@ -70,20 +81,7 @@ Router.post("/trm", (req, res) => {
     res.status(200).json({ status: "success", value: 3955.23 });
 });
 
-Router.post("/update-setting", adminAuthMiddleware, (req, res) => {
-
-    Setting.update(req.body).then(
-        (resp) => {
-            res.json(resp);
-        },
-        (err) => {
-            sendErrorMsg(res, err);
-        }
-    );
-});
-
 Router.get("/fetch-setting", adminAuthMiddleware, (req, res) => {
-
     Setting.fetchOne().then(
         (resp) => {
             res.json(resp);

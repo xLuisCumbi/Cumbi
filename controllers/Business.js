@@ -32,6 +32,7 @@ const fetch = () => {
   });
 };
 
+// TODO posiblemente ya no sea necesario
 const fetchPerson = () => {
   return new Promise(async (resolve) => {
     try {

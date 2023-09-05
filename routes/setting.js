@@ -8,8 +8,18 @@ const {
     sessionAuthMiddleware,
 } = require("../middleware/auth");
 
-Router.post("/update-setting", apiAuthMiddleware, (req, res) => {
+Router.get("", adminAuthMiddleware, (req, res) => {
+    Setting.fetchOne().then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
 
+Router.post("/update", adminAuthMiddleware, (req, res) => {
     Setting.update(req.body).then(
         (resp) => {
             res.json(resp);
@@ -19,6 +29,7 @@ Router.post("/update-setting", apiAuthMiddleware, (req, res) => {
         }
     );
 });
+
 
 Router.post("/update-mnemonic", adminAuthMiddleware, (req, res) => {
     const { passphrase } = req.body;
