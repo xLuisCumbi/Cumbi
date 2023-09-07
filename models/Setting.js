@@ -15,6 +15,9 @@ const SettingSchema = new mongoose.Schema(
             type: Number,
             required: true,
         },
+        date_trm: {
+            type: String,
+        },
         perc_buy_house: {
             type: Number,
             required: true,
