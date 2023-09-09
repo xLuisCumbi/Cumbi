@@ -32,6 +32,18 @@ const fetch = () => {
   });
 };
 
+const fetchByID = (id) => {
+  return new Promise(async (resolve) => {
+    try {
+      const business = await BusinessModel.findById(id)
+      resolve({ status: 'success', business });
+    } catch (error) {
+      console.error('Error while fetching business:', error);
+      resolve({ status: 'failed', message: 'server error: kindly try again' });
+    }
+  });
+};
+
 // TODO posiblemente ya no sea necesario
 const fetchPerson = () => {
   return new Promise(async (resolve) => {
@@ -48,5 +60,6 @@ const fetchPerson = () => {
 module.exports = {
   create,
   fetch,
+  fetchByID,
   fetchPerson,
 };

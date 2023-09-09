@@ -50,7 +50,6 @@ const UserSchema = new mongoose.Schema(
     },
     payment_fee: {
       type: Number,
-      default: 3,
       required: function () {
         return this.role === 'person'; // El campo es requerido si el rol es "person".
       },

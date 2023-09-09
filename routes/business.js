@@ -29,6 +29,18 @@ Router.get("", (req, res) => {
     );
 });
 
+
+Router.get("/:id", (req, res) => {
+    Business.fetchByID(req.params.id).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
 /**
  * Get the business for people (Persona Natural)
  */
