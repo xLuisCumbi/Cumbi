@@ -36,7 +36,12 @@ const create = ({
     description,
     title,
     wp_order_received_url,
-    user
+    user,
+    trm,
+    trm_house,
+    amount_fiat,
+    coin_fiat,
+    payment_fee,
 }) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -72,7 +77,12 @@ const create = ({
                     type: "deposit",
                     amount,
                     wp_order_received_url,
-                    user
+                    user,
+                    trm,
+                    trm_house,
+                    amount_fiat,
+                    coin_fiat: coin_fiat.toUpperCase(),
+                    payment_fee,
                 };
 
                 const save = await saveDepositObj(depositObj);
@@ -117,6 +127,11 @@ const create = ({
                             coin: coin.toUpperCase(),
                             network: network.toUpperCase(),
                             user: user,
+                            trm,
+                            trm_house,
+                            amount_fiat,
+                            coin_fiat: coin_fiat.toUpperCase(),
+                            payment_fee,
                         };
 
                         const save = await saveDepositObj(depositObj);

@@ -378,7 +378,11 @@ const createInvoice = ({
   coin,
   token,
   user,
-  trm
+  trm,
+  trm_house,
+  amount_fiat,
+  coin_fiat,
+  payment_fee,
 }) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -402,7 +406,12 @@ const createInvoice = ({
           type: 'invoice',
           description,
           title,
-          user: userObj // Use the fetched user's _id
+          user: userObj, // Use the fetched user's _id
+          trm,
+          trm_house,
+          amount_fiat,
+          coin_fiat,
+          payment_fee
         });
 
         const invoice_url = process.env.APPURL + '/invoice/' + deposit_id;
