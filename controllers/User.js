@@ -183,6 +183,7 @@ const fetchDeposits = ({ token, user }) => {
         }
 
         const deposits = await DepositModel.find(query, { privateKey: 0, address_index: 0 })
+          .sort({ createdAt: 'desc' })
           .limit(250)
           .lean();
         resolve({ status: 'success', deposits });
@@ -383,6 +384,7 @@ const createInvoice = ({
   amount_fiat,
   coin_fiat,
   payment_fee,
+  type_payment_fee,
 }) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -411,7 +413,8 @@ const createInvoice = ({
           trm_house,
           amount_fiat,
           coin_fiat,
-          payment_fee
+          payment_fee,
+          type_payment_fee
         });
 
         const invoice_url = process.env.APPURL + '/invoice/' + deposit_id;

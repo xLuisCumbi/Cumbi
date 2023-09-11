@@ -73,25 +73,29 @@ const DepositSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
-    business:{
+    business: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Business',
     },
-    trm:{
+    trm: {
         type: Number
     },
-    trm_house:{
+    trm_house: {
         type: Number
     },
-    amount_fiat:{
+    amount_fiat: {
         type: Number
     },
-    coin_fiat:{
+    coin_fiat: {
         type: String
     },
-    payment_fee:{
+    payment_fee: {
         type: Number
-    }
+    },
+    type_payment_fee: {
+        type: String,
+        enum: ['person', 'business', 'cumbi'],
+    },
 }, {
     timestamps: { createdAt: 'createdAt', updatedAt: false }
 });

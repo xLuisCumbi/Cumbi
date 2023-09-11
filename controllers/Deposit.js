@@ -42,6 +42,7 @@ const create = ({
     amount_fiat,
     coin_fiat,
     payment_fee,
+    type_payment_fee,
 }) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -83,6 +84,7 @@ const create = ({
                     amount_fiat,
                     coin_fiat: coin_fiat.toUpperCase(),
                     payment_fee,
+                    type_payment_fee
                 };
 
                 const save = await saveDepositObj(depositObj);
@@ -132,6 +134,7 @@ const create = ({
                             amount_fiat,
                             coin_fiat: coin_fiat.toUpperCase(),
                             payment_fee,
+                            type_payment_fee
                         };
 
                         const save = await saveDepositObj(depositObj);

@@ -133,6 +133,25 @@ const getTRM = () => {
     return 3955.23
 };
 
+const timestamp2date = (timestamp) => {
+    if (!timestamp)
+        return
+    timestamp = parseInt(timestamp, 10);
+    const fecha = new Date(timestamp * 1000);
+
+    // Obtiene los componentes de fecha (día, mes, año, hora, minutos, segundos)
+    const dia = fecha.getDate();
+    const mes = fecha.getMonth() + 1; // Los meses se indexan desde 0
+    const anno = fecha.getFullYear();
+    const hora = fecha.getHours();
+    const minutos = fecha.getMinutes();
+    const segundos = fecha.getSeconds();
+
+    // Formatea la fecha en un formato legible por humanos
+    const fechaLegible = `${anno}/${mes}/${dia} ${hora}:${minutos}:${segundos}`;
+    return fechaLegible;
+}
+
 module.exports = {
     sendErrorMsg,
     validateField,
@@ -143,4 +162,5 @@ module.exports = {
     getProvider,
     checkSupportedAddress,
     getTRM,
+    timestamp2date,
 };
