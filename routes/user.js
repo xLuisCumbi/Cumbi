@@ -219,8 +219,9 @@ Router.post("/fetch-tokens", adminAuthMiddleware, (req, res) => {
  * Handles admin requests to delete an API token.
  * Returns a response containing the result of the deletion operation.
  */
-Router.post("/delete-token", adminAuthMiddleware, (req, res) => {
-    User.deleteToken(req.body).then(
+Router.delete("/token/:id", adminAuthMiddleware, (req, res) => {
+    console.log(req.params.id)
+    User.deleteToken(req.params.id, req.body).then(
         (resp) => {
             res.json(resp);
         },
@@ -235,8 +236,7 @@ Router.post("/delete-token", adminAuthMiddleware, (req, res) => {
  * It uses the 'sessionAuthMiddleware' middleware to check user authentication.
  */
 Router.put("/:id", sessionAuthMiddleware, (req, res) => {
-    const newData = req.body;
-    User.updateUser(newData).then(
+    User.updateUser(req.body).then(
         (resp) => {
             res.json(resp);
         },

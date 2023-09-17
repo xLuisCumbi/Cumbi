@@ -43,7 +43,6 @@ const fetchByID = (id) => {
  * Delete user by ID
  */
 const deleteById = (id) => {
-  // console.log(id)
   return new Promise(async (resolve) => {
     try {
       await UserModel.deleteOne({ _id: id })
@@ -285,9 +284,7 @@ const fetchTokens = ({ token }) => {
   return new Promise(async (resolve) => {
     try {
       const verify = await validateToken(token);
-
-      if (verify.status === 'success' && verify.role === 'admin') {
-        console.log(verify)
+      if (verify.status === 'success' && (verify.role === 'admin' || verify.role === 'superadmin')) {
         const tokens = await ApiTokenModel.find({ user: new ObjectId(verify.id) }).limit(200).lean();
         resolve({ status: 'success', tokens });
       } else {
@@ -307,11 +304,10 @@ const fetchTokens = ({ token }) => {
  * @param {string} params.token_id - The ID of the API token to delete.
  * @return {Promise<Object>} - The deletion result.
  */
-const deleteToken = ({ token, token_id }) => {
+const deleteToken = (token_id, { token }) => {
   return new Promise(async (resolve) => {
     try {
       const verify = await validateToken(token);
-
       if (verify.status == 'success') {
         await ApiTokenModel.findByIdAndDelete(token_id);
         resolve({ status: 'success' });

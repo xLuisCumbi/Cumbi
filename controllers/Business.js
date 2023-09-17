@@ -20,6 +20,10 @@ const create = (businessData) => {
   });
 };
 
+/**
+ * 
+ * @returns All business
+ */
 const fetch = () => {
   return new Promise(async (resolve) => {
     try {
@@ -32,6 +36,11 @@ const fetch = () => {
   });
 };
 
+/**
+ * 
+ * @param {*} id Id of business
+ * @returns the business with the id
+ */
 const fetchByID = (id) => {
   return new Promise(async (resolve) => {
     try {
@@ -57,9 +66,26 @@ const fetchPerson = () => {
   });
 };
 
+
+const update = (business) => {
+  return new Promise(async (resolve) => {
+    try {
+      await BusinessModel.updateOne(
+        { _id: business._id },
+        business
+      ).exec();
+      resolve({ status: 'success' });
+    } catch (error) {
+      console.log('error', error.stack);
+      resolve({ status: 'failed', message: 'server error: kindly try again' });
+    }
+  });
+};
+
 module.exports = {
   create,
   fetch,
   fetchByID,
   fetchPerson,
+  update,
 };

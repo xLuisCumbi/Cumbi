@@ -18,7 +18,7 @@ Router.post("/create", (req, res) => {
 });
 
 
-Router.get("", (req, res) => {
+Router.get("", adminAuthMiddleware, (req, res) => {
     Business.fetch().then(
         (resp) => {
             res.json(resp);
@@ -46,6 +46,17 @@ Router.get("/:id", (req, res) => {
  */
 Router.get("/person", (req, res) => {
     Business.fetchPerson().then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+Router.put("/:id", adminAuthMiddleware, (req, res) => {
+    Business.update(req.body).then(
         (resp) => {
             res.json(resp);
         },
