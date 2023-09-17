@@ -34,10 +34,6 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    passphrase: {
-      type: String,
-      required: false,
-    },
     token: {
       type: String,
       required: false,
