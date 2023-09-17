@@ -3,7 +3,7 @@ const Router = express.Router();
 const User = require("../controllers/User");
 const Setting = require("../controllers/Setting");
 const { sendErrorMsg } = require("../utils");
-const { adminAuthMiddleware } = require("../middleware/auth");
+const { adminAuthMiddleware, sessionAuthMiddleware } = require("../middleware/auth");
 
 
 /**
@@ -229,6 +229,35 @@ Router.post("/delete-token", adminAuthMiddleware, (req, res) => {
         }
     );
 });
+
+/**
+ * This is a route handler for a PUT request with a dynamic parameter 'id'.
+ * It uses the 'sessionAuthMiddleware' middleware to check user authentication.
+ */
+Router.put("/:id", sessionAuthMiddleware, (req, res) => {
+    const newData = req.body;
+    User.updateUser(newData).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+Router.put("/block/:id", sessionAuthMiddleware, (req, res) => {
+    console.log(req.body)
+    User.updateUserStatus(req.params.id, req.body).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
 
 /**
  * Handles requests to nonexistent admin routes.

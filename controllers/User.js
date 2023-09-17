@@ -105,6 +105,13 @@ const login = ({ email, password }) => {
       if (query) {
         const checkPassword = bcryptCompare(password, query.password);
 
+        if (query.status && query.status === "blocked") {
+          resolve({
+            status: 'auth_failed',
+            message: 'User blocked',
+          });
+        }
+
         if (checkPassword) {
           const token = signToken(
             { id: query._id, type: 'admin_token' }, // Use _id instead of admin_id
@@ -360,6 +367,39 @@ const update = ({ passphrase, email, username, password, token }) => {
   });
 };
 
+
+const updateUser = (user) => {
+  return new Promise(async (resolve) => {
+    try {
+      if (user.password)
+        user.password = await genHash(user.password);
+      await UserModel.updateOne(
+        { _id: user._id },
+        user
+      ).exec();
+      resolve({ status: 'success' });
+    } catch (error) {
+      console.log('error', error.stack);
+      resolve({ status: 'failed', message: 'server error: kindly try again' });
+    }
+  });
+};
+
+const updateUserStatus = (_id, { status }) => {
+  return new Promise(async (resolve) => {
+    try {
+      await UserModel.updateOne(
+        { _id: _id },
+        { $set: { status: status } },
+      ).exec();
+      resolve({ status: 'success' });
+    } catch (error) {
+      console.log('error', error.stack);
+      resolve({ status: 'failed', message: 'server error: kindly try again' });
+    }
+  });
+};
+
 /**
  * Creates a new invoice.
  * @param {Object} params - The parameters.
@@ -548,7 +588,7 @@ const getByBusiness = async ({ id }) => {
     }
 
     // Fetch users based on the constructed query
-    const users = await UserModel.find(usersQuery);
+    const users = await UserModel.find(usersQuery, { password: 0 });
 
     // Return the success status along with the retrieved users
     return {
@@ -561,6 +601,8 @@ const getByBusiness = async ({ id }) => {
   }
 };
 
+
+
 module.exports = {
   fetch,
   fetchByID,
@@ -569,6 +611,8 @@ module.exports = {
   login,
   validateToken,
   update,
+  updateUser,
+  updateUserStatus,
   adminStats,
   createInvoice,
   createToken,

@@ -2,11 +2,7 @@ const express = require("express");
 const Router = express.Router();
 const Setting = require("../controllers/Setting");
 const { sendErrorMsg } = require("../utils");
-const {
-    apiAuthMiddleware,
-    adminAuthMiddleware,
-    sessionAuthMiddleware,
-} = require("../middleware/auth");
+const { adminAuthMiddleware } = require("../middleware/auth");
 
 Router.get("", adminAuthMiddleware, (req, res) => {
     Setting.fetchOne().then(

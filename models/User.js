@@ -24,7 +24,7 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-  },
+    },
     email: {
       type: String,
       required: true,
@@ -54,6 +54,11 @@ const UserSchema = new mongoose.Schema(
         return this.role === 'person'; // El campo es requerido si el rol es "person".
       },
     },
+    status: {
+      type: String,
+      enum: ['active', 'blocked'],
+      default: 'active',
+    }
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
