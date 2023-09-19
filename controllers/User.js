@@ -100,7 +100,7 @@ const validateToken = async (token) => {
 const login = ({ email, password }) => {
   return new Promise(async (resolve) => {
     try {
-      const query = await UserModel.findOne({ email });
+      const query = await UserModel.findOne({ email: { '$regex': `^${email}$`, $options: 'i' } });
       if (query) {
         const checkPassword = bcryptCompare(password, query.password);
 
