@@ -4,7 +4,7 @@ const Deposit = require("../controllers/Deposit");
 const { sendErrorMsg } = require("../utils");
 const {
     apiAuthMiddleware,
-    sessionAuthMiddleware,
+    sessionAuthDepositMiddleware,
 } = require("../middleware/auth");
 
 Router.post("/create", apiAuthMiddleware, (req, res) => {
@@ -23,7 +23,7 @@ Router.post("/create", apiAuthMiddleware, (req, res) => {
     );
 });
 
-Router.post("/status", sessionAuthMiddleware, (req, res) => {
+Router.post("/status", sessionAuthDepositMiddleware, (req, res) => {
     Deposit.status(req.body).then(
         (resp) => {
             res.json(resp);
@@ -34,7 +34,7 @@ Router.post("/status", sessionAuthMiddleware, (req, res) => {
     );
 });
 
-Router.post("/set-network", sessionAuthMiddleware, (req, res) => {
+Router.post("/set-network", sessionAuthDepositMiddleware, (req, res) => {
     Deposit.setNetwork(req.body).then(
         (resp) => {
             res.json(resp);

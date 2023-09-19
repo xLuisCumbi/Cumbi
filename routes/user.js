@@ -3,7 +3,7 @@ const Router = express.Router();
 const User = require("../controllers/User");
 const Setting = require("../controllers/Setting");
 const { sendErrorMsg } = require("../utils");
-const { adminAuthMiddleware } = require("../middleware/auth");
+const { adminAuthMiddleware, sessionAuthMiddleware } = require("../middleware/auth");
 
 
 /**
@@ -219,8 +219,9 @@ Router.post("/fetch-tokens", adminAuthMiddleware, (req, res) => {
  * Handles admin requests to delete an API token.
  * Returns a response containing the result of the deletion operation.
  */
-Router.post("/delete-token", adminAuthMiddleware, (req, res) => {
-    User.deleteToken(req.body).then(
+Router.delete("/token/:id", adminAuthMiddleware, (req, res) => {
+    console.log(req.params.id)
+    User.deleteToken(req.params.id, req.body).then(
         (resp) => {
             res.json(resp);
         },
@@ -229,6 +230,34 @@ Router.post("/delete-token", adminAuthMiddleware, (req, res) => {
         }
     );
 });
+
+/**
+ * This is a route handler for a PUT request with a dynamic parameter 'id'.
+ * It uses the 'sessionAuthMiddleware' middleware to check user authentication.
+ */
+Router.put("/:id", sessionAuthMiddleware, (req, res) => {
+    User.updateUser(req.body).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+Router.put("/block/:id", sessionAuthMiddleware, (req, res) => {
+    console.log(req.body)
+    User.updateUserStatus(req.params.id, req.body).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
 
 /**
  * Handles requests to nonexistent admin routes.
