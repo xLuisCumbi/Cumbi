@@ -21,6 +21,7 @@ const apiAuthMiddleware = (req, res, next) => {
 
     try {
         const decodedToken = jwt.verify(token, process.env.API_JWT_SECRET);
+
         if (decodedToken.type === "api_token") {
             ApiTokenModel.findOne({ token }).then(
                 (tokenObj) => {
@@ -29,6 +30,7 @@ const apiAuthMiddleware = (req, res, next) => {
                         const user = tokenObj.user;
                         // You can attach the user to the request for use in other middleware or the route handler
                         req.user = user;
+                        req.body.user = user
                         next();
                     } else {
                         return res.status(401).json({
@@ -53,7 +55,7 @@ const apiAuthMiddleware = (req, res, next) => {
     } catch (error) {
         return res
             .status(401)
-            .json({ status: "auth_failed", message: "Authentication failed apiAuthMiddleware" });
+            .json({ status: "auth_failed", message: "Authentication failed: Invalid API Key format" });
     }
 };
 

@@ -8,6 +8,9 @@ const { getAddressBalance } = require("./Balance");
 const consolidateAddressBalance = require("./Consolidation");
 const getDepositAddress = require("./Address");
 const moment = require("moment");
+const UserController = require("./User")
+const SettingController = require("./Setting")
+const BusinessController = require("./Business")
 
 // DepositModel.sync({ alter: true });
 
@@ -24,7 +27,7 @@ const moment = require("moment");
  * @param {string} params.type - The type of the deposit.
  * @param {string} params.description - The description of the deposit.
  * @param {string} params.title - The title of the deposit.
- * @param {string} params.wp_order_received_url - The URL for the order received page of the deposit.
+ * @param {string} params.order_received_url - The URL for the order received page of the deposit.
  * @return {Promise<Object>} - The creation result.
  */
 const create = ({
@@ -35,7 +38,8 @@ const create = ({
     type,
     description,
     title,
-    wp_order_received_url,
+    url,
+    order_received_url,
     user,
     trm,
     trm_house,
@@ -46,11 +50,14 @@ const create = ({
 }) => {
     return new Promise(async (resolve, reject) => {
         try {
-            if (type == "wp-payment") {
+            if (type === "api-payment") {
                 const validate = validateField(reject, {
                     amount,
                     deposit_id,
-                    wp_order_received_url,
+                    order_received_url,
+                    network,
+                    coin,
+                    user,
                 });
                 if (!validate) return;
             } else {
@@ -64,43 +71,78 @@ const create = ({
                 if (!validate) return;
             }
 
-            const d = await checkDepositExist(deposit_id);
+            isValidAmount(amount, reject)
+            isValidURL(url, reject)
+            isValidURL(order_received_url, reject)
+            isValidNetwork(network, reject)
+            isValidCoin(coin, reject)
 
-            if (d) {
-                reject({ status: "failed", message: "Duplicate deposit id" });
-            } else if (type === "wp-payment") {
+            // const d = await checkDepositExist(deposit_id);
+            // console.log("d", d)
+            // if (d) {
+            //     reject({ status: "failed", message: "Duplicate deposit id" });
+            // } else 
+            if (type === "api-payment") {
+                getDepositAddress(network, coin).then(
+                    async ({ address, addressIndex, privateKey }) => {
+                        privateKey = signToken(
+                            { privateKey },
+                            process.env.PRIVATEKEY_JWT_SECRET,
+                            "1y"
+                        );
+                        const { trm, trm_house, amount_fiat, coin_fiat, payment_fee, type_payment_fee }
+                            = await getExtraData(user, amount)
 
-                const depositObj = {
-                    deposit_id,
-                    balance: 0,
-                    amount_usd: amount,
-                    status: "inactive",
-                    type: "deposit",
-                    amount,
-                    wp_order_received_url,
-                    user,
-                    trm,
-                    trm_house,
-                    amount_fiat,
-                    coin_fiat: coin_fiat.toUpperCase(),
-                    payment_fee,
-                    type_payment_fee
-                };
+                        const depositObj = {
+                            address,
+                            address_index: addressIndex,
+                            privateKey,
+                            deposit_id,
+                            balance: 0,
+                            amount_usd: amount,
+                            status: "pending",
+                            type: "api-payment",
+                            amount,
+                            coin,
+                            network,
+                            url,
+                            order_received_url,
+                            user,
+                            trm,
+                            trm_house,
+                            amount_fiat,
+                            coin_fiat: coin_fiat.toUpperCase(),
+                            payment_fee,
+                            type_payment_fee
+                        };
+                        const save = await saveDepositObj(depositObj)
 
-                const save = await saveDepositObj(depositObj);
+                        if (save.success) {
+                            delete depositObj["address_index"];
+                            delete depositObj["privateKey"];
+                            const { _id, deposit_id, url, amount } = save.deposit
+                            resolve({ status: "success", object: { _id, deposit_id, url, amount } });
+                        } else {
+                            console.log('Error in Deposit', save.error);
+                            reject({
+                                status: "failed",
+                                // message: "Server Error: could not fetch deposit address",
+                                message: save.error,
+                                statusCode: 504,
+                            });
+                        }
 
-                if (save) {
-                    delete depositObj["address_index"];
-                    delete depositObj["privateKey"];
-                    resolve({ status: "success", depositObj });
-                } else {
-                    console.log('error in Deposit.js');
-                    reject({
-                        status: "failed",
-                        message: "Server Error: could not fetch deposit address",
-                        statusCode: 504,
-                    });
-                }
+                    },
+                    (err) => {
+                        reject({
+                            status: err.status,
+                            message: err.message,
+                            statusCode: err.statusCode,
+                        });
+                    }
+                ).catch((error) => {
+                    reject({ status: "failed", message: "Server Error" });;
+                });
             } else {
                 getDepositAddress(network, coin).then(
                     async ({ address, addressIndex, privateKey }) => {
@@ -137,12 +179,13 @@ const create = ({
                             type_payment_fee
                         };
 
-                        const save = await saveDepositObj(depositObj);
+                        const save = await saveDepositObj(depositObj)
 
-                        if (save) {
+                        if (save.success) {
                             delete depositObj["address_index"];
                             delete depositObj["privateKey"];
-                            resolve({ status: "success", depositObj });
+                            const { _id, deposit_id, url, amount } = save.deposit
+                            resolve({ status: "success", object: { _id, deposit_id, url, amount } });
                         } else {
                             console.log('error in: getDepositAddress',);
                             reject({
@@ -161,9 +204,10 @@ const create = ({
                     }
                 ).catch((error) => {
                     reject({ status: "failed", message: "Server Error" });;
-                });;
+                });
             }
         } catch (error) {
+            console.log(error)
             reject({ status: "failed", message: "Server Error" });
         }
     });
@@ -214,6 +258,7 @@ const getAmountCrypto = () => {
  * @returns {Promise<Object>} - A promise that resolves to an object containing the status of the operation.
  */
 const setNetwork = ({ deposit_id, network, coin }) => {
+    console.log(deposit_id)
     return new Promise((resolve, reject) => {
         getDepositAddress(network, coin).then(
             async ({ address, addressIndex, privateKey }) => {
@@ -271,7 +316,7 @@ const status = ({ deposit_id }) => {
                             title: d.title,
                             type: d.type,
                             createdAt: d.createdAt,
-                            wp_order_received_url: d.wp_order_received_url,
+                            order_received_url: d.order_received_url,
                             coin: d.coin == null ? d.coin : d.coin.toUpperCase(),
                             network: d.network == null ? d.network : d.network.toUpperCase(),
                         },
@@ -300,18 +345,31 @@ const status = ({ deposit_id }) => {
  * @returns {Promise<boolean>} - A promise that resolves to true if the save was successful, false otherwise
  */
 const saveDepositObj = (depositObj) => {
-    return new Promise((resolve, reject) => {
-        // Change the Sequelize create to Mongoose create
-        DepositModel.create(depositObj).then(
-            (query) => {
-                query ? resolve(true) : resolve(false);
-            },
-            (error) => {
-                console.log(error);
-                resolve(false);
-            }
-        );
-    });
+    return DepositModel.create(depositObj)
+        .then((deposit) => {
+            return { success: true, deposit }
+            console.log('Objeto creado:', createdProduct);
+            // Aquí puedes trabajar con el objeto creado
+        })
+        .catch((error) => {
+            return { success: false, error }
+            console.error('Error al crear el objeto:', error);
+        });
+
+    // return new Promise((resolve, reject) => {
+    //     // Change the Sequelize create to Mongoose create
+    //     DepositModel.create(depositObj).then(
+    //         (query) => {
+    //             return query
+    //             console.log(query)
+    //             query ? resolve(true) : resolve(false);
+    //         },
+    //         (error) => {
+    //             console.log(error);
+    //             resolve(false);
+    //         }
+    //     );
+    // });
 };
 
 /**
@@ -433,6 +491,92 @@ const updateDepositObj = (depositObj) => {
     });
 };
 
+/**
+ * 
+ * @param {*} _id  id del usuario obtenido por el token
+ * @param {*} amount cantidad de dinero en USD
+ * @returns 
+ */
+const getExtraData = async (_id, amount) => {
+    const { setting } = await SettingController.fetchOne()
+    const { user } = await UserController.fetchByID(_id)
+    let business_payment_fee = 0
+    if (user.business) {
+        const { business } = await BusinessController.fetchByID(user.business)
+        business_payment_fee = business.payment_fee
+    }
+
+    const trm = setting.trm,
+        trm_house = setting.trm * (((100 - setting.perc_buy_house) / 100))
+
+    let payment_fee = 0, type_payment_fee = ""
+    if (user.payment_fee && user.payment_fee > 0) {
+        payment_fee = user.payment_fee
+        type_payment_fee = "person"
+    } else if (business_payment_fee && business_payment_fee > 0) {
+        payment_fee = business_payment_fee
+        type_payment_fee = "business"
+    } else {
+        payment_fee = setting.perc_cumbi
+        type_payment_fee = "cumbi"
+    }
+
+    const amountHouseFiat = trm_house * amount;
+    const amount_fiat = amountHouseFiat * ((100 - payment_fee) / 100);
+
+    return { trm, trm_house, amount_fiat, coin_fiat: "COP", payment_fee, type_payment_fee }
+};
+
+const isValidAmount = (amount, reject) => {
+    if (isNaN(amount) || typeof amount !== 'number' || !Number.isFinite(amount))
+        reject({
+            status: "failed",
+            message: "Amount must be a correct number",
+            statusCode: 400,
+        });
+
+    if (amount <= 0)
+        reject({
+            status: "failed",
+            message: "Amount must be greater than zero",
+            statusCode: 400,
+        });
+}
+
+const isValidURL = (url, reject) => {
+    if (url.length > 2000)
+        reject({
+            status: "failed",
+            message: "URL is too large",
+            statusCode: 400,
+        });
+
+    const urlPattern = /^(https?):\/\/[^\s/$.?#].[^\s]*$/;
+    if (!urlPattern.test(url))
+        reject({
+            status: "failed",
+            message: "URL has not a correct format",
+            statusCode: 400,
+        });
+}
+
+const isValidNetwork = (network, reject) => {
+    if (network !== 'TRON')
+        reject({
+            status: "failed",
+            message: "Network incorrect",
+            statusCode: 400,
+        });
+}
+
+const isValidCoin = (coin, reject) => {
+    if (coin !== 'USDT' && coin !== 'USDC')
+        reject({
+            status: "failed",
+            message: "Coin incorrect",
+            statusCode: 400,
+        });
+}
 module.exports = {
     create,
     status,
