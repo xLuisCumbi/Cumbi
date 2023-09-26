@@ -93,7 +93,7 @@ CREATE TABLE `deposit` (
   `type` varchar(255) NOT NULL,
   `title` varchar(255) DEFAULT NULL,
   `description` varchar(255) DEFAULT NULL,
-  `wp_order_received_url` varchar(255) DEFAULT NULL,
+  `order_received_url` varchar(255) DEFAULT NULL,
   `createdAt` datetime NOT NULL,
   `updatedAt` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),

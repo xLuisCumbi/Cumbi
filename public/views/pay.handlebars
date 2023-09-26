@@ -205,7 +205,7 @@
                     $('.success-section').show(300);
 
                     if (payment.type === 'deposit') {
-                        setTimeout(() => { document.location = payment.wp_order_received_url }, 1500);
+                        setTimeout(() => { document.location = payment.order_received_url }, 1500);
                     }
 
                 } else {

@@ -34,7 +34,6 @@ const DepositSchema = new mongoose.Schema({
     deposit_id: {
         type: String,
         required: true,
-        unique: true,
     },
     status: {
         type: String,
@@ -60,7 +59,11 @@ const DepositSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    wp_order_received_url: {
+    // wp_order_received_url: {
+    //     type: String,
+    //     default: null
+    // },
+    order_received_url: {
         type: String,
         default: null
     },

@@ -8,12 +8,7 @@ const {
 } = require("../middleware/auth");
 
 Router.post("/create", apiAuthMiddleware, (req, res) => {
-
-    const depositData = {
-        ...req.body,
-        user: req.user._id, // add the user's ID to the deposit data
-    };
-    Deposit.create(depositData).then(
+    Deposit.create(req.body).then(
         (resp) => {
             res.json(resp);
         },
