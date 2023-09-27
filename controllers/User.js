@@ -435,16 +435,18 @@ const createInvoice = ({
           reject({ message: 'User not found' });
           return;
         }
-
-        const response = await create({
+        const response = await DepositModel.create({
           amount,
+          amount_usd: amount,
+          status: "pending",
+          balance: 0,
           deposit_id,
           network,
           coin,
           type: 'invoice',
           description,
           title,
-          user: userObj, // Use the fetched user's _id
+          user,
           trm,
           trm_house,
           amount_fiat,
@@ -453,12 +455,12 @@ const createInvoice = ({
           type_payment_fee
         });
 
-        const invoice_url = process.env.APPURL + '/invoice/' + deposit_id;
-        const invoiceObj = {
-          status: 'success',
-          invoiceObj: { ...response.depositObj, invoice_url },
-        };
-        resolve(invoiceObj);
+        // const invoice_url = process.env.APPURL + '/invoice/' + deposit_id;
+        // const invoiceObj = {
+        //   status: 'success',
+        //   invoiceObj: { ...response.depositObj, invoice_url },
+        // };
+        // resolve(invoiceObj);
       } else {
         resolve(verify);
       }

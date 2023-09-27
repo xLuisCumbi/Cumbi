@@ -4,10 +4,22 @@ const Deposit = require("../controllers/Deposit");
 const { sendErrorMsg } = require("../utils");
 const {
     apiAuthMiddleware,
+    sessionAuthMiddleware,
     sessionAuthDepositMiddleware,
 } = require("../middleware/auth");
 
 Router.post("/create", apiAuthMiddleware, (req, res) => {
+    Deposit.create(req.body).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+Router.post("/create-app", sessionAuthMiddleware, (req, res) => {
     Deposit.create(req.body).then(
         (resp) => {
             res.json(resp);

@@ -56,8 +56,8 @@ const dbConnection = require('./config/db'); // Import the connectDB function
 dbConnection();
 
 // Define routes
-app.get('/invoice/:depositID', paymentUIController);
-app.get('/payment/:depositID', paymentUIController);
+app.get('/invoice/:_id', paymentUIController);
+app.get('/payment/:_id', paymentUIController);
 app.use('/api/deposit', depositRoute);
 app.use('/api/user', userRoute);
 app.use('/api/business', businessRoute);

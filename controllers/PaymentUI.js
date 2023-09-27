@@ -15,20 +15,21 @@ const depositController = require("./Deposit");
  * @param {Object} res - The HTTP response object.
  */
 module.exports = async (req, res) => {
-    const deposit_id = req.params.depositID;
-    const resp = await depositController.status({ deposit_id });
+    const _id = req.params._id;
+    const resp = await depositController.status(_id);
+
     if (resp.status != "success") {
         res.status(404).json({ message: "PAYMENT NOT FOUND" });
         return;
     }
 
     const sessionToken = signToken(
-        { deposit_id },
+        { _id },
         process.env.SESSION_SECRET,
         "7h"
     );
     req.session.token = sessionToken;
-    req.session.deposit_id = deposit_id;
+    req.session.deposit_id = _id;
     const depositObj = resp.depositObj;
 
     if (depositObj.address == null || depositObj.address == "") {
