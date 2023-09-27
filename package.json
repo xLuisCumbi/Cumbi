@@ -39,6 +39,8 @@
     },
     "homepage": "https://github.com/Luismij/Cumbi#readme",
     "devDependencies": {
-        "eslint-plugin-jsdoc": "^46.4.6"
+        "dependency-cruiser": "^14.0.0",
+        "eslint-plugin-jsdoc": "^46.4.6",
+        "madge": "^6.1.0"
     }
 }
