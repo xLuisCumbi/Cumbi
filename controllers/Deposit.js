@@ -143,6 +143,7 @@ const create = ({
                         });
                     }
                 ).catch((error) => {
+                    console.error(error)
                     reject({ status: "failed", message: "Server Error" });;
                 });
             } else {
@@ -188,7 +189,7 @@ const create = ({
                             delete depositObj["address_index"];
                             delete depositObj["privateKey"];
 
-                            const invoice_url = process.env.APPURL + '/invoice/' + _id;
+                            const invoice_url = process.env.APPURL + '/invoice/' + save.deposit._id;
                             const invoiceObj = {
                                 status: 'success',
                                 invoiceObj: { ...save.deposit, invoice_url },
@@ -213,11 +214,12 @@ const create = ({
                         });
                     }
                 ).catch((error) => {
+                    console.error(error)
                     reject({ status: "failed", message: "Server Error" });;
                 });
             }
         } catch (error) {
-            console.log(error)
+            console.error(error)
             reject({ status: "failed", message: "Server Error" });
         }
     });
