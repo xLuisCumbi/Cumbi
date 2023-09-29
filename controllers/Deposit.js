@@ -270,6 +270,7 @@ const getAmountCrypto = () => {
  * @returns {Promise<Object>} - A promise that resolves to an object containing the status of the operation.
  */
 const setNetwork = ({ deposit_id, network, coin }) => {
+    console.log(deposit_id)
     return new Promise((resolve, reject) => {
         getDepositAddress(network, coin).then(
             async ({ address, addressIndex, privateKey }) => {

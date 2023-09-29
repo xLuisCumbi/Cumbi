@@ -10,7 +10,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 const morgan = require('morgan');
-const allowedOrigins = ['https://dash.cumbi.co', 'http://localhost:3000'];
+const allowedOrigins = ['https://dash.cumbi.co', 'http://localhost:3000', 'https://stage.cumbi.co'];
 
 // Apply middlewares
 app.use(cors({

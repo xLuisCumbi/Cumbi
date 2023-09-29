@@ -3,7 +3,7 @@ name: Deploy Images to GHCR
 on:
   push:
     branches:
-      - main
+      - stage
 
 jobs:
   push-store-image:
@@ -24,12 +24,12 @@ jobs:
       - name: 'Build Image'
         run: |
           REPO_NAME=${{ github.repository }}
-          IMAGE_URL="ghcr.io/${REPO_NAME,,}:latest"
+          IMAGE_URL="ghcr.io/${REPO_NAME,,}:staging"
           docker build . --tag ${IMAGE_URL}
           docker push ${IMAGE_URL}
   redeploy:
     name: Redeploy
-    runs-on: self-hosted
+    runs-on: staging-self-hosted
     needs: [push-store-image]
     steps:
       - name: Pull Latest Images
