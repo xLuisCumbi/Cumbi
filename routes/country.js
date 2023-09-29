@@ -1,15 +1,13 @@
 const express = require("express");
 const Router = express.Router();
-const Deposit = require("../controllers/Deposit");
+const Country = require("../controllers/Country");
 const { sendErrorMsg } = require("../utils");
-const {
-    apiAuthMiddleware,
-    sessionAuthMiddleware,
-    sessionAuthDepositMiddleware,
-} = require("../middleware/auth");
+const { adminAuthMiddleware, sessionAuthMiddleware } = require("../middleware/auth");
 
-Router.post("/create", apiAuthMiddleware, (req, res) => {
-    Deposit.create(req.body).then(
+
+
+Router.post("/create", adminAuthMiddleware, (req, res) => {
+    Country.create(req.body).then(
         (resp) => {
             res.json(resp);
         },
@@ -19,8 +17,9 @@ Router.post("/create", apiAuthMiddleware, (req, res) => {
     );
 });
 
-Router.post("/create-app", sessionAuthMiddleware, (req, res) => {
-    Deposit.create(req.body).then(
+
+Router.get("", sessionAuthMiddleware, (req, res) => {
+    Country.fetch().then(
         (resp) => {
             res.json(resp);
         },
@@ -30,8 +29,8 @@ Router.post("/create-app", sessionAuthMiddleware, (req, res) => {
     );
 });
 
-Router.post("/status", sessionAuthDepositMiddleware, (req, res) => {
-    Deposit.status(req.body).then(
+Router.get("/:id",sessionAuthMiddleware, (req, res) => {
+    Country.fetchByID(req.params.id).then(
         (resp) => {
             res.json(resp);
         },
@@ -41,8 +40,8 @@ Router.post("/status", sessionAuthDepositMiddleware, (req, res) => {
     );
 });
 
-Router.post("/set-network", sessionAuthDepositMiddleware, (req, res) => {
-    Deposit.setNetwork(req.body).then(
+Router.put("/:id", adminAuthMiddleware, (req, res) => {
+    Country.update(req.body).then(
         (resp) => {
             res.json(resp);
         },
@@ -52,8 +51,12 @@ Router.post("/set-network", sessionAuthDepositMiddleware, (req, res) => {
     );
 });
 
+/**
+ * Handles requests to nonexistent admin routes.
+ * Returns a 404 response.
+ */
 Router.use("**", (req, res) => {
-    res.status(404).json({ status: "failed", messsage: "404 not found" });
+    res.status(404).json({ status: "failed", message: "404 not found" });
 });
 
 module.exports = Router;

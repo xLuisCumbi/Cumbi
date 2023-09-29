@@ -50,7 +50,7 @@ const create = ({
 }) => {
     return new Promise(async (resolve, reject) => {
         try {
-            if (type === "api-payment") {
+            if (type && type === "api-payment") {
                 const validate = validateField(reject, {
                     amount,
                     deposit_id,
@@ -61,9 +61,15 @@ const create = ({
                 });
                 if (!validate) return;
             } else {
-                const validate = validateField(reject, {
+                console.log({
                     amount,
-                    deposit_id,
+                    network,
+                    coin,
+                    user,
+                })
+                const validate = validateField(reject, {
+                    trm,
+                    amount,
                     network,
                     coin,
                     user,
@@ -72,17 +78,13 @@ const create = ({
             }
 
             isValidAmount(amount, reject)
-            isValidURL(url, reject)
-            isValidURL(order_received_url, reject)
             isValidNetwork(network, reject)
             isValidCoin(coin, reject)
 
-            // const d = await checkDepositExist(deposit_id);
-            // console.log("d", d)
-            // if (d) {
-            //     reject({ status: "failed", message: "Duplicate deposit id" });
-            // } else 
-            if (type === "api-payment") {
+            if (type && type === "api-payment") {
+                isValidURL(url, reject)
+                isValidURL(order_received_url, reject)
+
                 getDepositAddress(network, coin).then(
                     async ({ address, addressIndex, privateKey }) => {
                         privateKey = signToken(
@@ -141,6 +143,7 @@ const create = ({
                         });
                     }
                 ).catch((error) => {
+                    console.error(error)
                     reject({ status: "failed", message: "Server Error" });;
                 });
             } else {
@@ -154,6 +157,7 @@ const create = ({
                         const coinPriceDouble = await getAmountCrypto();
                         const coin_price = Number(coinPriceDouble).toFixed(2);
                         const amount_crypto = Number((amount / coin_price).toFixed(6));
+                        const deposit_id = Date.now();
 
                         const depositObj = {
                             address,
@@ -170,7 +174,7 @@ const create = ({
                             address_index: addressIndex,
                             coin: coin.toUpperCase(),
                             network: network.toUpperCase(),
-                            user: user,
+                            user,
                             trm,
                             trm_house,
                             amount_fiat,
@@ -184,8 +188,15 @@ const create = ({
                         if (save.success) {
                             delete depositObj["address_index"];
                             delete depositObj["privateKey"];
-                            const { _id, deposit_id, url, amount } = save.deposit
-                            resolve({ status: "success", object: { _id, deposit_id, url, amount } });
+
+                            const invoice_url = process.env.APPURL + '/invoice/' + save.deposit._id;
+                            const invoiceObj = {
+                                status: 'success',
+                                invoiceObj: { ...save.deposit, invoice_url },
+                            };
+                            resolve(invoiceObj);
+                            // const { _id, deposit_id, url, amount } = save.deposit
+                            // resolve({ status: "success", object: { _id, deposit_id, url, amount } });
                         } else {
                             console.log('error in: getDepositAddress',);
                             reject({
@@ -203,11 +214,12 @@ const create = ({
                         });
                     }
                 ).catch((error) => {
+                    console.error(error)
                     reject({ status: "failed", message: "Server Error" });;
                 });
             }
         } catch (error) {
-            console.log(error)
+            console.error(error)
             reject({ status: "failed", message: "Server Error" });
         }
     });
@@ -297,9 +309,9 @@ const setNetwork = ({ deposit_id, network, coin }) => {
  * @param {string} params.deposit_id - The ID of the deposit.
  * @return {Promise<Object>} - The status result.
  */
-const status = ({ deposit_id }) => {
+const status = (_id) => {
     return new Promise((resolve) => {
-        DepositModel.findOne({ deposit_id })
+        DepositModel.findById(_id)
             .then(d => {
                 if (d) {
                     resolve({
@@ -348,28 +360,10 @@ const saveDepositObj = (depositObj) => {
     return DepositModel.create(depositObj)
         .then((deposit) => {
             return { success: true, deposit }
-            console.log('Objeto creado:', createdProduct);
-            // Aquí puedes trabajar con el objeto creado
         })
         .catch((error) => {
             return { success: false, error }
-            console.error('Error al crear el objeto:', error);
         });
-
-    // return new Promise((resolve, reject) => {
-    //     // Change the Sequelize create to Mongoose create
-    //     DepositModel.create(depositObj).then(
-    //         (query) => {
-    //             return query
-    //             console.log(query)
-    //             query ? resolve(true) : resolve(false);
-    //         },
-    //         (error) => {
-    //             console.log(error);
-    //             resolve(false);
-    //         }
-    //     );
-    // });
 };
 
 /**

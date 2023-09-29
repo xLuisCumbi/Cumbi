@@ -128,7 +128,7 @@
 
 <script>
 
-    const deposit_id = window.location.pathname.split("/")[2];
+    const _id = window.location.pathname.split("/")[2];
 
     setTimeout(() => {
         new QRCode(document.getElementById("qrCode"), {
@@ -190,8 +190,7 @@
     }
 
     function checkPayment() {
-
-        $.post('/api/deposit/status', { deposit_id }, function (payment) {
+        $.post('/api/deposit/status', { _id }, function (payment) {
             try {
 
                 payment = payment.depositObj;
