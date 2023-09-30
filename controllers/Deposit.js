@@ -50,7 +50,12 @@ const create = ({
 }) => {
     return new Promise(async (resolve, reject) => {
         try {
-            if (type && type === "api-payment") {
+            if (!type) {
+                reject({ status: "failed", message: "Incorrect type" });
+                return
+            }
+
+            if (type === "api-payment") {
                 const validate = validateField(reject, {
                     amount,
                     deposit_id,
@@ -60,13 +65,7 @@ const create = ({
                     user,
                 });
                 if (!validate) return;
-            } else {
-                console.log({
-                    amount,
-                    network,
-                    coin,
-                    user,
-                })
+            } else if (type === "app-payment") {
                 const validate = validateField(reject, {
                     trm,
                     amount,
@@ -75,15 +74,17 @@ const create = ({
                     user,
                 });
                 if (!validate) return;
+            } else {
+                reject({ status: "failed", message: "Incorrect type" });
+                return
             }
 
-            isValidAmount(amount, reject)
-            isValidNetwork(network, reject)
-            isValidCoin(coin, reject)
+            if (!isValidAmount(amount, reject) || !isValidNetwork(network, reject) || !isValidCoin(coin, reject))
+                return
 
-            if (type && type === "api-payment") {
-                isValidURL(url, reject)
-                isValidURL(order_received_url, reject)
+            if (type === "api-payment") {
+                if (!isValidURL(url, reject) || !isValidURL(order_received_url, reject))
+                    return
 
                 getDepositAddress(network, coin).then(
                     async ({ address, addressIndex, privateKey }) => {
@@ -92,6 +93,7 @@ const create = ({
                             process.env.PRIVATEKEY_JWT_SECRET,
                             "1y"
                         );
+
                         const { trm, trm_house, amount_fiat, coin_fiat, payment_fee, type_payment_fee }
                             = await getExtraData(user, amount)
 
@@ -146,7 +148,7 @@ const create = ({
                     console.error(error)
                     reject({ status: "failed", message: "Server Error" });;
                 });
-            } else {
+            } else if (type === "app-payment") {
                 getDepositAddress(network, coin).then(
                     async ({ address, addressIndex, privateKey }) => {
                         privateKey = signToken(
@@ -215,8 +217,10 @@ const create = ({
                     }
                 ).catch((error) => {
                     console.error(error)
-                    reject({ status: "failed", message: "Server Error" });;
+                    reject({ status: "failed", message: "Server Error" });
                 });
+            } else {
+                reject({ status: "failed", message: "Incorrect type" });
             }
         } catch (error) {
             console.error(error)
@@ -400,7 +404,7 @@ const expireTimedOutDeposits = () => {
             const expiryTime = moment().subtract(24, "hours").toDate();
             // Change the Sequelize update to Mongoose updateMany
             await DepositModel.updateMany(
-                { createdAt: { $lt: expiryTime } },
+                { createdAt: { $lt: expiryTime }, status: "pending" },
                 { status: "expired" }
             );
 
@@ -522,54 +526,72 @@ const getExtraData = async (_id, amount) => {
 };
 
 const isValidAmount = (amount, reject) => {
-    if (isNaN(amount) || typeof amount !== 'number' || !Number.isFinite(amount))
+    if (Number.isNaN(amount)) {
         reject({
             status: "failed",
             message: "Amount must be a correct number",
             statusCode: 400,
         });
+        return false
+    }
 
-    if (amount <= 0)
+    if (amount <= 0) {
         reject({
             status: "failed",
             message: "Amount must be greater than zero",
             statusCode: 400,
         });
+        return false
+    }
+
+    return true
 }
 
 const isValidURL = (url, reject) => {
-    if (url.length > 2000)
+    if (url.length > 2000) {
         reject({
             status: "failed",
             message: "URL is too large",
             statusCode: 400,
         });
+        return false
+    }
 
     const urlPattern = /^(https?):\/\/[^\s/$.?#].[^\s]*$/;
-    if (!urlPattern.test(url))
+    if (!urlPattern.test(url)) {
         reject({
             status: "failed",
             message: "URL has not a correct format",
             statusCode: 400,
         });
+        return false
+    }
+
+    return true
 }
 
 const isValidNetwork = (network, reject) => {
-    if (network !== 'TRON')
+    if (network !== 'TRON') {
         reject({
             status: "failed",
             message: "Network incorrect",
             statusCode: 400,
         });
+        return false
+    }
+    return true
 }
 
 const isValidCoin = (coin, reject) => {
-    if (coin !== 'USDT' && coin !== 'USDC')
+    if (coin !== 'USDT' && coin !== 'USDC') {
         reject({
             status: "failed",
             message: "Coin incorrect",
             statusCode: 400,
         });
+        return false
+    }
+    return true
 }
 module.exports = {
     create,

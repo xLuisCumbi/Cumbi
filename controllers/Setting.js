@@ -37,7 +37,7 @@ const fetchOne = () => {
     return new Promise(async (resolve) => {
         try {
             // Find the latest setting document using the sort method
-            const setting = await SettingModel.findOne({}).sort({ id: -1 });
+            const setting = await SettingModel.findOne({}).sort({ _id: -1 });
             if (setting) {
                 resolve({
                     status: 'success',

@@ -4,8 +4,6 @@ const Coin = require("../controllers/Coin");
 const { sendErrorMsg } = require("../utils");
 const { adminAuthMiddleware, sessionAuthMiddleware } = require("../middleware/auth");
 
-
-
 Router.post("/create", adminAuthMiddleware, (req, res) => {
     Coin.create(req.body).then(
         (resp) => {
@@ -16,7 +14,6 @@ Router.post("/create", adminAuthMiddleware, (req, res) => {
         }
     );
 });
-
 
 Router.get("", sessionAuthMiddleware, (req, res) => {
     Coin.fetch().then(
@@ -29,7 +26,18 @@ Router.get("", sessionAuthMiddleware, (req, res) => {
     );
 });
 
-Router.get("/:id",sessionAuthMiddleware, (req, res) => {
+// Router.get("/init", (req, res) => {
+//     Coin.init().then(
+//         (resp) => {
+//             res.json(resp);
+//         },
+//         (err) => {
+//             sendErrorMsg(res, err);
+//         }
+//     );
+// });
+
+Router.get("/:id", sessionAuthMiddleware, (req, res) => {
     Coin.fetchByID(req.params.id).then(
         (resp) => {
             res.json(resp);
@@ -50,6 +58,9 @@ Router.put("/:id", adminAuthMiddleware, (req, res) => {
         }
     );
 });
+
+
+
 
 /**
  * Handles requests to nonexistent admin routes.
