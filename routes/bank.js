@@ -4,8 +4,6 @@ const Bank = require("../controllers/Bank");
 const { sendErrorMsg } = require("../utils");
 const { adminAuthMiddleware, sessionAuthMiddleware } = require("../middleware/auth");
 
-
-
 Router.post("/create", adminAuthMiddleware, (req, res) => {
     Bank.create(req.body).then(
         (resp) => {
@@ -17,7 +15,6 @@ Router.post("/create", adminAuthMiddleware, (req, res) => {
     );
 });
 
-
 Router.get("", sessionAuthMiddleware, (req, res) => {
     Bank.fetch().then(
         (resp) => {
@@ -28,6 +25,17 @@ Router.get("", sessionAuthMiddleware, (req, res) => {
         }
     );
 });
+
+// Router.get("/init", (req, res) => {
+//     Bank.init().then(
+//         (resp) => {
+//             res.json(resp);
+//         },
+//         (err) => {
+//             sendErrorMsg(res, err);
+//         }
+//     );
+// });
 
 Router.get("/:id",sessionAuthMiddleware, (req, res) => {
     Bank.fetchByID(req.params.id).then(

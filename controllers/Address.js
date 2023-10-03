@@ -104,7 +104,7 @@ const getTrc20Address = (privateKey) => {
  */
 const getAddressIndex = (network, coin) => {
     return new Promise((resolve, reject) => {
-        DepositModel.findOne({ network, coin }).sort({ id: -1 })
+        DepositModel.findOne({ network, coin }).sort({ address_index: -1 })
             .then((lastInsertedRow) => {
                 if (!lastInsertedRow) {
                     resolve(1);

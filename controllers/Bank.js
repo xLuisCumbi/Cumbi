@@ -57,9 +57,27 @@ const update = (bank) => {
   });
 };
 
+const init = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      BankModel.insertMany(
+        [
+          { name: "USDT", abbr: "USDT" },
+          { name: "USDC", abbr: "USDC" },
+        ]
+      )
+      resolve({ status: 'success' });
+    } catch (e) {
+      console.error('Error during creation:', e);
+      reject({ status: 'failed', message: 'server error' });
+    }
+  });
+};
+
 module.exports = {
   create,
   fetch,
   fetchByID,
   update,
+  init
 };

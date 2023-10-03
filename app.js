@@ -50,6 +50,10 @@ const depositRoute = require('./routes/deposit');
 const userRoute = require('./routes/user');
 const businessRoute = require('./routes/business');
 const settingsRoute = require('./routes/setting');
+const coinRoute = require('./routes/coin');
+const countryRoute = require('./routes/country');
+const bankRoute = require('./routes/bank');
+const bankAccountRoute = require('./routes/bankAccount');
 const dbConnection = require('./config/db'); // Import the connectDB function
 
 // Connect to the database
@@ -62,6 +66,10 @@ app.use('/api/deposit', depositRoute);
 app.use('/api/user', userRoute);
 app.use('/api/business', businessRoute);
 app.use('/api/settings', settingsRoute);
+app.use('/api/coin', coinRoute);
+app.use('/api/country', countryRoute);
+app.use('/api/bank', bankRoute);
+app.use('/api/bank_account', bankAccountRoute);
 app.get('*', (req, res) => {
   res.status(404).json({ message: 'NOT FOUND' });
 });
