@@ -2,6 +2,7 @@
 const BankModel = require('../models/Bank');
 
 const create = (data) => {
+  console.log(data)
   return new Promise(async (resolve, reject) => {
     try {
       const query = await BankModel.create(data);
@@ -16,7 +17,7 @@ const create = (data) => {
 const fetch = () => {
   return new Promise(async (resolve) => {
     try {
-      const banks = await BankModel.find().limit(250)
+      const banks = await BankModel.find().populate('country').sort({ name: 'asc' }).limit(250)
       resolve({ status: 'success', banks });
     } catch (error) {
       console.error('Error while fetching bank:', error);
@@ -79,5 +80,5 @@ module.exports = {
   fetch,
   fetchByID,
   update,
-  init
+  // init
 };

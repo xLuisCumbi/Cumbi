@@ -69,7 +69,7 @@ app.use('/api/settings', settingsRoute);
 app.use('/api/coin', coinRoute);
 app.use('/api/country', countryRoute);
 app.use('/api/bank', bankRoute);
-app.use('/api/bank_account', bankAccountRoute);
+app.use('/api/bankaccount', bankAccountRoute);
 app.get('*', (req, res) => {
   res.status(404).json({ message: 'NOT FOUND' });
 });

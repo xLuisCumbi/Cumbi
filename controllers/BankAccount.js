@@ -1,4 +1,4 @@
-const BankAccountModel = require('../models/Bank');
+const BankAccountModel = require('../models/BankAccount');
 
 const create = (data) => {
   return new Promise(async (resolve, reject) => {
@@ -12,11 +12,17 @@ const create = (data) => {
   });
 };
 
+/**
+ * 
+ * @returns Bank Account list of user, if the user is superadmin return all
+ */
 const fetch = () => {
   return new Promise(async (resolve) => {
     try {
-      const bankAccountAccounts = await BankAccountModel.find().limit(250)
-      resolve({ status: 'success', bankAccountAccounts });
+      const bankAccounts = await BankAccountModel.find()
+      .populate('bank').sort({ name: 'asc' })
+      .limit(250)
+      resolve({ status: 'success', bankAccounts });
     } catch (error) {
       console.error('Error while fetching bankAccount:', error);
       resolve({ status: 'failed', message: 'server error: kindly try again' });

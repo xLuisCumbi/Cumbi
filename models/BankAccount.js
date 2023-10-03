@@ -4,11 +4,11 @@ const mongoose = require('mongoose');
 // Define the Admin schema
 const BankAccountSchema = new mongoose.Schema(
     {
-        user_id: {
+        user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
         },
-        bank_id: {
+        bank: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Bank',
         },
@@ -21,10 +21,14 @@ const BankAccountSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        nickname: {
+        name: {
             type: String,
             required: true,
         },
+        active: {
+            type: Boolean,
+            default: false,
+        }
     },
     {
         timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },

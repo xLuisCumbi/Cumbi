@@ -13,6 +13,7 @@ const CoinSchema = new mongoose.Schema(
         abbr: {
             type: String,
             required: true,
+            unique: true,
         },
         price: {
             type: Number,
