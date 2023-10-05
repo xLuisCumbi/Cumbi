@@ -6,7 +6,7 @@ const { adminAuthMiddleware, sessionAuthMiddleware } = require("../middleware/au
 
 
 
-Router.post("/create", adminAuthMiddleware, (req, res) => {
+Router.post("/create", sessionAuthMiddleware, (req, res) => {
     BankAccount.create(req.body).then(
         (resp) => {
             res.json(resp);
@@ -19,7 +19,7 @@ Router.post("/create", adminAuthMiddleware, (req, res) => {
 
 
 Router.get("", sessionAuthMiddleware, (req, res) => {
-    BankAccount.fetch().then(
+    BankAccount.fetch(req.user).then(
         (resp) => {
             res.json(resp);
         },
@@ -29,7 +29,18 @@ Router.get("", sessionAuthMiddleware, (req, res) => {
     );
 });
 
-Router.get("/:id",sessionAuthMiddleware, (req, res) => {
+Router.get("/active", sessionAuthMiddleware, (req, res) => {
+    BankAccount.fetchActive(req.user).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+Router.get("/:id", sessionAuthMiddleware, (req, res) => {
     BankAccount.fetchByID(req.params.id).then(
         (resp) => {
             res.json(resp);
@@ -40,7 +51,7 @@ Router.get("/:id",sessionAuthMiddleware, (req, res) => {
     );
 });
 
-Router.put("/:id", adminAuthMiddleware, (req, res) => {
+Router.put("/:id", sessionAuthMiddleware, (req, res) => {
     BankAccount.update(req.body).then(
         (resp) => {
             res.json(resp);
