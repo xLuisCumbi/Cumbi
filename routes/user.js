@@ -9,7 +9,7 @@ const { adminAuthMiddleware, sessionAuthMiddleware } = require("../middleware/au
 /**
  * Get all users
  */
-Router.get("", (req, res) => {
+Router.get("", sessionAuthMiddleware, (req, res) => {
     User.fetch().then(
         (resp) => {
             res.json(resp);
@@ -20,7 +20,7 @@ Router.get("", (req, res) => {
     );
 });
 
-Router.get("/:id", (req, res) => {
+Router.get("/:id", sessionAuthMiddleware, (req, res) => {
     User.fetchByID(req.params.id).then(
         (resp) => {
             res.json(resp);
@@ -31,7 +31,7 @@ Router.get("/:id", (req, res) => {
     );
 });
 
-Router.delete("/:id", (req, res) => {
+Router.delete("/:id",sessionAuthMiddleware, (req, res) => {
     User.deleteById(req.params.id).then(
         (resp) => {
             res.json(resp);
@@ -45,7 +45,7 @@ Router.delete("/:id", (req, res) => {
 /**
  * TODO revisar como hacerlo con GET
  */
-Router.post("/business", (req, res) => {
+Router.post("/business",sessionAuthMiddleware, (req, res) => {
     User.getByBusiness(req.body).then(
         (resp) => {
             res.json(resp);

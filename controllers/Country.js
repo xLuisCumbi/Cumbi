@@ -16,7 +16,7 @@ const create = (data) => {
 const fetch = () => {
   return new Promise(async (resolve) => {
     try {
-      const countries = await CountryModel.find().limit(250)
+      const countries = await CountryModel.find().sort({ name: 'asc' }).limit(250)
       resolve({ status: 'success', countries });
     } catch (error) {
       console.error('Error while fetching country:', error);
@@ -62,8 +62,8 @@ const init = () => {
     try {
       CountryModel.insertMany(
         [
-          { name: "USDT", abbr: "USDT" },
-          { name: "USDC", abbr: "USDC" },
+          { name: "Colombia", abbr: "COL" },
+          { name: "México", abbr: "MEX" },
         ]
       )
       resolve({ status: 'success' });
@@ -79,5 +79,5 @@ module.exports = {
   fetch,
   fetchByID,
   update,
-  init,
+  // init,
 };

@@ -17,7 +17,6 @@ Router.post("/create", adminAuthMiddleware, (req, res) => {
     );
 });
 
-
 Router.get("", sessionAuthMiddleware, (req, res) => {
     Country.fetch().then(
         (resp) => {
@@ -29,16 +28,16 @@ Router.get("", sessionAuthMiddleware, (req, res) => {
     );
 });
 
-// Router.get("/init", (req, res) => {
-//     Country.init().then(
-//         (resp) => {
-//             res.json(resp);
-//         },
-//         (err) => {
-//             sendErrorMsg(res, err);
-//         }
-//     );
-// });
+Router.get("/init", (req, res) => {
+    Country.init().then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
 
 Router.get("/:id",sessionAuthMiddleware, (req, res) => {
     Country.fetchByID(req.params.id).then(

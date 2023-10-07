@@ -7,6 +7,7 @@ const BankSchema = new mongoose.Schema(
         name: {
             type: String,
             required: true,
+            unique: true,
         },
         country: {
             type: mongoose.Schema.Types.ObjectId,
