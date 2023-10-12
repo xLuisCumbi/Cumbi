@@ -10,10 +10,14 @@ const cron = require("node-cron");
  * The cron jobs run every 5 minutes and call the runCronJobs function.
  */
 const start = () => {
-    cron.schedule("*/2 * * * *", () => {
-    //cron.schedule("0 0 * * *", () => {
+    cron.schedule("*/1 * * * *", () => {
         runCronJobs();
     });
+};
+
+const stop = () => {
+    console.log("Cron Job Stoped");
+    cron.stop();
 };
 
 /**
@@ -21,14 +25,15 @@ const start = () => {
  * The cron jobs check for pending deposits and update admin stats.
  */
 function runCronJobs() {
-
     console.log("Cron Job Fired");
-    checkPendingDeposits();
+    if (!checkPendingDeposits())
+        stop()
     updateAdminStats();
 }
 
-runCronJobs();
+// runCronJobs();
 
 module.exports = {
-    start,
+    // start,
+    // stop
 };

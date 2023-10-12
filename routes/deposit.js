@@ -4,6 +4,7 @@ const Deposit = require("../controllers/Deposit");
 const { sendErrorMsg } = require("../utils");
 const {
     apiAuthMiddleware,
+    adminAuthMiddleware,    
     sessionAuthMiddleware,
     sessionAuthDepositMiddleware,
 } = require("../middleware/auth");
@@ -43,6 +44,17 @@ Router.post("/status", sessionAuthDepositMiddleware, (req, res) => {
 
 Router.post("/set-network", sessionAuthDepositMiddleware, (req, res) => {
     Deposit.setNetwork(req.body).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+Router.post("/consolidate-payment", adminAuthMiddleware, (req, res) => {
+    Deposit.consolidatePayment(req.body).then(
         (resp) => {
             res.json(resp);
         },
