@@ -1,7 +1,6 @@
 const DepositModel = require('../models/Deposit');
 const UserModel = require('../models/User');
 const { signToken, bcryptCompare, verifyToken, genHash } = require('../utils');
-const { create, updateDepositObj } = require('./Deposit');
 const ApiTokenModel = require('../models/ApiToken');
 const consolidateAddressBalance = require('./Consolidation');
 const bcrypt = require('bcryptjs');
@@ -201,35 +200,35 @@ const fetchDeposits = ({ token, user }) => {
   });
 };
 
-const consolidatePayment = ({ token, deposit_id }) => {
-  return new Promise(async (resolve) => {
-    try {
-      const verify = await validateToken(token);
-      if (verify.status === 'success') {
-        const deposit = await DepositModel.findOne({ deposit_id }).exec();
-        if (deposit) {
-          resolve({ status: 'success' });
-          //process continues resolve doesnt stop script
-          //so admin wont have to wait for entire process of consolidation
-          //when done db is auto updated
-        }
+// const consolidatePayment = ({ token, deposit_id }) => {
+//   return new Promise(async (resolve) => {
+//     try {
+//       const verify = await validateToken(token);
+//       if (verify.status === 'success') {
+//         const deposit = await DepositModel.findOne({ deposit_id }).exec();
+//         if (deposit) {
+//           resolve({ status: 'success' });
+//           //process continues resolve doesnt stop script
+//           //so admin wont have to wait for entire process of consolidation
+//           //when done db is auto updated
+//         }
 
-        const { _id, address, balance, privateKey, network, coin } = deposit;
-        const consolidation_status = await consolidateAddressBalance(
-          address,
-          balance,
-          privateKey,
-          network,
-          coin
-        );
+//         const { _id, address, balance, privateKey, network, coin } = deposit;
+//         const consolidation_status = await consolidateAddressBalance(
+//           address,
+//           balance,
+//           privateKey,
+//           network,
+//           coin
+//         );
 
-        updateDepositObj({ _id, consolidation_status });
-      } else resolve(verify);
-    } catch (error) {
-      resolve({ status: 'failed', message: 'server error: kindly try again' });
-    }
-  });
-};
+//         updateDepositObj({ _id, consolidation_status });
+//       } else resolve(verify);
+//     } catch (error) {
+//       resolve({ status: 'failed', message: 'server error: kindly try again' });
+//     }
+//   });
+// };
 
 /**
  * Creates a new API token and stores it in the database.
@@ -616,7 +615,7 @@ module.exports = {
   createToken,
   fetchTokens,
   deleteToken,
-  consolidatePayment,
+  // consolidatePayment,
   signUp,
   getByBusiness,
 };

@@ -11,6 +11,8 @@ const moment = require("moment");
 const UserController = require("./User")
 const SettingController = require("./Setting")
 const BusinessController = require("./Business")
+// const cronController = require('./Cron');
+const cron = require("node-cron");
 
 // DepositModel.sync({ alter: true });
 
@@ -203,7 +205,8 @@ const create = ({
                             console.log('error in: getDepositAddress',);
                             reject({
                                 status: "failed",
-                                message: "Server Error: could not fetch deposit address",
+                                // message: "Server Error: could not fetch deposit address",
+                                message: save.error,
                                 statusCode: 504,
                             });
                         }
@@ -363,6 +366,7 @@ const status = (_id) => {
 const saveDepositObj = (depositObj) => {
     return DepositModel.create(depositObj)
         .then((deposit) => {
+            startCron()
             return { success: true, deposit }
         })
         .catch((error) => {
@@ -372,7 +376,7 @@ const saveDepositObj = (depositObj) => {
 
 /**
  * @function fetchPendingDeposits
- * @description Fetches pending deposits that were created in the last 24 hours
+ * @description Fetches pending deposits that were created in the last 1 hour
  * @returns {Promise<Array>} - A promise that resolves to an array of pending deposits
  */
 const fetchPendingDeposits = () => {
@@ -432,17 +436,16 @@ const checkPendingDeposits = async () => {
 
         if (pendingDeposits.length == 0) {
             console.log("no pending Deposits detected");
-            return;
+            // cronController.stop
+            return false;
         }
 
         pendingDeposits.map(async (deposit) => {
 
-            const { _id, address, privateKey, network, coin } = deposit;
+            const { _id, address, privateKey, network, coin, consolidation_status, status } = deposit;
 
             let balance = await getAddressBalance(address, privateKey, network, coin);
-            balance = !balance ? 0 : balance;
-            let status = "pending";
-            consolidation_status = "unconsolidated";
+            balance = balance ? balance : 0;
 
             if (balance >= deposit.amount) {
                 status = "success";
@@ -454,15 +457,21 @@ const checkPendingDeposits = async () => {
                     network,
                     coin
                 );
+            } else {
+                if (status === "pending" && consolidation_status === "unconsolidated")
+                    return true
+                status = "pending";
+                consolidation_status = "unconsolidated";
             }
 
             updateDepositObj({ _id, address, status, balance, consolidation_status });
         });
 
         expireTimedOutDeposits();
+        return true;
     } catch (error) {
         console.error(error);
-        return;
+        return true;
     }
 };
 
@@ -485,6 +494,36 @@ const updateDepositObj = (depositObj) => {
 
         } catch (error) {
             console.log(error);
+        }
+    });
+};
+
+const consolidatePayment = ({ token, deposit_id }) => {
+    return new Promise(async (resolve) => {
+        try {
+            const verify = await validateToken(token);
+            if (verify.status === 'success') {
+                const deposit = await DepositModel.findOne({ deposit_id }).exec();
+                if (deposit) {
+                    resolve({ status: 'success' });
+                    //process continues resolve doesnt stop script
+                    //so admin wont have to wait for entire process of consolidation
+                    //when done db is auto updated
+                }
+
+                const { _id, address, balance, privateKey, network, coin } = deposit;
+                const consolidation_status = await consolidateAddressBalance(
+                    address,
+                    balance,
+                    privateKey,
+                    network,
+                    coin
+                );
+
+                updateDepositObj({ _id, consolidation_status });
+            } else resolve(verify);
+        } catch (error) {
+            resolve({ status: 'failed', message: 'server error: kindly try again' });
         }
     });
 };
@@ -593,11 +632,42 @@ const isValidCoin = (coin, reject) => {
     }
     return true
 }
+
+
+/**
+ * Starts the cron jobs.
+ * The cron jobs run every 5 minutes and call the runCronJobs function.
+ */
+const startCron = () => {
+    cron.schedule("*/1 * * * *", () => {
+        runCronJobs();
+    });
+};
+
+const stopCron = () => {
+    console.log("Cron Job Stoped");
+    cron.stop();
+};
+
+/**
+ * Runs the cron jobs.
+ * The cron jobs check for pending deposits and update admin stats.
+ */
+function runCronJobs() {
+    console.log("Cron Job Fired");
+    if (!checkPendingDeposits()){
+        stopCron()
+    }        
+    updateAdminStats();
+}
+
+
 module.exports = {
     create,
     status,
     checkPendingDeposits,
     getDepositAddress,
     setNetwork,
-    updateDepositObj
+    updateDepositObj,
+    consolidatePayment
 };
