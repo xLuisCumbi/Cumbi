@@ -31,7 +31,7 @@ Router.post("/create-app", sessionAuthMiddleware, (req, res) => {
     );
 });
 
-Router.post("/status", sessionAuthDepositMiddleware, (req, res) => {
+Router.post("/status",  (req, res) => {
     Deposit.status(req.body).then(
         (resp) => {
             res.json(resp);

@@ -192,7 +192,7 @@
     function checkPayment() {
         $.post('/api/deposit/status', { _id }, function (payment) {
             try {
-
+                console.log(payment.depositObj)
                 payment = payment.depositObj;
                 if (payment.status == 'success') {
 
@@ -213,7 +213,7 @@
 
                 }
             } catch (err) {
-
+                console.log("test")
                 console.log(err);
             }
         });

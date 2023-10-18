@@ -2,7 +2,7 @@
 require('dotenv').config({ path: './config/.env' });
 
 // Import required packages and modules
-// const cronController = require('./controllers/Cron');
+const { startCron } = require('./controllers/Deposit');
 const { engine } = require('express-handlebars');
 const express = require('express');
 const session = require('express-session');
@@ -75,7 +75,7 @@ app.get('*', (req, res) => {
 });
 
 // Start the cron job
-// cronController.start();
+startCron();
 
 // Start the server
 app.listen(PORT, () => {

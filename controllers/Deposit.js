@@ -11,8 +11,10 @@ const moment = require("moment");
 const UserController = require("./User")
 const SettingController = require("./Setting")
 const BusinessController = require("./Business")
+const { updateAdminStats } = require("./Stats");
 // const cronController = require('./Cron');
 const cron = require("node-cron");
+let isCronActive = false
 
 // DepositModel.sync({ alter: true });
 
@@ -399,13 +401,13 @@ const fetchPendingDeposits = () => {
 
 /**
  * @function expireTimedOutDeposits
- * @description Expires deposits that were created more than 24 hours ago
+ * @description Expires deposits that were created more than 1 hour ago
  * @returns {Promise<void>} - A promise that resolves when the operation is complete
  */
 const expireTimedOutDeposits = () => {
     return new Promise(async (resolve, reject) => {
         try {
-            const expiryTime = moment().subtract(24, "hours").toDate();
+            const expiryTime = moment().subtract(1, "hour").toDate();
             // Change the Sequelize update to Mongoose updateMany
             await DepositModel.updateMany(
                 { createdAt: { $lt: expiryTime }, status: "pending" },
@@ -435,15 +437,15 @@ const checkPendingDeposits = async () => {
         const pendingDeposits = await fetchPendingDeposits();
 
         if (pendingDeposits.length == 0) {
-            console.log("no pending Deposits detected");
-            // cronController.stop
+            console.log("No pending Deposits detected");
+            expireTimedOutDeposits()
             return false;
         }
 
         pendingDeposits.map(async (deposit) => {
 
-            const { _id, address, privateKey, network, coin, consolidation_status, status } = deposit;
-
+            const { _id, address, privateKey, network, coin } = deposit;
+            let { consolidation_status, status } = deposit
             let balance = await getAddressBalance(address, privateKey, network, coin);
             balance = balance ? balance : 0;
 
@@ -458,6 +460,8 @@ const checkPendingDeposits = async () => {
                     coin
                 );
             } else {
+                // console.log("status", status)
+                // console.log("consolidation_status", consolidation_status)
                 if (status === "pending" && consolidation_status === "unconsolidated")
                     return true
                 status = "pending";
@@ -466,10 +470,10 @@ const checkPendingDeposits = async () => {
 
             updateDepositObj({ _id, address, status, balance, consolidation_status });
         });
-
-        expireTimedOutDeposits();
+ 
         return true;
     } catch (error) {
+        expireTimedOutDeposits()
         console.error(error);
         return true;
     }
@@ -635,29 +639,33 @@ const isValidCoin = (coin, reject) => {
 
 
 /**
+ * The cron jobs run every 1 minutes and call the runCronJobs function.
+ */
+const cronJob = cron.schedule("*/1 * * * *", () => {
+    runCronJobs();
+});
+
+/**
  * Starts the cron jobs.
- * The cron jobs run every 5 minutes and call the runCronJobs function.
  */
 const startCron = () => {
-    cron.schedule("*/1 * * * *", () => {
-        runCronJobs();
-    });
+    console.log("Cron Job Fired");
+    cronJob.start()
 };
 
 const stopCron = () => {
     console.log("Cron Job Stoped");
-    cron.stop();
+    cronJob.stop();
 };
 
 /**
  * Runs the cron jobs.
  * The cron jobs check for pending deposits and update admin stats.
  */
-function runCronJobs() {
-    console.log("Cron Job Fired");
-    if (!checkPendingDeposits()){
+async function runCronJobs() {
+    if (!await checkPendingDeposits()) {
         stopCron()
-    }        
+    }
     updateAdminStats();
 }
 
@@ -669,5 +677,6 @@ module.exports = {
     getDepositAddress,
     setNetwork,
     updateDepositObj,
-    consolidatePayment
+    consolidatePayment,
+    startCron
 };
