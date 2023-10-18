@@ -115,9 +115,11 @@ const adminAuthMiddleware = (req, res, next) => {
 };
 
 const sessionAuthDepositMiddleware = (req, res, next) => {
+    console.log(req.headers.authorization)
     if (req.headers.authorization) {
         return apiAuthMiddleware(req, res, next);
     } else {
+        console.log(req.session)
         if (req.session.token && req.session.deposit_id) {
             jwt.verify(
                 req.session.token,
@@ -203,7 +205,6 @@ const sessionAuthMiddleware = (req, res, next) => {
             .json({ status: "auth_failed", message: "Authentication failed - triggered an error" });
     }
 };
-
 
 
 module.exports = {
