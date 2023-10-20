@@ -55,6 +55,14 @@ const UserSchema = new mongoose.Schema(
       type: String,
       enum: ['active', 'blocked'],
       default: 'active',
+    },
+    kyc: {
+      type: String,
+      enum: ['pending', 'accepted', 'denied'],
+      default: 'pending',
+    },
+    document: {
+      type: String
     }
   },
   {

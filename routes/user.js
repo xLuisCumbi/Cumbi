@@ -31,7 +31,7 @@ Router.get("/:id", sessionAuthMiddleware, (req, res) => {
     );
 });
 
-Router.delete("/:id",sessionAuthMiddleware, (req, res) => {
+Router.delete("/:id", sessionAuthMiddleware, (req, res) => {
     User.deleteById(req.params.id).then(
         (resp) => {
             res.json(resp);
@@ -45,7 +45,7 @@ Router.delete("/:id",sessionAuthMiddleware, (req, res) => {
 /**
  * TODO revisar como hacerlo con GET
  */
-Router.post("/business",sessionAuthMiddleware, (req, res) => {
+Router.post("/business", sessionAuthMiddleware, (req, res) => {
     User.getByBusiness(req.body).then(
         (resp) => {
             res.json(resp);
@@ -87,6 +87,9 @@ Router.post("/login", (req, res) => {
  * If successful, returns a response containing the user's information.
  */
 Router.post("/signup", adminAuthMiddleware, (req, res) => {
+    console.log(req.file)
+    console.log(req.body)
+    return
     User.signUp(req.body).then(
         (resp) => {
             res.json(resp);
