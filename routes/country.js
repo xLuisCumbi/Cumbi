@@ -17,7 +17,7 @@ Router.post("/create", adminAuthMiddleware, (req, res) => {
     );
 });
 
-Router.get("", sessionAuthMiddleware, (req, res) => {
+Router.get("", (req, res) => {
     Country.fetch().then(
         (resp) => {
             res.json(resp);

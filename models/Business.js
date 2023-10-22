@@ -29,7 +29,7 @@ const BusinessSchema = new mongoose.Schema(
     },
     payment_fee: {
       type: Number,
-      default: 3,
+      default: 0,
       required: true,
     },
     token: {
@@ -42,6 +42,14 @@ const BusinessSchema = new mongoose.Schema(
     last_stats_update: {
       type: Date,
     },
+    kyc: {
+      type: String,
+      enum: ['pending', 'accepted', 'denied'],
+      default: 'pending',
+    },
+    document: {
+      type: String
+    }
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },

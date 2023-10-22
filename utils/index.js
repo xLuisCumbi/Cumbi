@@ -1,6 +1,9 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const ethers = require("ethers");
+const { S3Client } = require("@aws-sdk/client-s3");
+const { Upload } = require('@aws-sdk/lib-storage');
+const fs = require('fs');
 require("dotenv").config();
 
 const sendErrorMsg = (res, err) => {
@@ -152,6 +155,39 @@ const timestamp2date = (timestamp) => {
     return fechaLegible;
 }
 
+const uploadToS3 = async (file) => {
+    const client = new S3Client({
+        credentials: {
+            accessKeyId: 'AKIAS3YIGB2GOB76O5YQ',
+            secretAccessKey: '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',
+        },
+        region: 'us-east-1',
+    });
+
+    const fileStream = fs.createReadStream(file);
+    const filePath = 'ruta/al/archivo.pdf';
+    const fileName = 'nombre-del-archivo.pdf';
+    const bucketName = 'documents-cumbi';
+
+    const uploadParams = {
+        Bucket: bucketName,
+        Key: fileName,
+        Body: fileStream,
+    };
+
+    const upload = new Upload({
+        client: client,
+        params: uploadParams,
+    });
+
+    try {
+        const result = await upload.done();
+        console.log(result);
+    } catch (error) {
+        console.log(error);
+    }
+};
+
 module.exports = {
     sendErrorMsg,
     validateField,
@@ -163,4 +199,5 @@ module.exports = {
     checkSupportedAddress,
     getTRM,
     timestamp2date,
+    uploadToS3
 };

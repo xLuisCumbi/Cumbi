@@ -1,6 +1,6 @@
 const DepositModel = require('../models/Deposit');
 const UserModel = require('../models/User');
-const { signToken, bcryptCompare, verifyToken, genHash } = require('../utils');
+const { signToken, bcryptCompare, verifyToken, genHash, uploadToS3 } = require('../utils');
 const ApiTokenModel = require('../models/ApiToken');
 const consolidateAddressBalance = require('./Consolidation');
 const bcrypt = require('bcryptjs');
@@ -153,6 +153,15 @@ const signUp = (userData) => {
   return new Promise(async (resolve, reject) => {
     try {
       userData.password = await bcrypt.hash(userData.password, 10);
+
+      if (userData.document)
+        uploadToS3(userData.document)
+          .then(() => {
+            // Realiza acciones adicionales después de cargar el archivo a S3
+          })
+          .catch((error) => {
+            // Maneja errores en caso de que ocurran
+          });
 
       // Only include the "business" field in userData if the role is not "person"
       if (userData.role !== 'person') {
