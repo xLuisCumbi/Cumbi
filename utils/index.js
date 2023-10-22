@@ -1,15 +1,11 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const ethers = require("ethers");
-console.log('hola', 'hola')
-const AWS = require('aws-sdk');
 const { S3Client } = require("@aws-sdk/client-s3");
 const { Upload } = require('@aws-sdk/lib-storage');
 const fs = require('fs');
 require("dotenv").config();
 
-
-console.log('AWS', AWS);
 const sendErrorMsg = (res, err) => {
     console.log('err', err);
     console.log('Error Stack Trace:', err.stack);
@@ -159,14 +155,7 @@ const timestamp2date = (timestamp) => {
     return fechaLegible;
 }
 
-const uploadToS3 = (file) => {
-    // Configura AWS SDK con tus credenciales y región
-    AWS.config.update({
-        accessKeyId: 'AKIAS3YIGB2GOB76O5YQ',
-        secretAccessKey: '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',
-        region: 'us-east-1', // Cambia la región según tus necesidades
-    });
-
+const uploadToS3 = async (file) => {
     const client = new S3Client({
         credentials: {
             accessKeyId: 'AKIAS3YIGB2GOB76O5YQ',
@@ -176,11 +165,9 @@ const uploadToS3 = (file) => {
     });
 
     const fileStream = fs.createReadStream(file);
-
-    const filePath = 'ruta/al/archivo.pdf'; // Ruta local al archivo que deseas subir
-    const fileName = 'nombre-del-archivo.pdf'; // Nombre que tendrá el archivo en S3
-    const bucketName = 'documents-cumbi'; // Nombre del bucket en S3
-
+    const filePath = 'ruta/al/archivo.pdf';
+    const fileName = 'nombre-del-archivo.pdf';
+    const bucketName = 'documents-cumbi';
 
     const uploadParams = {
         Bucket: bucketName,
@@ -193,11 +180,13 @@ const uploadToS3 = (file) => {
         params: uploadParams,
     });
 
-    upload.done().then((res, error) => {
-        console.log(res);
-    });
-
-}
+    try {
+        const result = await upload.done();
+        console.log(result);
+    } catch (error) {
+        console.log(error);
+    }
+};
 
 module.exports = {
     sendErrorMsg,
