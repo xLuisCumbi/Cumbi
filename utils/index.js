@@ -1,13 +1,15 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const ethers = require("ethers");
-// const AWS = require('aws-sdk');
-// import { S3Client } from "@aws-sdk/client-s3"
-// const { S3Client } = require("@aws-sdk/client-s3");
-// const { Upload } = require('@aws-sdk/lib-storage');
+console.log('hola', 'hola')
+const AWS = require('aws-sdk');
+const { S3Client } = require("@aws-sdk/client-s3");
+const { Upload } = require('@aws-sdk/lib-storage');
 const fs = require('fs');
 require("dotenv").config();
 
+
+console.log('AWS', AWS);
 const sendErrorMsg = (res, err) => {
     console.log('err', err);
     console.log('Error Stack Trace:', err.stack);
@@ -159,41 +161,41 @@ const timestamp2date = (timestamp) => {
 
 const uploadToS3 = (file) => {
     // Configura AWS SDK con tus credenciales y región
-    // AWS.config.update({
-    //     accessKeyId: 'AKIAS3YIGB2GOB76O5YQ',
-    //     secretAccessKey: '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',
-    //     region: 'us-east-1', // Cambia la región según tus necesidades
-    // });
+    AWS.config.update({
+        accessKeyId: 'AKIAS3YIGB2GOB76O5YQ',
+        secretAccessKey: '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',
+        region: 'us-east-1', // Cambia la región según tus necesidades
+    });
 
-    // const client = new S3Client({
-    //     credentials: {
-    //         accessKeyId: 'AKIAS3YIGB2GOB76O5YQ',
-    //         secretAccessKey: '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',
-    //     },
-    //     region: 'us-east-1',
-    // });
+    const client = new S3Client({
+        credentials: {
+            accessKeyId: 'AKIAS3YIGB2GOB76O5YQ',
+            secretAccessKey: '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',
+        },
+        region: 'us-east-1',
+    });
 
-    // const fileStream = fs.createReadStream(file);
+    const fileStream = fs.createReadStream(file);
 
-    // const filePath = 'ruta/al/archivo.pdf'; // Ruta local al archivo que deseas subir
-    // const fileName = 'nombre-del-archivo.pdf'; // Nombre que tendrá el archivo en S3
-    // const bucketName = 'documents-cumbi'; // Nombre del bucket en S3
+    const filePath = 'ruta/al/archivo.pdf'; // Ruta local al archivo que deseas subir
+    const fileName = 'nombre-del-archivo.pdf'; // Nombre que tendrá el archivo en S3
+    const bucketName = 'documents-cumbi'; // Nombre del bucket en S3
 
 
-    // const uploadParams = {
-    //     Bucket: bucketName,
-    //     Key: fileName,
-    //     Body: fileStream,
-    // };
+    const uploadParams = {
+        Bucket: bucketName,
+        Key: fileName,
+        Body: fileStream,
+    };
 
-    // const upload = new Upload({
-    //     client: client,
-    //     params: uploadParams,
-    // });
+    const upload = new Upload({
+        client: client,
+        params: uploadParams,
+    });
 
-    // upload.done().then((res, error) => {
-    //     console.log(res);
-    // });
+    upload.done().then((res, error) => {
+        console.log(res);
+    });
 
 }
 
