@@ -6,9 +6,10 @@ const consolidateAddressBalance = require('./Consolidation');
 const bcrypt = require('bcryptjs');
 const ObjectId = require('mongoose').Types.ObjectId;
 
+
 /**
  * Get all users
- * @returns 
+ * @returns
  */
 const fetch = () => {
   return new Promise(async (resolve) => {
@@ -24,7 +25,7 @@ const fetch = () => {
 
 /**
  * Get user by ID
- * @returns 
+ * @returns
  */
 const fetchByID = (id) => {
   return new Promise(async (resolve) => {
@@ -149,34 +150,36 @@ const login = ({ email, password }) => {
  * @param {string} params.domain - The user's user.
  * @return {Promise<Object>} - The signup result.
  */
-const signUp = (userData) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      userData.password = await bcrypt.hash(userData.password, 10);
+const signUp = async (userData, document = {}) => {
 
-      if (userData.document)
-        uploadToS3(userData.document)
-          .then(() => {
-            // Realiza acciones adicionales después de cargar el archivo a S3
-          })
-          .catch((error) => {
-            // Maneja errores en caso de que ocurran
-          });
-
-      // Only include the "business" field in userData if the role is not "person"
-      if (userData.role !== 'person') {
-        const query = await UserModel.create(userData);
-        resolve({ status: 'signUp_success', user: query });
-      } else {
-        const { business, ...userDataWithoutBusiness } = userData;
-        const query = await UserModel.create(userDataWithoutBusiness);
-        resolve({ status: 'signUp_success', user: query });
+  try {
+    // Verifica si se ha proporcionado un documento
+    if (document) {
+      try {
+        const s3Response = await uploadToS3(document);
+        // Guarda la URL del archivo en S3 en tu base de datos
+        userData.document = s3Response.Location;
+      } catch (error) {
+        console.error('Error uploading to S3:', error);
+        throw { status: 'signUp_failed', message: 'Error uploading to S3' };
       }
-    } catch (e) {
-      console.error('Error during login:', e);
-      reject({ status: 'signUp_failed', message: 'server error' });
     }
-  });
+
+    // Aquí va tu lógica para crear el usuario en la base de datos
+    let query;
+    if (userData.role !== 'person') {
+      // query = await UserModel.create(userData);
+    } else {
+      const { business, ...userDataWithoutBusiness } = userData;
+      // query = await UserModel.create(userDataWithoutBusiness);
+    }
+
+    return { status: 'signUp_success', user: query };
+
+  } catch (e) {
+    console.error('Error during signUp:', e);
+    throw { status: 'signUp_failed', message: 'server error' };
+  }
 };
 
 /**

@@ -156,17 +156,22 @@ const timestamp2date = (timestamp) => {
 }
 
 const uploadToS3 = async (file) => {
+    console.log('file', file);
     const client = new S3Client({
+        region: process.env.AWS_REGION,
         credentials: {
-            accessKeyId: 'AKIAS3YIGB2GOB76O5YQ',
-            secretAccessKey: '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',
-        },
-        region: 'us-east-1',
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+        }
     });
 
-    const fileStream = fs.createReadStream(file);
-    const filePath = 'ruta/al/archivo.pdf';
-    const fileName = 'nombre-del-archivo.pdf';
+    console.log('file', file.path);
+
+    const fileStream = fs.createReadStream(file.path); // Utiliza file.path para obtener la ruta al archivo
+    const fileName = generateS3FileName(file.name); // Llama a la función para generar el nombre
+
+    console.log('fileName', fileName);
+
     const bucketName = 'documents-cumbi';
 
     const uploadParams = {
@@ -186,6 +191,14 @@ const uploadToS3 = async (file) => {
     } catch (error) {
         console.log(error);
     }
+};
+
+// Función para generar el nombre del archivo en S3
+const generateS3FileName = (originalFileName) => {
+    const uniqueFileName = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    // Reemplaza espacios por guiones bajos y agrega el ID de usuario
+    const sanitizedFileName = originalFileName.replace(/ /g, '_');
+    return `${uniqueFileName}_${sanitizedFileName}`;
 };
 
 module.exports = {

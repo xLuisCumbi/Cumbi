@@ -5,6 +5,10 @@ const Setting = require("../controllers/Setting");
 const { sendErrorMsg } = require("../utils");
 const { adminAuthMiddleware, sessionAuthMiddleware } = require("../middleware/auth");
 
+// Multer middleware for file uploads
+const multer = require('multer');
+const upload = multer(); // Configuración básica de multer
+
 
 /**
  * Get all users
@@ -87,9 +91,6 @@ Router.post("/login", (req, res) => {
  * If successful, returns a response containing the user's information.
  */
 Router.post("/signup", adminAuthMiddleware, (req, res) => {
-    console.log(req.file)
-    console.log(req.body)
-    return
     User.signUp(req.body).then(
         (resp) => {
             res.json(resp);
@@ -99,6 +100,18 @@ Router.post("/signup", adminAuthMiddleware, (req, res) => {
         }
     );
 });
+
+// Ruta para el registro de usuarios sin autenticación de administrador.
+Router.post("/public-signup", upload.any(), async (req, res) => {
+    try {
+        const document = req.files.length > 0 ? req.files[0] : null;
+        const resp = await User.signUp(req.body, document);
+        res.json(resp);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 /**
  * Retrieves deposit information for the admin.
@@ -250,7 +263,6 @@ Router.put("/:id", sessionAuthMiddleware, (req, res) => {
 });
 
 Router.put("/block/:id", sessionAuthMiddleware, (req, res) => {
-    console.log(req.body)
     User.updateUserStatus(req.params.id, req.body).then(
         (resp) => {
             res.json(resp);
