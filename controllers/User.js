@@ -17,7 +17,7 @@ const fetch = () => {
       const users = await UserModel.find({}, { password: 0 }).limit(20)
       resolve({ status: 'success', users });
     } catch (error) {
-      console.error('Error while fetching business:', error);
+      console.error('Error while fetching users:', error);
       resolve({ status: 'failed', message: 'server error: kindly try again' });
     }
   });
@@ -33,7 +33,7 @@ const fetchByID = (id) => {
       const user = await UserModel.findById(id, { password: 0 })
       resolve({ status: 'success', user });
     } catch (error) {
-      console.error('Error while fetching business:', error);
+      console.error('Error while fetching user:', error);
       resolve({ status: 'failed', message: 'server error: kindly try again' });
     }
   });
@@ -48,7 +48,7 @@ const deleteById = (id) => {
       await UserModel.deleteOne({ _id: id })
       resolve({ status: 'success' });
     } catch (error) {
-      console.error('Error while fetching business:', error);
+      console.error('Error while deleteting user:', error);
       resolve({ status: 'failed', message: 'server error: kindly try again' });
     }
   });
@@ -425,12 +425,13 @@ const updateProfile = ({ passphrase, email, username, password, token }) => {
 const updateUser = (user) => {
   return new Promise(async (resolve) => {
     try {
-      if (user.password)
+      if (user.password) {
         user.password = await genHash(user.password);
-      await UserModel.updateOne(
-        { _id: user._id },
-        user
-      ).exec();
+      } else {
+        delete user.password
+      }
+
+      await UserModel.updateOne({ _id: user._id }, user).exec();
       resolve({ status: 'success' });
     } catch (error) {
       console.log('error', error.stack);
@@ -628,23 +629,25 @@ const adminStats = ({ token }) => {
  * @param {string} params.id - The ID of the user making the request.
  * @return {Promise<Object>} - The result containing the retrieved users.
  */
-const getByBusiness = async ({ id }) => {
+const getByBusiness = async (id) => {
   try {
     // Fetch the user's role based on their ID
     const { role, business } = await UserModel.findById(id);
 
-    // Determine whether the user is a superadmin based on their role
-    const isSuperAdmin = role === 'superadmin';
-
     let usersQuery = {};
 
-    // If the user is not a superadmin, fetch their associated business and query users by business
-    if (!isSuperAdmin) {
+
+    // If the user is a person, just get the same user
+    if (role === 'person') {
+      usersQuery._id = id
+
+      // If the user is not a superadmin, fetch their associated business and query users by business
+    } else if (role !== 'superadmin') {
       usersQuery.business = business;
     }
 
     // Fetch users based on the constructed query
-    const users = await UserModel.find(usersQuery, { password: 0 });
+    const users = await UserModel.find(usersQuery, { password: 0 }).populate('business');
 
     // Return the success status along with the retrieved users
     return {

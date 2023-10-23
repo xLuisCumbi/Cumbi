@@ -59,6 +59,11 @@ const create = ({
                 return
             }
 
+            if (!await hasKYC(user)) {
+                reject({ status: "failed", message: "Usuario pendiente por validación" });
+                return
+            }
+
             if (type === "api-payment") {
                 const validate = validateField(reject, {
                     amount,
@@ -470,7 +475,7 @@ const checkPendingDeposits = async () => {
 
             updateDepositObj({ _id, address, status, balance, consolidation_status });
         });
- 
+
         return true;
     } catch (error) {
         expireTimedOutDeposits()
@@ -667,6 +672,14 @@ async function runCronJobs() {
         stopCron()
     }
     updateAdminStats();
+}
+
+
+async function hasKYC(_id) {
+    const { user } = await UserController.fetchByID(_id)
+    if (user.kyc && user.kyc === "accepted")
+        return true
+    return false
 }
 
 

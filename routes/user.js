@@ -24,33 +24,8 @@ Router.get("", sessionAuthMiddleware, (req, res) => {
     );
 });
 
-Router.get("/:id", sessionAuthMiddleware, (req, res) => {
-    User.fetchByID(req.params.id).then(
-        (resp) => {
-            res.json(resp);
-        },
-        (err) => {
-            sendErrorMsg(res, err);
-        }
-    );
-});
-
-Router.delete("/:id", sessionAuthMiddleware, (req, res) => {
-    User.deleteById(req.params.id).then(
-        (resp) => {
-            res.json(resp);
-        },
-        (err) => {
-            sendErrorMsg(res, err);
-        }
-    );
-});
-
-/**
- * TODO revisar como hacerlo con GET
- */
-Router.post("/business", sessionAuthMiddleware, (req, res) => {
-    User.getByBusiness(req.body).then(
+Router.get("/business/:id", sessionAuthMiddleware, (req, res) => {
+    User.getByBusiness(req.params.id).then(
         (resp) => {
             res.json(resp);
         },
@@ -70,6 +45,31 @@ Router.get("/fetch-setting", adminAuthMiddleware, (req, res) => {
         }
     );
 });
+
+Router.get("/:id", sessionAuthMiddleware, (req, res) => {
+    User.fetchByID(req.params.id).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
+
+
+Router.delete("/:id", sessionAuthMiddleware, (req, res) => {
+    User.deleteById(req.params.id).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
 
 /**
  * Handles admin login requests.

@@ -133,6 +133,7 @@ const getMnemonic = () => {
             }
 
             const phraseToken = setting.passphrase;
+
             verifyToken(phraseToken, process.env.MNEMONIC_JWT_SECRET).then(
                 (phraseObj) => {
                     resolve(phraseObj.mnemonic);
