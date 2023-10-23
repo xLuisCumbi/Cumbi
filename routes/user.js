@@ -159,6 +159,21 @@ Router.post("/update", adminAuthMiddleware, (req, res) => {
     );
 });
 
+/**
+ * Updates admin information.
+ * Returns a response containing the updated admin data.
+ */
+Router.post("/update-profile", adminAuthMiddleware, (req, res) => {
+    User.updateProfile(req.body).then(
+        (resp) => {
+            res.json(resp);
+        },
+        (err) => {
+            sendErrorMsg(res, err);
+        }
+    );
+});
+
 Router.post("/consolidate-payment", adminAuthMiddleware, (req, res) => {
     User.consolidatePayment(req.body).then(
         (resp) => {

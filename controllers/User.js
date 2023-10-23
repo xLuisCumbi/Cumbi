@@ -151,36 +151,38 @@ const login = ({ email, password }) => {
  * @return {Promise<Object>} - The signup result.
  */
 const signUp = async (userData, document = {}) => {
-
   console.log('document', document);
   try {
-    // Verifica si se ha proporcionado un documento
-    if (document) {
-      try {
+    // Primero, crea el usuario en la base de datos
+    userData.password = await bcrypt.hash(userData.password, 10);
 
+    let query;
+    let userId;
+    if (userData.role !== 'person') {
+      query = await UserModel.create(userData);
+      userId = query._id;
+    } else {
+      const { business, ...userDataWithoutBusiness } = userData;
+      query = await UserModel.create(userDataWithoutBusiness);
+      userId = query._id;
+    }
+
+    // Si el usuario se crea exitosamente y se proporciona un documento, sube el archivo
+    if (userId && document) {
+      try {
         const s3Response = await uploadToS3(document);
 
         if (s3Response && s3Response.Location) {
-          userData.document = s3Response.Location;
+          // Actualiza el usuario con la URL del documento
+          await UserModel.updateOne({ _id: userId }, { document: s3Response.Location });
         } else {
-          throw { status: 'signUp_failed', message: 'S3 response does not contain Location' };
+          throw { status: 'update_failed', message: 'S3 response does not contain Location' };
         }
 
       } catch (error) {
         console.error('Error uploading to S3:', error);
-        throw { status: 'signUp_failed', message: 'Error uploading to S3' };
+        throw { status: 'update_failed', message: 'Error uploading to S3' };
       }
-    }
-
-    // Aquí va tu lógica para crear el usuario en la base de datos
-    userData.password = await bcrypt.hash(userData.password, 10);
-
-    let query;
-    if (userData.role !== 'person') {
-      query = await UserModel.create(userData);
-    } else {
-      const { business, ...userDataWithoutBusiness } = userData;
-      query = await UserModel.create(userDataWithoutBusiness);
     }
 
     return { status: 'signUp_success', user: query };
@@ -383,6 +385,42 @@ const update = ({ passphrase, email, username, password, token }) => {
   });
 };
 
+const updateProfile = ({ passphrase, email, username, password, token }) => {
+  return new Promise(async (resolve) => {
+    try {
+      const verify = await validateToken(token);
+
+      if (verify.status == 'success') {
+        let adminObj = {};
+
+        if (passphrase) {
+          adminObj.passphrase = signToken(
+            { mnemonic: passphrase, type: 'mnemonic-token' },
+            process.env.MNEMONIC_JWT_SECRET,
+            '100y'
+          );
+        }
+
+        if (password) adminObj.password = await genHash(password);
+
+        if (username) adminObj.username = username;
+        console.log('username', username);
+
+        adminObj.updatedAt = new Date();
+        console.log('verify.id', verify.id);
+        await UserModel.updateOne(
+          { _id: verify.id },
+          adminObj
+        ).exec();
+
+        resolve({ status: 'success' });
+      } else resolve(verify);
+    } catch (error) {
+      console.log('error', error.stack);
+      resolve({ status: 'failed', message: 'server error: kindly try again' });
+    }
+  });
+};
 
 const updateUser = (user) => {
   return new Promise(async (resolve) => {
@@ -631,6 +669,7 @@ module.exports = {
   update,
   updateUser,
   updateUserStatus,
+  updateProfile,
   adminStats,
   createInvoice,
   createToken,
