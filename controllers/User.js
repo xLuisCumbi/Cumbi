@@ -152,13 +152,20 @@ const login = ({ email, password }) => {
  */
 const signUp = async (userData, document = {}) => {
 
+  console.log('document', document);
   try {
     // Verifica si se ha proporcionado un documento
     if (document) {
       try {
+
         const s3Response = await uploadToS3(document);
-        // Guarda la URL del archivo en S3 en tu base de datos
-        userData.document = s3Response.Location;
+
+        if (s3Response && s3Response.Location) {
+          userData.document = s3Response.Location;
+        } else {
+          throw { status: 'signUp_failed', message: 'S3 response does not contain Location' };
+        }
+
       } catch (error) {
         console.error('Error uploading to S3:', error);
         throw { status: 'signUp_failed', message: 'Error uploading to S3' };
@@ -168,10 +175,10 @@ const signUp = async (userData, document = {}) => {
     // Aquí va tu lógica para crear el usuario en la base de datos
     let query;
     if (userData.role !== 'person') {
-      // query = await UserModel.create(userData);
+      query = await UserModel.create(userData);
     } else {
       const { business, ...userDataWithoutBusiness } = userData;
-      // query = await UserModel.create(userDataWithoutBusiness);
+      query = await UserModel.create(userDataWithoutBusiness);
     }
 
     return { status: 'signUp_success', user: query };

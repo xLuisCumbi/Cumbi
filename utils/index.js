@@ -165,10 +165,8 @@ const uploadToS3 = async (file) => {
         }
     });
 
-    console.log('file', file.path);
-
-    const fileStream = fs.createReadStream(file.path); // Utiliza file.path para obtener la ruta al archivo
-    const fileName = generateS3FileName(file.name); // Llama a la función para generar el nombre
+    const fileStream = file.path ? fs.createReadStream(file.path) : file.buffer;
+    const fileName = generateS3FileName(file.originalname); // Llama a la función para generar el nombre
 
     console.log('fileName', fileName);
 
@@ -187,9 +185,10 @@ const uploadToS3 = async (file) => {
 
     try {
         const result = await upload.done();
-        console.log(result);
+        return result;
     } catch (error) {
         console.log(error);
+        throw error; // Lanza el error para que pueda ser capturado en la función signUp
     }
 };
 
