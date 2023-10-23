@@ -173,6 +173,8 @@ const signUp = async (userData, document = {}) => {
     }
 
     // Aquí va tu lógica para crear el usuario en la base de datos
+    userData.password = await bcrypt.hash(userData.password, 10);
+
     let query;
     if (userData.role !== 'person') {
       query = await UserModel.create(userData);
