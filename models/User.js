@@ -61,7 +61,15 @@ const UserSchema = new mongoose.Schema(
     },
     document: {
       type: String
-    }
+    },
+    acceptedDataPolicy: {
+      type: Boolean,
+      default: false,
+    },
+    acceptedTermsConditions: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
