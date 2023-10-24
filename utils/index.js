@@ -156,7 +156,6 @@ const timestamp2date = (timestamp) => {
 }
 
 const uploadToS3 = async (file) => {
-    console.log('file', file);
     const client = new S3Client({
         region: process.env.AWS_REGION,
         credentials: {
@@ -167,8 +166,6 @@ const uploadToS3 = async (file) => {
 
     const fileStream = file.path ? fs.createReadStream(file.path) : file.buffer;
     const fileName = generateS3FileName(file.originalname); // Llama a la función para generar el nombre
-
-    console.log('fileName', fileName);
 
     const bucketName = 'documents-cumbi';
 

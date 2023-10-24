@@ -151,7 +151,6 @@ const login = ({ email, password }) => {
  * @return {Promise<Object>} - The signup result.
  */
 const signUp = async (userData, document = {}) => {
-  console.log('document', document);
   try {
     // Primero, crea el usuario en la base de datos
     userData.password = await bcrypt.hash(userData.password, 10);
