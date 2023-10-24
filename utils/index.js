@@ -167,7 +167,7 @@ const uploadToS3 = async (file) => {
     const fileStream = file.path ? fs.createReadStream(file.path) : file.buffer;
     const fileName = generateS3FileName(file.originalname); // Llama a la función para generar el nombre
 
-    const bucketName = 'documents-cumbi';
+    const bucketName = process.env.AWS_BUCKET;
 
     const uploadParams = {
         Bucket: bucketName,
