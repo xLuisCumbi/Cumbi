@@ -48,19 +48,19 @@ Router.post("/update", adminAuthMiddleware, (req, res) => {
 });
 
 
-Router.post("/update-mnemonic", adminAuthMiddleware, (req, res) => {
-    const { passphrase } = req.body;
-    const userRole = req.user.role; // Assuming the user role is available in req.user
+// Router.post("/update-mnemonic", adminAuthMiddleware, (req, res) => {
+//     const { passphrase } = req.body;
+//     const userRole = req.user.role; // Assuming the user role is available in req.user
 
-    Setting.updateMnemonic(passphrase, userRole).then(
-        (resp) => {
-            res.json(resp);
-        },
-        (err) => {
-            sendErrorMsg(res, err);
-        }
-    );
-});
+//     Setting.updateMnemonic(passphrase, userRole).then(
+//         (resp) => {
+//             res.json(resp);
+//         },
+//         (err) => {
+//             sendErrorMsg(res, err);
+//         }
+//     );
+// });
 
 
 Router.use("**", (req, res) => {

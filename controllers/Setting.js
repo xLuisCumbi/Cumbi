@@ -59,39 +59,39 @@ const fetchOne = () => {
  * @returns {Promise<Object>} A Promise that resolves to an object indicating the status of the update operation.
  * @throws {Object} An object indicating the failure status and error message if the operation fails.
  */
-const updateMnemonic = (passphrase, userRole) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            // Only 'superadmin' users are allowed to update the passphrase
-            if (userRole !== 'superadmin') {
-                return reject({ status: 'failed', message: 'Only super admins can update mnemonic' });
-            }
+// const updateMnemonic = (passphrase, userRole) => {
+//     return new Promise(async (resolve, reject) => {
+//         try {
+//             // Only 'superadmin' users are allowed to update the passphrase
+//             if (userRole !== 'superadmin') {
+//                 return reject({ status: 'failed', message: 'Only super admins can update mnemonic' });
+//             }
 
-            // Sign the mnemonic token if passphrase is provided
-            if (passphrase) {
-                const mnemonicToken = signToken(
-                    { mnemonic: passphrase, type: 'mnemonic-token' },
-                    process.env.MNEMONIC_JWT_SECRET,
-                    '100y'
-                );
-                // Update the passphrase in the setting document
-                await SettingModel.findOneAndUpdate({}, { passphrase: mnemonicToken });
-            } else {
-                // No passphrase provided, reject with an appropriate message
-                return reject({ status: 'failed', message: 'Passphrase is required' });
-            }
+//             // Sign the mnemonic token if passphrase is provided
+//             if (passphrase) {
+//                 const mnemonicToken = signToken(
+//                     { mnemonic: passphrase, type: 'mnemonic-token' },
+//                     process.env.MNEMONIC_JWT_SECRET,
+//                     '100y'
+//                 );
+//                 // Update the passphrase in the setting document
+//                 await SettingModel.findOneAndUpdate({}, { passphrase: mnemonicToken });
+//             } else {
+//                 // No passphrase provided, reject with an appropriate message
+//                 return reject({ status: 'failed', message: 'Passphrase is required' });
+//             }
 
-            resolve({ status: 'success' });
-        } catch (e) {
-            console.error('Error during updating mnemonic:', e);
-            reject({ status: 'failed', message: 'Server error' });
-        }
-    });
-};
+//             resolve({ status: 'success' });
+//         } catch (e) {
+//             console.error('Error during updating mnemonic:', e);
+//             reject({ status: 'failed', message: 'Server error' });
+//         }
+//     });
+// };
 
 // Export the functions
 module.exports = {
     update,
     fetchOne,
-    updateMnemonic,
+    //updateMnemonic,
 };
