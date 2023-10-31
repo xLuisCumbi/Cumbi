@@ -1,6 +1,6 @@
 const DepositModel = require('../models/Deposit');
 const UserModel = require('../models/User');
-const { signToken, bcryptCompare, verifyToken, genHash, uploadToS3 } = require('../utils');
+const { signToken, bcryptCompare, verifyToken, genHash, uploadToS3, sendEmail, TYPE_EMAIL } = require('../utils');
 const ApiTokenModel = require('../models/ApiToken');
 const consolidateAddressBalance = require('./Consolidation');
 const bcrypt = require('bcryptjs');
@@ -174,6 +174,8 @@ const signUp = async (userData, document = {}) => {
         if (s3Response && s3Response.Location) {
           // Actualiza el usuario con la URL del documento
           await UserModel.updateOne({ _id: userId }, { document: s3Response.Location });
+          // Envía un email de confirmación al usuario
+          sendEmail(userData.email, TYPE_EMAIL.REGISTER)
         } else {
           throw { status: 'update_failed', message: 'S3 response does not contain Location' };
         }

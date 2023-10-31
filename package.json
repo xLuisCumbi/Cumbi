@@ -13,6 +13,7 @@
     "author": "github: Timileyin105",
     "dependencies": {
         "@aws-sdk/client-s3": "^3.433.0",
+        "@aws-sdk/client-sesv2": "^3.437.0",
         "@aws-sdk/lib-storage": "^3.431.0",
         "axios": "^1.4.0",
         "bcryptjs": "^2.4.3",
@@ -34,6 +35,7 @@
         "multer-s3": "^3.0.1",
         "mysql2": "^3.5.2",
         "node-cron": "^3.0.2",
+        "nodemailer": "^6.9.7",
         "sequelize": "^6.32.0",
         "tronweb": "^5.2.0"
     },

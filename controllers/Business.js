@@ -11,8 +11,8 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const create = (businessData) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const query = await BusinessModel.create(businessData);
-      resolve({ status: 'success', business: query });
+      const business = await BusinessModel.create(businessData);
+      resolve({ status: 'success', business });
     } catch (e) {
       console.error('Error during login:', e);
       reject({ status: 'failed', message: 'server error' });

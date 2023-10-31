@@ -3,7 +3,7 @@
  * It includes functions for creating deposits, checking deposit status, and updating deposits.
  */
 const DepositModel = require("../models/Deposit");
-const { validateField, signToken } = require("../utils");
+const { validateField, signToken, TYPE_EMAIL, sendEmail } = require("../utils");
 const { getAddressBalance } = require("./Balance");
 const consolidateAddressBalance = require("./Consolidation");
 const getDepositAddress = require("./Address");
@@ -12,9 +12,7 @@ const UserController = require("./User")
 const SettingController = require("./Setting")
 const BusinessController = require("./Business")
 const { updateAdminStats } = require("./Stats");
-// const cronController = require('./Cron');
 const cron = require("node-cron");
-let isCronActive = false
 
 // DepositModel.sync({ alter: true });
 
@@ -134,6 +132,7 @@ const create = ({
                             delete depositObj["address_index"];
                             delete depositObj["privateKey"];
                             const { _id, deposit_id, url, amount } = save.deposit
+                            sendEmail(getEmailByUser(user), TYPE_EMAIL.INVOICE_CREATED, { url: url })
                             resolve({ status: "success", object: { _id, deposit_id, url, amount } });
                         } else {
                             console.log('Error in Deposit', save.error);
@@ -205,6 +204,7 @@ const create = ({
                                 status: 'success',
                                 invoiceObj: { ...save.deposit, invoice_url },
                             };
+                            sendEmail(getEmailByUser(user), TYPE_EMAIL.INVOICE_CREATED, { url: invoice_url })
                             resolve(invoiceObj);
                             // const { _id, deposit_id, url, amount } = save.deposit
                             // resolve({ status: "success", object: { _id, deposit_id, url, amount } });
@@ -457,6 +457,7 @@ const checkPendingDeposits = async () => {
             if (balance >= deposit.amount) {
                 status = "success";
                 console.log("successful deposit detected");
+                sendEmail(getEmailByUser(deposit.user), TYPE_EMAIL.INVOICE_PAID, { _id })
                 consolidation_status = await consolidateAddressBalance(
                     address,
                     balance,
@@ -465,8 +466,6 @@ const checkPendingDeposits = async () => {
                     coin
                 );
             } else {
-                // console.log("status", status)
-                // console.log("consolidation_status", consolidation_status)
                 if (status === "pending" && consolidation_status === "unconsolidated")
                     return true
                 status = "pending";
@@ -682,6 +681,10 @@ async function hasKYC(_id) {
     return false
 }
 
+async function getEmailByUser(_id) {
+    const { email } = await UserController.fetchByID(_id)
+    return email
+}
 
 module.exports = {
     create,
