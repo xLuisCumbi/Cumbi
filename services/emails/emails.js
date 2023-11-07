@@ -11,7 +11,7 @@ const register = () => `<html>
             </tr>
             <tr>
                 <td>
-                    <p>¡Gracias por registrarte en Cumbi! 
+                    <p>¡Gracias por registrarte en Cumbi!
                     <br/>La información suministrada sera revisada en máximo 48 horas, de ser aceptada podrás empezar a realizar facturas,
                     mientras puedes ingresar a <a target="_blank" href="https://cumbi.co">CUMBI</a>.</p>
                 </td>
@@ -92,11 +92,37 @@ const invoicePaid = ({ _id }) => `<html>
     </body>
 </html>`;
 
+const kycStatusUpdate = (options) => {
+    const { kycStatus } = options;
+    const messages = {
+        pending: 'Tu estado de KYC está pendiente de revisión.',
+        accepted: '¡Felicidades! Tu estado de KYC ha sido aceptado.',
+        denied: 'Tu estado de KYC ha sido denegado.',
+    };
+
+    const message = messages[kycStatus] || 'Tu estado de KYC ha cambiado.';
+
+    return `<html>
+      <head>
+          <title>Estado KYC: ${kycStatus}</title>
+      </head>
+      <body>
+          <h1>Estado KYC: ${kycStatus}</h1>
+          <p>${message}</p>
+          <footer>
+              Visítanos en <a target="_blank" href="https://cumbi.co">Cumbi</a>
+          </footer>
+      </body>
+  </html>`;
+};
+
+
 const validation = () => '';
 
 module.exports = {
-  register,
-  invoiceCreated,
-  invoicePaid,
-  validation,
+    register,
+    invoiceCreated,
+    invoicePaid,
+    validation,
+    kycStatusUpdate,
 };

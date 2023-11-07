@@ -9,6 +9,7 @@ const { TYPE_EMAIL, sendEmail } = require('../services/emails/emailService');
 const ApiTokenModel = require('../models/ApiToken');
 const consolidateAddressBalance = require('./Consolidation');
 const { ObjectId } = require('mongoose').Types;
+const { sendKycStatusEmail } = require('../services/emails/emailService'); // Importa la nueva función
 
 /**
  * Get all users
@@ -407,22 +408,29 @@ const updateProfile = ({
     resolve({ status: 'failed', message: 'server error: kindly try again' });
   }
 });
-
-const updateUser = (user) => new Promise(async (resolve) => {
+const updateUser = (user) => new Promise(async (resolve, reject) => {
   try {
+    // Conservar el estado KYC original antes de la actualización
+    const originalUser = await UserModel.findById(user._id);
+    const originalKycStatus = originalUser.kyc;
+
     if (user.password) {
       user.password = await genHash(user.password);
     } else {
       delete user.password;
     }
 
-    console.log('user', user.kyc);
-    return;
     await UserModel.updateOne({ _id: user._id }, user).exec();
+
+    // Comprueba si el estado de KYC ha cambiado y envía un correo electrónico si es así
+    if (user.kyc && user.kyc !== originalKycStatus) {
+      sendKycStatusEmail(user.email, user.kyc); // Asume que el email del usuario está en user.email
+    }
+
     resolve({ status: 'success' });
   } catch (error) {
     console.log('error', error.stack);
-    resolve({ status: 'failed', message: 'server error: kindly try again' });
+    reject({ status: 'failed', message: 'server error: kindly try again' });
   }
 });
 

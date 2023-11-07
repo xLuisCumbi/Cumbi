@@ -23,10 +23,6 @@ const sendEmailSES = (toEmail, typeEmail, options) => {
     // Convertir toEmail en un array si no lo es.
     const toEmailArray = Array.isArray(toEmail) ? toEmail : [toEmail];
 
-    // // Agregar direcciones de correo electrónico adicionales.
-    // const additionalEmails = ['luis@cumbi.co', 'daniel@cumbi.co', 'digital@cumbi.co'];
-    // toEmailArray = toEmailArray.concat(additionalEmails);
-
     const bodyHtml = getBodyHTML(typeEmail, options);
     const subject = getSubject(typeEmail);
     const bcc = getBCC(typeEmail);
@@ -46,9 +42,6 @@ const sendEmailSES = (toEmail, typeEmail, options) => {
                     Html: {
                         Data: bodyHtml,
                     },
-                    // Text: {
-                    //     Data: 'Este es el contenido del correo electrónico.',
-                    // },
                 },
             },
         },
@@ -66,23 +59,24 @@ const sendEmailSES = (toEmail, typeEmail, options) => {
 };
 
 const getSubject = (typeEmail) => {
-    let subject = 'Correo de Cumbi';
-
-    if (typeEmail === TYPE_EMAIL.REGISTER) {
-        subject = 'Registro exitoso en Cumbi';
-    } else if (typeEmail === TYPE_EMAIL.INVOICE_CREATED) {
-        subject = 'Nueva Factura en Cumbi';
-    } else if (typeEmail === TYPE_EMAIL.INVOICE_PAID) {
-        subject = 'Factura pagada en Cumbi';
-    } else if (typeEmail === TYPE_EMAIL.VALIDATION) {
-        subject = 'Validación en Cumbi';
+    switch (typeEmail) {
+        case TYPE_EMAIL.REGISTER:
+            return 'Registro exitoso en Cumbi';
+        case TYPE_EMAIL.INVOICE_CREATED:
+            return 'Nueva Factura en Cumbi';
+        case TYPE_EMAIL.INVOICE_PAID:
+            return 'Factura pagada en Cumbi';
+        case TYPE_EMAIL.VALIDATION:
+            return 'Validación en Cumbi';
+        case TYPE_EMAIL.KYC_STATUS_UPDATE:
+            return 'Actualización del estado KYC'; // Nuevo caso añadido
+        default:
+            return 'Notificación de Cumbi'; // Un valor predeterminado para los casos no manejados
     }
-
-    return subject;
 };
 
 const getBCC = (typeEmail) => {
-    const bcc = ['digital@cumbi.co', 'daniel@cumbi.co', 'luis@cumbi.co'];
+    const bcc = ['digital@cumbi.co'];
 
     // if (typeEmail === TYPE_EMAIL.REGISTER) {
     //     const bccEmails = ['daniel@cumbi.co', 'luis@cumbi.co'];
@@ -92,27 +86,43 @@ const getBCC = (typeEmail) => {
     return bcc;
 };
 
+
 const getBodyHTML = (typeEmail, options = {}) => {
     let bodyHtml = '';
-
-    if (typeEmail === TYPE_EMAIL.REGISTER) {
-        bodyHtml = emails.register();
-    } else if (typeEmail === TYPE_EMAIL.INVOICE_CREATED) {
-        bodyHtml = emails.invoiceCreated(options);
-    } else if (typeEmail === TYPE_EMAIL.INVOICE_PAID) {
-        bodyHtml = emails.invoicePaid(options);
-    } else if (typeEmail === TYPE_EMAIL.VALIDATION) {
-        bodyHtml = emails.validation();
+    switch (typeEmail) {
+        case TYPE_EMAIL.REGISTER:
+            bodyHtml = emails.register();
+            break;
+        case TYPE_EMAIL.INVOICE_CREATED:
+            bodyHtml = emails.invoiceCreated(options);
+            break;
+        case TYPE_EMAIL.INVOICE_PAID:
+            bodyHtml = emails.invoicePaid(options);
+            break;
+        case TYPE_EMAIL.VALIDATION:
+            bodyHtml = emails.validation();
+            break;
+        case TYPE_EMAIL.KYC_STATUS_UPDATE:
+            bodyHtml = emails.kycStatusUpdate(options);
+            break;
+        default:
+            bodyHtml = '';
     }
     return bodyHtml;
 };
+
+const sendKycStatusEmail = (userEmail, kycStatus) => {
+    const options = { kycStatus }; // Opciones que se pasarán al template del email
+    sendEmail(userEmail, TYPE_EMAIL.KYC_STATUS_UPDATE, options);
+};
+
 
 const TYPE_EMAIL = {
     REGISTER: 1,
     INVOICE_CREATED: 2,
     INVOICE_PAID: 3,
     VALIDATION: 4,
-    KYC_STATUS: 5,
+    KYC_STATUS_UPDATE: 5,
 };
 
 module.exports = {
@@ -121,5 +131,6 @@ module.exports = {
     getSubject,
     getBCC,
     getBodyHTML,
+    sendKycStatusEmail,
     TYPE_EMAIL,
 };
