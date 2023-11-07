@@ -95,29 +95,28 @@ const invoicePaid = ({ _id }) => `<html>
 const kycStatusUpdate = (options) => {
     const { kycStatus } = options;
     const messages = {
-        pending: 'Tu estado de KYC está pendiente de revisión.',
-        accepted: '¡Felicidades! Tu estado de KYC ha sido aceptado.',
-        denied: 'Tu estado de KYC ha sido denegado.',
+        pending: "Tu estado de KYC está pendiente de revisión.",
+        accepted: "¡Felicidades! Tu estado de KYC ha sido aceptado.",
+        denied: "Tu estado de KYC ha sido denegado.",
     };
 
-    const message = messages[kycStatus] || 'Tu estado de KYC ha cambiado.';
+    const message = messages[kycStatus] || "Tu estado de KYC ha cambiado.";
 
     return `<html>
-      <head>
-          <title>Estado KYC: ${kycStatus}</title>
-      </head>
-      <body>
-          <h1>Estado KYC: ${kycStatus}</h1>
-          <p>${message}</p>
-          <footer>
-              Visítanos en <a target="_blank" href="https://cumbi.co">Cumbi</a>
-          </footer>
-      </body>
-  </html>`;
+        <head>
+            <title>Estado KYC: ${kycStatus}</title>
+        </head>
+        <body>
+            <h1>Estado KYC: ${kycStatus}</h1>
+            <p>${message}</p>
+            <footer>
+                Visítanos en <a target="_blank" href="https://cumbi.co">Cumbi</a>
+            </footer>
+        </body>
+    </html>`;
 };
 
-
-const validation = () => '';
+const validation = () => "";
 
 module.exports = {
     register,
