@@ -1,6 +1,4 @@
-
-const register = () => {
-    return `<html>
+const register = () => `<html>
     <head>
         <title>Confirmación de Registro</title>
     </head>
@@ -30,11 +28,9 @@ const register = () => {
             </div>
         </footer>
     </body>
-</html>`
-}
+</html>`;
 
-const invoiceCreated = ({ url }) => {
-    return `<html>
+const invoiceCreated = ({ url }) => `<html>
     <head>
         <title>Nueva factura</title>
     </head>
@@ -63,11 +59,9 @@ const invoiceCreated = ({ url }) => {
             </div>
         </footer>
     </body>
-</html>`
-}
+</html>`;
 
-const invoicePaid = ({ _id }) => {
-    return `<html>
+const invoicePaid = ({ _id }) => `<html>
     <head>
         <title>Nuevo pago</title>
     </head>
@@ -96,16 +90,13 @@ const invoicePaid = ({ _id }) => {
             </div>
         </footer>
     </body>
-</html>`
-}
+</html>`;
 
-const validation = () => {
-    return ``
-}
+const validation = () => '';
 
 module.exports = {
-    register,
-    invoiceCreated,
-    invoicePaid,
-    validation
-}
+  register,
+  invoiceCreated,
+  invoicePaid,
+  validation,
+};

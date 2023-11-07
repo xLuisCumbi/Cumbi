@@ -8,8 +8,10 @@ const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+
 const app = express();
 const morgan = require('morgan');
+
 const allowedOrigins = ['https://dash.cumbi.co', 'http://localhost:3000', 'https://stage.cumbi.co'];
 
 // Apply middlewares
@@ -38,11 +40,11 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: { maxAge: 70 * 60 * 1000 },
-  })
+  }),
 );
 
 // Define port number
-const PORT = process.env.PORT;
+const { PORT } = process.env;
 
 // Import routes and database connection
 const paymentUIController = require('./controllers/PaymentUI');

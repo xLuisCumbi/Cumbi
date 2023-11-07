@@ -48,14 +48,13 @@ const BusinessSchema = new mongoose.Schema(
       default: 'pending',
     },
     document: {
-      type: String
-    }
+      type: String,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
-  }
+  },
 );
 
-
 // Create the model from the schema and export it
-module.exports = mongoose.model('Business', BusinessSchema)
+module.exports = mongoose.model('Business', BusinessSchema);
