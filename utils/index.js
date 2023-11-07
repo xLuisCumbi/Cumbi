@@ -207,32 +207,43 @@ const generateS3FileName = (originalFileName) => {
  * @param {*} typeEmail Tipo de mensaje a enviar
  */
 const sendEmail = (toEmail, typeEmail, options) => {
-    sendEmailSMTP(toEmail, typeEmail, options)
+    sendEmailSES(toEmail, typeEmail, options);
 }
 
-const sendEmailSES = () => {
+const sendEmailSES = (toEmail, typeEmail, options) => {
     const sesv2Client = new SESv2Client({
         region: process.env.AWS_REGION,
         credentials: {
-            accessKeyId: process.env.SES_SMTP_USERNAME,
-            secretAccessKey: process.env.SES_SMTP_PASSWORD
+            accessKeyId: process.env.SES_ACCESS_KEY,
+            secretAccessKey: process.env.SES_SECRET_KEY
         }
     });
+
+    // Convertir toEmail en un array si no lo es.
+    let toEmailArray = Array.isArray(toEmail) ? toEmail : [toEmail];
+
+    // // Agregar direcciones de correo electrónico adicionales.
+    // const additionalEmails = ['luis@cumbi.co', 'daniel@cumbi.co', 'digital@cumbi.co'];
+    // toEmailArray = toEmailArray.concat(additionalEmails);
+
+    const bodyHtml = getBodyHTML(typeEmail, options);
+    const subject = getSubject(typeEmail);
+    const bcc = getBCC(typeEmail);
 
     const params = {
         FromEmailAddress: process.env.SES_EMAIL,
         Destination: {
-            ToAddresses: ['anfehernandez94@gmail.com', 'info@secuenciauno.co'],
-            BccAddresses: ['secuenciaunop@gmail.com']
+            ToAddresses: toEmailArray,
+            BccAddresses: bcc
         },
         Content: {
             Simple: {
                 Subject: {
-                    Data: 'Asunto del correo electrónico',
+                    Data: subject,
                 },
                 Body: {
                     Html: {
-                        Data: emails.register(),
+                        Data: bodyHtml,
                     },
                     // Text: {
                     //     Data: 'Este es el contenido del correo electrónico.',
@@ -253,48 +264,6 @@ const sendEmailSES = () => {
         });
 }
 
-/**
- * Envía un mensaje de correo electrónico a través de SMTP
- * @param {*} toEmail Correo al que se envía el mensaje
- * @param {*} typeEmail Tipo de mensaje a enviar
- */
-const sendEmailSMTP = (toEmail, typeEmail, options) => {
-    // Configura el transporte con los datos del servidor SMTP
-    const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST, // Reemplaza con la dirección del servidor SMTP
-        port: process.env.SMTP_PORT, // Reemplaza con el puerto del servidor SMTP (el valor puede variar según el servidor)
-        secure: true, // En caso de que utilices una conexión segura (TLS/SSL)
-        auth: {
-            user: process.env.SMTP_USERNAME,     // Reemplaza con tu dirección de correo electrónico
-            pass: process.env.SMTP_PASSWORD,     // Reemplaza con tu contraseña de correo electrónico o contraseña de aplicación
-        },
-    });
-
-    const subject = getSubject(typeEmail)
-    const bcc = getBCC(typeEmail)
-    const bodyHtml = getBodyHTML(typeEmail, options)
-    const bodyText = "El mensaje no se visualiza correctamente."
-
-    // Define el contenido del correo y otras opciones
-    const mailOptions = {
-        from: process.env.SES_EMAIL,   // Dirección de correo electrónico del remitente
-        to: [toEmail],  // Dirección de correo electrónico del destinatario principal
-        bcc: bcc,  // Direcciones de correo electrónico con copia oculta (BCC)
-        subject: subject,
-        text: bodyText,
-        html: bodyHtml, // Contenido del correo en formato HTML
-    };
-
-    // Envía el correo electrónico
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            console.error('Error al enviar el correo electrónico:', error);
-        } else {
-            console.log('Correo electrónico enviado:', info.response);
-        }
-    });
-}
-
 const getSubject = (typeEmail) => {
     let subject = "Correo de Cumbi"
 
@@ -312,12 +281,12 @@ const getSubject = (typeEmail) => {
 }
 
 const getBCC = (typeEmail) => {
-    let bcc = ['secuenciaunop@gmail.com', 'digital@cumbi.co']
+    let bcc = ['digital@cumbi.co', 'daniel@cumbi.co', 'luis@cumbi.co']
 
-    if (typeEmail === TYPE_EMAIL.REGISTER) {
-        const bccEmails = ['daniel@cumbi.co', 'luis@cumbi.co'];
-        bcc.push(...bccEmails);
-    }
+    // if (typeEmail === TYPE_EMAIL.REGISTER) {
+    //     const bccEmails = ['daniel@cumbi.co', 'luis@cumbi.co'];
+    //     bcc.push(...bccEmails);
+    // }
 
     return bcc
 }

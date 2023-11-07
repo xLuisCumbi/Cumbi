@@ -13,6 +13,7 @@ const SettingController = require("./Setting")
 const BusinessController = require("./Business")
 const { updateAdminStats } = require("./Stats");
 const cron = require("node-cron");
+const User = require("../models/User");
 
 // DepositModel.sync({ alter: true });
 
@@ -131,8 +132,9 @@ const create = ({
                         if (save.success) {
                             delete depositObj["address_index"];
                             delete depositObj["privateKey"];
-                            const { _id, deposit_id, url, amount } = save.deposit
-                            sendEmail(getEmailByUser(user), TYPE_EMAIL.INVOICE_CREATED, { url: url })
+                            const { _id, deposit_id, url, amount } = save.deposit;
+                            const email = await getEmailByUser(user);
+                            sendEmail(email, TYPE_EMAIL.INVOICE_CREATED, { url: url });
                             resolve({ status: "success", object: { _id, deposit_id, url, amount } });
                         } else {
                             console.log('Error in Deposit', save.error);
@@ -204,7 +206,10 @@ const create = ({
                                 status: 'success',
                                 invoiceObj: { ...save.deposit, invoice_url },
                             };
-                            sendEmail(getEmailByUser(user), TYPE_EMAIL.INVOICE_CREATED, { url: invoice_url })
+                            // Send email invoice created
+                            const email = await getEmailByUser(user);
+                            sendEmail(email, TYPE_EMAIL.INVOICE_CREATED, { url: invoice_url })
+
                             resolve(invoiceObj);
                             // const { _id, deposit_id, url, amount } = save.deposit
                             // resolve({ status: "success", object: { _id, deposit_id, url, amount } });
@@ -457,7 +462,8 @@ const checkPendingDeposits = async () => {
             if (balance >= deposit.amount) {
                 status = "success";
                 console.log("successful deposit detected");
-                sendEmail(getEmailByUser(deposit.user), TYPE_EMAIL.INVOICE_PAID, { _id })
+                const email = await getEmailByUser(user);
+                sendEmail(email, TYPE_EMAIL.INVOICE_PAID, { _id })
                 consolidation_status = await consolidateAddressBalance(
                     address,
                     balance,
@@ -537,10 +543,10 @@ const consolidatePayment = ({ token, deposit_id }) => {
 };
 
 /**
- * 
+ *
  * @param {*} _id  id del usuario obtenido por el token
  * @param {*} amount cantidad de dinero en USD
- * @returns 
+ * @returns
  */
 const getExtraData = async (_id, amount) => {
     const { setting } = await SettingController.fetchOne()
@@ -682,8 +688,8 @@ async function hasKYC(_id) {
 }
 
 async function getEmailByUser(_id) {
-    const { email } = await UserController.fetchByID(_id)
-    return email
+    const user = await User.findById(_id).exec();
+    return user.email
 }
 
 module.exports = {
