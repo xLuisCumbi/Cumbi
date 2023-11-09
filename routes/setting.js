@@ -45,10 +45,6 @@ Router.post('/update', adminAuthMiddleware, (req, res) => {
   );
 });
 
-Router.post('/update-mnemonic', adminAuthMiddleware, (req, res) => {
-  const { passphrase } = req.body;
-  const userRole = req.user.role; // Assuming the user role is available in req.user
-
 // Router.post("/update-mnemonic", adminAuthMiddleware, (req, res) => {
 //     const { passphrase } = req.body;
 //     const userRole = req.user.role; // Assuming the user role is available in req.user
