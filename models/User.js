@@ -70,6 +70,10 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    acceptedPrivacyPolicy: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
