@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema(
     business: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Business',
-      required: function () {
+      required() {
         return this.role !== 'person'; // El campo es requerido si el rol no es "person".
       },
       unique: false,
@@ -45,7 +45,7 @@ const UserSchema = new mongoose.Schema(
     },
     payment_fee: {
       type: Number,
-      required: function () {
+      required() {
         return this.role === 'person'; // El campo es requerido si el rol es "person".
       },
     },
@@ -60,7 +60,7 @@ const UserSchema = new mongoose.Schema(
       default: 'pending',
     },
     document: {
-      type: String
+      type: String,
     },
     acceptedDataPolicy: {
       type: Boolean,
@@ -73,9 +73,8 @@ const UserSchema = new mongoose.Schema(
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
-  }
+  },
 );
 
-
 // Create the model from the schema and export it
-module.exports = mongoose.model('User', UserSchema)
+module.exports = mongoose.model('User', UserSchema);

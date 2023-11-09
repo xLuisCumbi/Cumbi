@@ -1,7 +1,9 @@
 // Import required modules
-const SettingModel = require('../models/Setting');
 const mongoose = require('mongoose');
-const { signToken, bcryptCompare, verifyToken, genHash } = require('../utils');
+const SettingModel = require('../models/Setting');
+const {
+  signToken, bcryptCompare, verifyToken, genHash,
+} = require('../utils');
 
 /**
  * Update or create a setting document in the database.
@@ -10,22 +12,20 @@ const { signToken, bcryptCompare, verifyToken, genHash } = require('../utils');
  * @returns {Promise<Object>} A Promise that resolves to an object indicating the status of the update or create operation.
  * @throws {Object} An object indicating the failure status and error message if the operation fails.
  */
-const update = (settingData) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            // If _id is provided in settingData, update the existing document, otherwise create a new one
-            if (settingData._id) {
-                await SettingModel.findOneAndUpdate({ _id: settingData._id }, settingData);
-            } else {
-                await SettingModel.create(settingData);
-            }
-            resolve({ status: 'success' });
-        } catch (e) {
-            console.error('Error during update:', e);
-            reject({ status: 'failed', message: 'server error' });
-        }
-    });
-};
+const update = (settingData) => new Promise(async (resolve, reject) => {
+  try {
+    // If _id is provided in settingData, update the existing document, otherwise create a new one
+    if (settingData._id) {
+      await SettingModel.findOneAndUpdate({ _id: settingData._id }, settingData);
+    } else {
+      await SettingModel.create(settingData);
+    }
+    resolve({ status: 'success' });
+  } catch (e) {
+    console.error('Error during update:', e);
+    reject({ status: 'failed', message: 'server error' });
+  }
+});
 
 /**
  * Fetch the latest setting document from the database.
@@ -33,23 +33,21 @@ const update = (settingData) => {
  * @returns {Promise<Object>} A Promise that resolves to an object containing the status and the fetched setting data.
  * @throws {Object} An object indicating the failure status and error message if the operation fails.
  */
-const fetchOne = () => {
-    return new Promise(async (resolve) => {
-        try {
-            // Find the latest setting document using the sort method
-            const setting = await SettingModel.findOne({}).sort({ _id: -1 });
-            if (setting) {
-                resolve({
-                    status: 'success',
-                    setting,
-                });
-            }
-        } catch (e) {
-            console.error('Error during fetch:', e);
-            resolve({ status: 'failed', message: 'server error' });
-        }
-    });
-};
+const fetchOne = () => new Promise(async (resolve) => {
+  try {
+    // Find the latest setting document using the sort method
+    const setting = await SettingModel.findOne({}).sort({ _id: -1 });
+    if (setting) {
+      resolve({
+        status: 'success',
+        setting,
+      });
+    }
+  } catch (e) {
+    console.error('Error during fetch:', e);
+    resolve({ status: 'failed', message: 'server error' });
+  }
+});
 
 /**
  * Update the passphrase in the setting document for users with the role 'superadmin'.

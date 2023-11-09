@@ -2,19 +2,20 @@
  * @file This file is a module that exports several functions for handling deposits.
  * It includes functions for creating deposits, checking deposit status, and updating deposits.
  */
-const DepositModel = require("../models/Deposit");
-const { validateField, signToken } = require("../utils");
-const { getAddressBalance } = require("./Balance");
-const consolidateAddressBalance = require("./Consolidation");
-const getDepositAddress = require("./Address");
-const moment = require("moment");
-const UserController = require("./User")
-const SettingController = require("./Setting")
-const BusinessController = require("./Business")
-const { updateAdminStats } = require("./Stats");
-// const cronController = require('./Cron');
-const cron = require("node-cron");
-let isCronActive = false
+const moment = require('moment');
+const cron = require('node-cron');
+const DepositModel = require('../models/Deposit');
+const { validateField, signToken } = require('../utils');
+const { TYPE_EMAIL, sendEmail } = require('../services/emails/emailService');
+
+const { getAddressBalance } = require('./Balance');
+const consolidateAddressBalance = require('./Consolidation');
+const getDepositAddress = require('./Address');
+const UserController = require('./User');
+const SettingController = require('./Setting');
+const BusinessController = require('./Business');
+const { updateAdminStats } = require('./Stats');
+const User = require('../models/User');
 
 // DepositModel.sync({ alter: true });
 
@@ -35,209 +36,218 @@ let isCronActive = false
  * @return {Promise<Object>} - The creation result.
  */
 const create = ({
-    amount,
-    deposit_id,
-    network,
-    coin,
-    type,
-    description,
-    title,
-    url,
-    order_received_url,
-    user,
-    trm,
-    trm_house,
-    amount_fiat,
-    coin_fiat,
-    payment_fee,
-    type_payment_fee,
-}) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            if (!type) {
-                reject({ status: "failed", message: "Incorrect type" });
-                return
-            }
+  amount,
+  deposit_id,
+  network,
+  coin,
+  type,
+  description,
+  title,
+  url,
+  order_received_url,
+  user,
+  trm,
+  trm_house,
+  amount_fiat,
+  coin_fiat,
+  payment_fee,
+  type_payment_fee,
+}) => new Promise(async (resolve, reject) => {
+  try {
+    if (!type) {
+      reject({ status: 'failed', message: 'Incorrect type' });
+      return;
+    }
 
-            if (!await hasKYC(user)) {
-                reject({ status: "failed", message: "Usuario pendiente por validación" });
-                return
-            }
+    if (!await hasKYC(user)) {
+      reject({ status: 'failed', message: 'Usuario pendiente por validación' });
+      return;
+    }
 
-            if (type === "api-payment") {
-                const validate = validateField(reject, {
-                    amount,
-                    deposit_id,
-                    order_received_url,
-                    network,
-                    coin,
-                    user,
-                });
-                if (!validate) return;
-            } else if (type === "app-payment") {
-                const validate = validateField(reject, {
-                    trm,
-                    amount,
-                    network,
-                    coin,
-                    user,
-                });
-                if (!validate) return;
-            } else {
-                reject({ status: "failed", message: "Incorrect type" });
-                return
-            }
+    if (type === 'api-payment') {
+      const validate = validateField(reject, {
+        amount,
+        deposit_id,
+        order_received_url,
+        network,
+        coin,
+        user,
+      });
+      if (!validate) return;
+    } else if (type === 'app-payment') {
+      const validate = validateField(reject, {
+        trm,
+        amount,
+        network,
+        coin,
+        user,
+      });
+      if (!validate) return;
+    } else {
+      reject({ status: 'failed', message: 'Incorrect type' });
+      return;
+    }
 
-            if (!isValidAmount(amount, reject) || !isValidNetwork(network, reject) || !isValidCoin(coin, reject))
-                return
+    if (!isValidAmount(amount, reject) || !isValidNetwork(network, reject) || !isValidCoin(coin, reject)) return;
 
-            if (type === "api-payment") {
-                if (!isValidURL(url, reject) || !isValidURL(order_received_url, reject))
-                    return
+    if (type === 'api-payment') {
+      if (!isValidURL(url, reject) || !isValidURL(order_received_url, reject)) return;
 
-                getDepositAddress(network, coin).then(
-                    async ({ address, addressIndex, privateKey }) => {
-                        privateKey = signToken(
-                            { privateKey },
-                            process.env.PRIVATEKEY_JWT_SECRET,
-                            "1y"
-                        );
+      getDepositAddress(network, coin).then(
+        async ({ address, addressIndex, privateKey }) => {
+          privateKey = signToken(
+            { privateKey },
+            process.env.PRIVATEKEY_JWT_SECRET,
+            '1y',
+          );
 
-                        const { trm, trm_house, amount_fiat, coin_fiat, payment_fee, type_payment_fee }
-                            = await getExtraData(user, amount)
+          const {
+            trm, trm_house, amount_fiat, coin_fiat, payment_fee, type_payment_fee,
+          } = await getExtraData(user, amount);
 
-                        const depositObj = {
-                            address,
-                            address_index: addressIndex,
-                            privateKey,
-                            deposit_id,
-                            balance: 0,
-                            amount_usd: amount,
-                            status: "pending",
-                            type: "api-payment",
-                            amount,
-                            coin,
-                            network,
-                            url,
-                            order_received_url,
-                            user,
-                            trm,
-                            trm_house,
-                            amount_fiat,
-                            coin_fiat: coin_fiat.toUpperCase(),
-                            payment_fee,
-                            type_payment_fee
-                        };
-                        const save = await saveDepositObj(depositObj)
+          const depositObj = {
+            address,
+            address_index: addressIndex,
+            privateKey,
+            deposit_id,
+            balance: 0,
+            amount_usd: amount,
+            status: 'pending',
+            type: 'api-payment',
+            amount,
+            coin,
+            network,
+            url,
+            order_received_url,
+            user,
+            trm,
+            trm_house,
+            amount_fiat,
+            coin_fiat: coin_fiat.toUpperCase(),
+            payment_fee,
+            type_payment_fee,
+          };
+          const save = await saveDepositObj(depositObj);
 
-                        if (save.success) {
-                            delete depositObj["address_index"];
-                            delete depositObj["privateKey"];
-                            const { _id, deposit_id, url, amount } = save.deposit
-                            resolve({ status: "success", object: { _id, deposit_id, url, amount } });
-                        } else {
-                            console.log('Error in Deposit', save.error);
-                            reject({
-                                status: "failed",
-                                // message: "Server Error: could not fetch deposit address",
-                                message: save.error,
-                                statusCode: 504,
-                            });
-                        }
+          if (save.success) {
+            delete depositObj.address_index;
+            delete depositObj.privateKey;
+            const {
+              _id, deposit_id, url, amount,
+            } = save.deposit;
+            const email = await getEmailByUser(user);
+            sendEmail(email, TYPE_EMAIL.INVOICE_CREATED, { url });
+            resolve({
+              status: 'success',
+              object: {
+                _id, deposit_id, url, amount,
+              },
+            });
+          } else {
+            console.log('Error in Deposit', save.error);
+            reject({
+              status: 'failed',
+              // message: "Server Error: could not fetch deposit address",
+              message: save.error,
+              statusCode: 504,
+            });
+          }
+        },
+        (err) => {
+          reject({
+            status: err.status,
+            message: err.message,
+            statusCode: err.statusCode,
+          });
+        },
+      ).catch((error) => {
+        console.error(error);
+        reject({ status: 'failed', message: 'Server Error' });
+      });
+    } else if (type === 'app-payment') {
+      getDepositAddress(network, coin).then(
+        async ({ address, addressIndex, privateKey }) => {
+          privateKey = signToken(
+            { privateKey },
+            process.env.PRIVATEKEY_JWT_SECRET,
+            '1y',
+          );
+          const coinPriceDouble = await getAmountCrypto();
+          const coin_price = Number(coinPriceDouble).toFixed(2);
+          const amount_crypto = Number((amount / coin_price).toFixed(6));
+          const deposit_id = Date.now();
 
-                    },
-                    (err) => {
-                        reject({
-                            status: err.status,
-                            message: err.message,
-                            statusCode: err.statusCode,
-                        });
-                    }
-                ).catch((error) => {
-                    console.error(error)
-                    reject({ status: "failed", message: "Server Error" });;
-                });
-            } else if (type === "app-payment") {
-                getDepositAddress(network, coin).then(
-                    async ({ address, addressIndex, privateKey }) => {
-                        privateKey = signToken(
-                            { privateKey },
-                            process.env.PRIVATEKEY_JWT_SECRET,
-                            "1y"
-                        );
-                        const coinPriceDouble = await getAmountCrypto();
-                        const coin_price = Number(coinPriceDouble).toFixed(2);
-                        const amount_crypto = Number((amount / coin_price).toFixed(6));
-                        const deposit_id = Date.now();
+          const depositObj = {
+            address,
+            coin_price,
+            deposit_id,
+            privateKey,
+            balance: 0,
+            amount_usd: amount,
+            status: 'pending',
+            type: type || 'deposit',
+            description: description || '',
+            title: title || '',
+            amount: amount_crypto,
+            address_index: addressIndex,
+            coin: coin.toUpperCase(),
+            network: network.toUpperCase(),
+            user,
+            trm,
+            trm_house,
+            amount_fiat,
+            coin_fiat: coin_fiat.toUpperCase(),
+            payment_fee,
+            type_payment_fee,
+          };
 
-                        const depositObj = {
-                            address,
-                            coin_price,
-                            deposit_id,
-                            privateKey,
-                            balance: 0,
-                            amount_usd: amount,
-                            status: "pending",
-                            type: type ? type : "deposit",
-                            description: description ? description : "",
-                            title: title ? title : "",
-                            amount: amount_crypto,
-                            address_index: addressIndex,
-                            coin: coin.toUpperCase(),
-                            network: network.toUpperCase(),
-                            user,
-                            trm,
-                            trm_house,
-                            amount_fiat,
-                            coin_fiat: coin_fiat.toUpperCase(),
-                            payment_fee,
-                            type_payment_fee
-                        };
+          const save = await saveDepositObj(depositObj);
 
-                        const save = await saveDepositObj(depositObj)
+          if (save.success) {
+            delete depositObj.address_index;
+            delete depositObj.privateKey;
 
-                        if (save.success) {
-                            delete depositObj["address_index"];
-                            delete depositObj["privateKey"];
+            const invoice_url = `${process.env.APPURL}/invoice/${save.deposit._id}`;
+            const invoiceObj = {
+              status: 'success',
+              invoiceObj: { ...save.deposit, invoice_url },
+            };
+            // Send email invoice created
+            const email = await getEmailByUser(user);
+            sendEmail(email, TYPE_EMAIL.INVOICE_CREATED, { url: invoice_url });
 
-                            const invoice_url = process.env.APPURL + '/invoice/' + save.deposit._id;
-                            const invoiceObj = {
-                                status: 'success',
-                                invoiceObj: { ...save.deposit, invoice_url },
-                            };
-                            resolve(invoiceObj);
-                            // const { _id, deposit_id, url, amount } = save.deposit
-                            // resolve({ status: "success", object: { _id, deposit_id, url, amount } });
-                        } else {
-                            console.log('error in: getDepositAddress',);
-                            reject({
-                                status: "failed",
-                                // message: "Server Error: could not fetch deposit address",
-                                message: save.error,
-                                statusCode: 504,
-                            });
-                        }
-                    },
-                    (err) => {
-                        reject({
-                            status: err.status,
-                            message: err.message,
-                            statusCode: err.statusCode,
-                        });
-                    }
-                ).catch((error) => {
-                    console.error(error)
-                    reject({ status: "failed", message: "Server Error" });
-                });
-            } else {
-                reject({ status: "failed", message: "Incorrect type" });
-            }
-        } catch (error) {
-            console.error(error)
-            reject({ status: "failed", message: "Server Error" });
-        }
-    });
-};
+            resolve(invoiceObj);
+            // const { _id, deposit_id, url, amount } = save.deposit
+            // resolve({ status: "success", object: { _id, deposit_id, url, amount } });
+          } else {
+            console.log('error in: getDepositAddress');
+            reject({
+              status: 'failed',
+              // message: "Server Error: could not fetch deposit address",
+              message: save.error,
+              statusCode: 504,
+            });
+          }
+        },
+        (err) => {
+          reject({
+            status: err.status,
+            message: err.message,
+            statusCode: err.statusCode,
+          });
+        },
+      ).catch((error) => {
+        console.error(error);
+        reject({ status: 'failed', message: 'Server Error' });
+      });
+    } else {
+      reject({ status: 'failed', message: 'Incorrect type' });
+    }
+  } catch (error) {
+    console.error(error);
+    reject({ status: 'failed', message: 'Server Error' });
+  }
+});
 
 /**
  * @function checkDepositExist
@@ -245,34 +255,30 @@ const create = ({
  * @param {string} deposit_id - The ID of the deposit to check
  * @returns {Promise<Object>} - The deposit object if found, undefined otherwise
  */
-const checkDepositExist = (deposit_id) => {
-    return new Promise(async (resolve, reject) => {
-        // Change the Sequelize findOne to Mongoose findOne
-        DepositModel.findOne({ deposit_id }).then(
-            async (query) => {
-                if (query) {
-                    resolve(query);
-                } else {
-                    resolve(undefined);
-                }
-            },
-            (err) => {
-                resolve(undefined);
-            }
-        );
-    });
-};
+const checkDepositExist = (deposit_id) => new Promise(async (resolve, reject) => {
+  // Change the Sequelize findOne to Mongoose findOne
+  DepositModel.findOne({ deposit_id }).then(
+    async (query) => {
+      if (query) {
+        resolve(query);
+      } else {
+        resolve(undefined);
+      }
+    },
+    (err) => {
+      resolve(undefined);
+    },
+  );
+});
 
 /**
  * @function getAmountCrypto
  * @description Gets the amount of crypto. This function seems to be a placeholder as it currently returns 1.
  * @returns {Promise<number>} - A promise that resolves to the amount of crypto
  */
-const getAmountCrypto = () => {
-    return new Promise((resolve, reject) => {
-        resolve(1);
-    });
-};
+const getAmountCrypto = () => new Promise((resolve, reject) => {
+  resolve(1);
+});
 
 /**
  * @function setNetwork
@@ -284,35 +290,35 @@ const getAmountCrypto = () => {
  * @returns {Promise<Object>} - A promise that resolves to an object containing the status of the operation.
  */
 const setNetwork = ({ deposit_id, network, coin }) => {
-    console.log(deposit_id)
-    return new Promise((resolve, reject) => {
-        getDepositAddress(network, coin).then(
-            async ({ address, addressIndex, privateKey }) => {
-                privateKey = signToken(
-                    { privateKey },
-                    process.env.PRIVATEKEY_JWT_SECRET,
-                    "1y"
-                );
-                await DepositModel.updateOne(
-                    { deposit_id, status: "inactive" },
-                    {
-                        address,
-                        address_index: addressIndex,
-                        privateKey,
-                        network,
-                        coin,
-                        status: "pending",
-                    }
-                );
-                resolve({ status: "success" });
-            },
-            (err) => {
-                reject({ status: "failed", message: "Server Error" });
-            }
-        ).catch((error) => {
-            reject({ status: "failed", message: "Server Error" });;
-        });;;
+  console.log(deposit_id);
+  return new Promise((resolve, reject) => {
+    getDepositAddress(network, coin).then(
+      async ({ address, addressIndex, privateKey }) => {
+        privateKey = signToken(
+          { privateKey },
+          process.env.PRIVATEKEY_JWT_SECRET,
+          '1y',
+        );
+        await DepositModel.updateOne(
+          { deposit_id, status: 'inactive' },
+          {
+            address,
+            address_index: addressIndex,
+            privateKey,
+            network,
+            coin,
+            status: 'pending',
+          },
+        );
+        resolve({ status: 'success' });
+      },
+      (err) => {
+        reject({ status: 'failed', message: 'Server Error' });
+      },
+    ).catch((error) => {
+      reject({ status: 'failed', message: 'Server Error' });
     });
+  });
 };
 
 /**
@@ -323,46 +329,44 @@ const setNetwork = ({ deposit_id, network, coin }) => {
  * @param {string} params.deposit_id - The ID of the deposit.
  * @return {Promise<Object>} - The status result.
  */
-const status = (_id) => {
-    return new Promise((resolve) => {
-        DepositModel.findById(_id)
-            .then(d => {
-                if (d) {
-                    resolve({
-                        status: "success",
-                        depositObj: {
-                            address: d.address,
-                            coin_price: d.coin_price,
-                            deposit_id: d.deposit_id,
-                            balance: d.balance,
-                            amount_usd: d.amount_usd,
-                            status: d.status,
-                            amount: d.amount,
-                            description: d.description,
-                            title: d.title,
-                            type: d.type,
-                            createdAt: d.createdAt,
-                            order_received_url: d.order_received_url,
-                            coin: d.coin == null ? d.coin : d.coin.toUpperCase(),
-                            network: d.network == null ? d.network : d.network.toUpperCase(),
-                        },
-                    });
-                } else {
-                    resolve({
-                        status: "failed",
-                        message: "Could not find deposit",
-                    });
-                }
-            })
-            .catch(err => {
-                console.log('error in status:', err.stack);
-                resolve({
-                    status: "failed",
-                    message: "Server Error: kindly try again later",
-                });
-            });
+const status = (_id) => new Promise((resolve) => {
+  DepositModel.findById(_id)
+    .then((d) => {
+      if (d) {
+        resolve({
+          status: 'success',
+          depositObj: {
+            address: d.address,
+            coin_price: d.coin_price,
+            deposit_id: d.deposit_id,
+            balance: d.balance,
+            amount_usd: d.amount_usd,
+            status: d.status,
+            amount: d.amount,
+            description: d.description,
+            title: d.title,
+            type: d.type,
+            createdAt: d.createdAt,
+            order_received_url: d.order_received_url,
+            coin: d.coin == null ? d.coin : d.coin.toUpperCase(),
+            network: d.network == null ? d.network : d.network.toUpperCase(),
+          },
+        });
+      } else {
+        resolve({
+          status: 'failed',
+          message: 'Could not find deposit',
+        });
+      }
+    })
+    .catch((err) => {
+      console.log('error in status:', err.stack);
+      resolve({
+        status: 'failed',
+        message: 'Server Error: kindly try again later',
+      });
     });
-};
+});
 
 /**
  * @function saveDepositObj
@@ -370,61 +374,52 @@ const status = (_id) => {
  * @param {Object} depositObj - The deposit object to save
  * @returns {Promise<boolean>} - A promise that resolves to true if the save was successful, false otherwise
  */
-const saveDepositObj = (depositObj) => {
-    return DepositModel.create(depositObj)
-        .then((deposit) => {
-            startCron()
-            return { success: true, deposit }
-        })
-        .catch((error) => {
-            return { success: false, error }
-        });
-};
+const saveDepositObj = (depositObj) => DepositModel.create(depositObj)
+  .then((deposit) => {
+    startCron();
+    return { success: true, deposit };
+  })
+  .catch((error) => ({ success: false, error }));
 
 /**
  * @function fetchPendingDeposits
  * @description Fetches pending deposits that were created in the last 1 hour
  * @returns {Promise<Array>} - A promise that resolves to an array of pending deposits
  */
-const fetchPendingDeposits = () => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const expiryTime = moment().subtract(1, "hour").toDate();
-            let pendingDeposits = await DepositModel.find({
-                status: "pending",
-                createdAt: { $gte: expiryTime },
-            }).lean();
+const fetchPendingDeposits = () => new Promise(async (resolve, reject) => {
+  try {
+    const expiryTime = moment().subtract(1, 'hour').toDate();
+    const pendingDeposits = await DepositModel.find({
+      status: 'pending',
+      createdAt: { $gte: expiryTime },
+    }).lean();
 
-            resolve(pendingDeposits);
-
-        } catch (error) {
-            resolve([]);
-            console.log(error);
-        }
-    });
-};
+    resolve(pendingDeposits);
+  } catch (error) {
+    resolve([]);
+    console.log(error);
+  }
+});
 
 /**
  * @function expireTimedOutDeposits
  * @description Expires deposits that were created more than 1 hour ago
  * @returns {Promise<void>} - A promise that resolves when the operation is complete
  */
-const expireTimedOutDeposits = () => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const expiryTime = moment().subtract(1, "hour").toDate();
-            // Change the Sequelize update to Mongoose updateMany
-            await DepositModel.updateMany(
-                { createdAt: { $lt: expiryTime }, status: "pending" },
-                { status: "expired" }
-            );
+const expireTimedOutDeposits = () => new Promise(async (resolve, reject) => {
+  try {
+    const expiryTime = moment().subtract(1, 'hour').toDate();
+    // Change the Sequelize update to Mongoose updateMany
+    await DepositModel.updateMany(
+      { createdAt: { $lt: expiryTime }, status: 'pending' },
+      { status: 'expired' },
+    );
 
-            resolve();
-        } catch (error) {
-            reject(error);
-        }
-    });
-};
+    resolve();
+  } catch (error) {
+    reject(error);
+  }
+});
 
 /**
  * Checks for pending deposits.
@@ -438,50 +433,52 @@ const expireTimedOutDeposits = () => {
  * @returns {Promise<void>} - A promise that resolves when the operation is complete
  */
 const checkPendingDeposits = async () => {
-    try {
-        const pendingDeposits = await fetchPendingDeposits();
+  try {
+    const pendingDeposits = await fetchPendingDeposits();
 
-        if (pendingDeposits.length == 0) {
-            console.log("No pending Deposits detected");
-            expireTimedOutDeposits()
-            return false;
-        }
-
-        pendingDeposits.map(async (deposit) => {
-
-            const { _id, address, privateKey, network, coin } = deposit;
-            let { consolidation_status, status } = deposit
-            let balance = await getAddressBalance(address, privateKey, network, coin);
-            balance = balance ? balance : 0;
-
-            if (balance >= deposit.amount) {
-                status = "success";
-                console.log("successful deposit detected");
-                consolidation_status = await consolidateAddressBalance(
-                    address,
-                    balance,
-                    privateKey,
-                    network,
-                    coin
-                );
-            } else {
-                // console.log("status", status)
-                // console.log("consolidation_status", consolidation_status)
-                if (status === "pending" && consolidation_status === "unconsolidated")
-                    return true
-                status = "pending";
-                consolidation_status = "unconsolidated";
-            }
-
-            updateDepositObj({ _id, address, status, balance, consolidation_status });
-        });
-
-        return true;
-    } catch (error) {
-        expireTimedOutDeposits()
-        console.error(error);
-        return true;
+    if (pendingDeposits.length == 0) {
+      console.log('No pending Deposits detected');
+      expireTimedOutDeposits();
+      return false;
     }
+
+    pendingDeposits.map(async (deposit) => {
+      const {
+        _id, address, privateKey, network, coin,
+      } = deposit;
+      let { consolidation_status, status } = deposit;
+      let balance = await getAddressBalance(address, privateKey, network, coin);
+      balance = balance || 0;
+
+      if (balance >= deposit.amount) {
+        status = 'success';
+        console.log('successful deposit detected');
+        const email = await getEmailByUser(user);
+        sendEmail(email, TYPE_EMAIL.INVOICE_PAID, { _id });
+        consolidation_status = await consolidateAddressBalance(
+          address,
+          balance,
+          privateKey,
+          network,
+          coin,
+        );
+      } else {
+        if (status === 'pending' && consolidation_status === 'unconsolidated') return true;
+        status = 'pending';
+        consolidation_status = 'unconsolidated';
+      }
+
+      updateDepositObj({
+        _id, address, status, balance, consolidation_status,
+      });
+    });
+
+    return true;
+  } catch (error) {
+    expireTimedOutDeposits();
+    console.error(error);
+    return true;
+  }
 };
 
 /**
@@ -490,177 +487,176 @@ const checkPendingDeposits = async () => {
  * @param {Object} depositObj - The deposit object to update
  * @returns {Promise<Object>} - A promise that resolves to the updated deposit object
  */
-const updateDepositObj = (depositObj) => {
-    return new Promise(async (resolve) => {
-        try {
-            // Change the Sequelize update to Mongoose updateOne
-            const query = await DepositModel.updateOne(
-                { _id: depositObj._id },
-                { ...depositObj }
-            );
+const updateDepositObj = (depositObj) => new Promise(async (resolve) => {
+  try {
+    // Change the Sequelize update to Mongoose updateOne
+    const query = await DepositModel.updateOne(
+      { _id: depositObj._id },
+      { ...depositObj },
+    );
 
-            resolve(query);
+    resolve(query);
+  } catch (error) {
+    console.log(error);
+  }
+});
 
-        } catch (error) {
-            console.log(error);
-        }
-    });
-};
+const consolidatePayment = ({ token, deposit_id }) => new Promise(async (resolve) => {
+  try {
+    const verify = await validateToken(token);
+    if (verify.status === 'success') {
+      const deposit = await DepositModel.findOne({ deposit_id }).exec();
+      if (deposit) {
+        resolve({ status: 'success' });
+        // process continues resolve doesnt stop script
+        // so admin wont have to wait for entire process of consolidation
+        // when done db is auto updated
+      }
 
-const consolidatePayment = ({ token, deposit_id }) => {
-    return new Promise(async (resolve) => {
-        try {
-            const verify = await validateToken(token);
-            if (verify.status === 'success') {
-                const deposit = await DepositModel.findOne({ deposit_id }).exec();
-                if (deposit) {
-                    resolve({ status: 'success' });
-                    //process continues resolve doesnt stop script
-                    //so admin wont have to wait for entire process of consolidation
-                    //when done db is auto updated
-                }
+      const {
+        _id, address, balance, privateKey, network, coin,
+      } = deposit;
+      const consolidation_status = await consolidateAddressBalance(
+        address,
+        balance,
+        privateKey,
+        network,
+        coin,
+      );
 
-                const { _id, address, balance, privateKey, network, coin } = deposit;
-                const consolidation_status = await consolidateAddressBalance(
-                    address,
-                    balance,
-                    privateKey,
-                    network,
-                    coin
-                );
-
-                updateDepositObj({ _id, consolidation_status });
-            } else resolve(verify);
-        } catch (error) {
-            resolve({ status: 'failed', message: 'server error: kindly try again' });
-        }
-    });
-};
+      updateDepositObj({ _id, consolidation_status });
+    } else resolve(verify);
+  } catch (error) {
+    resolve({ status: 'failed', message: 'server error: kindly try again' });
+  }
+});
 
 /**
- * 
+ *
  * @param {*} _id  id del usuario obtenido por el token
  * @param {*} amount cantidad de dinero en USD
- * @returns 
+ * @returns
  */
 const getExtraData = async (_id, amount) => {
-    const { setting } = await SettingController.fetchOne()
-    const { user } = await UserController.fetchByID(_id)
-    let business_payment_fee = 0
-    if (user.business) {
-        const { business } = await BusinessController.fetchByID(user.business)
-        business_payment_fee = business.payment_fee
-    }
+  const { setting } = await SettingController.fetchOne();
+  const { user } = await UserController.fetchByID(_id);
+  let business_payment_fee = 0;
+  if (user.business) {
+    const { business } = await BusinessController.fetchByID(user.business);
+    business_payment_fee = business.payment_fee;
+  }
 
-    const trm = setting.trm,
-        trm_house = setting.trm * (((100 - setting.perc_buy_house) / 100))
+  const { trm } = setting;
+  const trm_house = setting.trm * (((100 - setting.perc_buy_house) / 100));
 
-    let payment_fee = 0, type_payment_fee = ""
-    if (user.payment_fee && user.payment_fee > 0) {
-        payment_fee = user.payment_fee
-        type_payment_fee = "person"
-    } else if (business_payment_fee && business_payment_fee > 0) {
-        payment_fee = business_payment_fee
-        type_payment_fee = "business"
-    } else {
-        payment_fee = setting.perc_cumbi
-        type_payment_fee = "cumbi"
-    }
+  let payment_fee = 0; let
+    type_payment_fee = '';
+  if (user.payment_fee && user.payment_fee > 0) {
+    payment_fee = user.payment_fee;
+    type_payment_fee = 'person';
+  } else if (business_payment_fee && business_payment_fee > 0) {
+    payment_fee = business_payment_fee;
+    type_payment_fee = 'business';
+  } else {
+    payment_fee = setting.perc_cumbi;
+    type_payment_fee = 'cumbi';
+  }
 
-    const amountHouseFiat = trm_house * amount;
-    const amount_fiat = amountHouseFiat * ((100 - payment_fee) / 100);
+  const amountHouseFiat = trm_house * amount;
+  const amount_fiat = amountHouseFiat * ((100 - payment_fee) / 100);
 
-    return { trm, trm_house, amount_fiat, coin_fiat: "COP", payment_fee, type_payment_fee }
+  return {
+    trm, trm_house, amount_fiat, coin_fiat: 'COP', payment_fee, type_payment_fee,
+  };
 };
 
 const isValidAmount = (amount, reject) => {
-    if (Number.isNaN(amount)) {
-        reject({
-            status: "failed",
-            message: "Amount must be a correct number",
-            statusCode: 400,
-        });
-        return false
-    }
+  if (Number.isNaN(amount)) {
+    reject({
+      status: 'failed',
+      message: 'Amount must be a correct number',
+      statusCode: 400,
+    });
+    return false;
+  }
 
-    if (amount <= 0) {
-        reject({
-            status: "failed",
-            message: "Amount must be greater than zero",
-            statusCode: 400,
-        });
-        return false
-    }
+  if (amount <= 0) {
+    reject({
+      status: 'failed',
+      message: 'Amount must be greater than zero',
+      statusCode: 400,
+    });
+    return false;
+  }
 
-    return true
-}
+  return true;
+};
 
 const isValidURL = (url, reject) => {
-    if (url.length > 2000) {
-        reject({
-            status: "failed",
-            message: "URL is too large",
-            statusCode: 400,
-        });
-        return false
-    }
+  if (url.length > 2000) {
+    reject({
+      status: 'failed',
+      message: 'URL is too large',
+      statusCode: 400,
+    });
+    return false;
+  }
 
-    const urlPattern = /^(https?):\/\/[^\s/$.?#].[^\s]*$/;
-    if (!urlPattern.test(url)) {
-        reject({
-            status: "failed",
-            message: "URL has not a correct format",
-            statusCode: 400,
-        });
-        return false
-    }
+  const urlPattern = /^(https?):\/\/[^\s/$.?#].[^\s]*$/;
+  if (!urlPattern.test(url)) {
+    reject({
+      status: 'failed',
+      message: 'URL has not a correct format',
+      statusCode: 400,
+    });
+    return false;
+  }
 
-    return true
-}
+  return true;
+};
 
 const isValidNetwork = (network, reject) => {
-    if (network !== 'TRON') {
-        reject({
-            status: "failed",
-            message: "Network incorrect",
-            statusCode: 400,
-        });
-        return false
-    }
-    return true
-}
+  if (network !== 'TRON') {
+    reject({
+      status: 'failed',
+      message: 'Network incorrect',
+      statusCode: 400,
+    });
+    return false;
+  }
+  return true;
+};
 
 const isValidCoin = (coin, reject) => {
-    if (coin !== 'USDT' && coin !== 'USDC') {
-        reject({
-            status: "failed",
-            message: "Coin incorrect",
-            statusCode: 400,
-        });
-        return false
-    }
-    return true
-}
-
+  if (coin !== 'USDT' && coin !== 'USDC') {
+    reject({
+      status: 'failed',
+      message: 'Coin incorrect',
+      statusCode: 400,
+    });
+    return false;
+  }
+  return true;
+};
 
 /**
  * The cron jobs run every 1 minutes and call the runCronJobs function.
  */
-const cronJob = cron.schedule("*/1 * * * *", () => {
-    runCronJobs();
+const cronJob = cron.schedule('*/1 * * * *', () => {
+  runCronJobs();
 });
 
 /**
  * Starts the cron jobs.
  */
 const startCron = () => {
-    console.log("Cron Job Fired");
-    cronJob.start()
+  console.log('Cron Job Fired');
+  cronJob.start();
 };
 
 const stopCron = () => {
-    console.log("Cron Job Stoped");
-    cronJob.stop();
+  console.log('Cron Job Stoped');
+  cronJob.stop();
 };
 
 /**
@@ -668,28 +664,30 @@ const stopCron = () => {
  * The cron jobs check for pending deposits and update admin stats.
  */
 async function runCronJobs() {
-    if (!await checkPendingDeposits()) {
-        stopCron()
-    }
-    updateAdminStats();
+  if (!await checkPendingDeposits()) {
+    stopCron();
+  }
+  updateAdminStats();
 }
-
 
 async function hasKYC(_id) {
-    const { user } = await UserController.fetchByID(_id)
-    if (user.kyc && user.kyc === "accepted")
-        return true
-    return false
+  const { user } = await UserController.fetchByID(_id);
+  if (user.kyc && user.kyc === 'accepted') return true;
+  return false;
 }
 
+async function getEmailByUser(_id) {
+  const user = await User.findById(_id).exec();
+  return user.email;
+}
 
 module.exports = {
-    create,
-    status,
-    checkPendingDeposits,
-    getDepositAddress,
-    setNetwork,
-    updateDepositObj,
-    consolidatePayment,
-    startCron
+  create,
+  status,
+  checkPendingDeposits,
+  getDepositAddress,
+  setNetwork,
+  updateDepositObj,
+  consolidatePayment,
+  startCron,
 };

@@ -1,58 +1,56 @@
+const bcrypt = require('bcryptjs');
 const DepositModel = require('../models/Deposit');
 const UserModel = require('../models/User');
-const { signToken, bcryptCompare, verifyToken, genHash, uploadToS3 } = require('../utils');
+const {
+  signToken, bcryptCompare, verifyToken, genHash, uploadToS3,
+} = require('../utils');
+const { TYPE_EMAIL, sendEmail } = require('../services/emails/emailService');
+
 const ApiTokenModel = require('../models/ApiToken');
 const consolidateAddressBalance = require('./Consolidation');
-const bcrypt = require('bcryptjs');
-const ObjectId = require('mongoose').Types.ObjectId;
-
+const { ObjectId } = require('mongoose').Types;
+const { sendKycStatusEmail } = require('../services/emails/emailService'); // Importa la nueva función
 
 /**
  * Get all users
  * @returns
  */
-const fetch = () => {
-  return new Promise(async (resolve) => {
-    try {
-      const users = await UserModel.find({}, { password: 0 }).limit(20)
-      resolve({ status: 'success', users });
-    } catch (error) {
-      console.error('Error while fetching users:', error);
-      resolve({ status: 'failed', message: 'server error: kindly try again' });
-    }
-  });
-};
+const fetch = () => new Promise(async (resolve) => {
+  try {
+    const users = await UserModel.find({}, { password: 0 }).limit(20);
+    resolve({ status: 'success', users });
+  } catch (error) {
+    console.error('Error while fetching users:', error);
+    resolve({ status: 'failed', message: 'server error: kindly try again' });
+  }
+});
 
 /**
  * Get user by ID
  * @returns
  */
-const fetchByID = (id) => {
-  return new Promise(async (resolve) => {
-    try {
-      const user = await UserModel.findById(id, { password: 0 })
-      resolve({ status: 'success', user });
-    } catch (error) {
-      console.error('Error while fetching user:', error);
-      resolve({ status: 'failed', message: 'server error: kindly try again' });
-    }
-  });
-};
+const fetchByID = (id) => new Promise(async (resolve) => {
+  try {
+    const user = await UserModel.findById(id, { password: 0 });
+    resolve({ status: 'success', user });
+  } catch (error) {
+    console.error('Error while fetching user:', error);
+    resolve({ status: 'failed', message: 'server error: kindly try again' });
+  }
+});
 
 /**
  * Delete user by ID
  */
-const deleteById = (id) => {
-  return new Promise(async (resolve) => {
-    try {
-      await UserModel.deleteOne({ _id: id })
-      resolve({ status: 'success' });
-    } catch (error) {
-      console.error('Error while deleteting user:', error);
-      resolve({ status: 'failed', message: 'server error: kindly try again' });
-    }
-  });
-};
+const deleteById = (id) => new Promise(async (resolve) => {
+  try {
+    await UserModel.deleteOne({ _id: id });
+    resolve({ status: 'success' });
+  } catch (error) {
+    console.error('Error while deleteting user:', error);
+    resolve({ status: 'failed', message: 'server error: kindly try again' });
+  }
+});
 
 /**
  * Validates a JWT token and returns the admin ID if the token is valid.
@@ -68,27 +66,25 @@ const validateToken = async (token) => {
     const decodedObj = await verifyToken(token, process.env.JWT_SECRET);
 
     // If it's a business_token, handle its validation
-    if (decodedObj.type === "business_token") {
+    if (decodedObj.type === 'business_token') {
       // Here, you can add any specific logic for business tokens.
       // For now, I'm just returning success if it's a valid business_token.
       return { status: 'success', type: 'business' };
     }
 
     // If it's an admin_token, proceed with the current logic
-    const id = decodedObj.id; // Use id instead of admin_id
+    const { id } = decodedObj; // Use id instead of admin_id
     const query = await UserModel.findOne({ _id: id, token });
 
     if (query) {
       return { status: 'success', id, role: query.role };
-    } else {
-      return { status: 'auth_failed', message: 'invalid token query' };
     }
+    return { status: 'auth_failed', message: 'invalid token query' };
   } catch (e) {
     console.error('Error during token validation:', e);
     return { status: 'auth_failed', message: 'invalid token triggered catch' };
   }
 };
-
 
 /**
  * Handles admin login. Verifies email and password, and if correct, returns a JWT token.
@@ -97,49 +93,49 @@ const validateToken = async (token) => {
  * @param {string} params.password - The admin's password.
  * @return {Promise<Object>} - The login result.
  */
-const login = ({ email, password }) => {
-  return new Promise(async (resolve) => {
-    try {
-      const query = await UserModel.findOne({ email: { '$regex': `^${email}$`, $options: 'i' } });
-      if (query) {
-        const checkPassword = bcryptCompare(password, query.password);
+const login = ({ email, password }) => new Promise(async (resolve) => {
+  try {
+    const query = await UserModel.findOne({ email: { $regex: `^${email}$`, $options: 'i' } });
+    if (query) {
+      const checkPassword = bcryptCompare(password, query.password);
 
-        if (query.status && query.status === "blocked") {
-          resolve({
-            status: 'auth_failed',
-            message: 'User blocked',
-          });
-        }
+      if (query.status && query.status === 'blocked') {
+        resolve({
+          status: 'auth_failed',
+          message: 'User blocked',
+        });
+      }
 
-        if (checkPassword) {
-          const token = signToken(
-            { id: query._id, type: 'admin_token' }, // Use _id instead of admin_id
-            process.env.JWT_SECRET,
-            '5d'
-          );
-          await UserModel.findOneAndUpdate({ _id: query._id }, { token }); // Use _id instead of admin_id
-          resolve({
-            status: 'success',
-            user: { id: query._id, authToken: token, email, username: query.username, role: query.role, business: query.business },
-          });
-        } else {
-          resolve({
-            status: 'auth_failed',
-            message: 'Incorrect username or password',
-          });
-        }
+      if (checkPassword) {
+        const token = signToken(
+          { id: query._id, type: 'admin_token' }, // Use _id instead of admin_id
+          process.env.JWT_SECRET,
+          '5d',
+        );
+        await UserModel.findOneAndUpdate({ _id: query._id }, { token }); // Use _id instead of admin_id
+        resolve({
+          status: 'success',
+          user: {
+            id: query._id, authToken: token, email, username: query.username, role: query.role, business: query.business,
+          },
+        });
       } else {
         resolve({
           status: 'auth_failed',
           message: 'Incorrect username or password',
         });
       }
-    } catch (e) {
-      console.error('Error during login:', e);
-      resolve({ status: 'auth_failed', message: 'server error' });
+    } else {
+      resolve({
+        status: 'auth_failed',
+        message: 'Incorrect username or password',
+      });
     }
-  });
-};
+  } catch (e) {
+    console.error('Error during login:', e);
+    resolve({ status: 'auth_failed', message: 'server error' });
+  }
+});
 
 /**
  * Handles user signUp.
@@ -174,10 +170,11 @@ const signUp = async (userData, document = {}) => {
         if (s3Response && s3Response.Location) {
           // Actualiza el usuario con la URL del documento
           await UserModel.updateOne({ _id: userId }, { document: s3Response.Location });
+          // Envía un email de confirmación al usuario
+          sendEmail(userData.email, TYPE_EMAIL.REGISTER);
         } else {
           throw { status: 'update_failed', message: 'S3 response does not contain Location' };
         }
-
       } catch (error) {
         console.error('Error uploading to S3:', error);
         throw { status: 'update_failed', message: 'Error uploading to S3' };
@@ -185,7 +182,6 @@ const signUp = async (userData, document = {}) => {
     }
 
     return { status: 'signUp_success', user: query };
-
   } catch (e) {
     console.error('Error during signUp:', e);
     throw { status: 'signUp_failed', message: 'server error' };
@@ -198,29 +194,27 @@ const signUp = async (userData, document = {}) => {
  * @param {string} params.token - The JWT token for authentication.
  * @return {Promise<Object>} - The fetch result.
  */
-const fetchDeposits = ({ token, user }) => {
-  return new Promise(async (resolve) => {
-    try {
-      const verify = await validateToken(token);
-      if (verify.status === 'success') {
-        let query = {};
+const fetchDeposits = ({ token, user }) => new Promise(async (resolve) => {
+  try {
+    const verify = await validateToken(token);
+    if (verify.status === 'success') {
+      const query = {};
 
-        if (user.role !== 'superadmin') {
-          query.user = user.id;
-        }
+      if (user.role !== 'superadmin') {
+        query.user = user.id;
+      }
 
-        const deposits = await DepositModel.find(query, { privateKey: 0, address_index: 0 })
-          .sort({ createdAt: 'desc' })
-          .limit(250)
-          .lean();
-        resolve({ status: 'success', deposits });
-      } else resolve(verify);
-    } catch (error) {
-      console.error('Error while fetching deposits:', error);
-      resolve({ status: 'failed', message: 'server error: kindly try again' });
-    }
-  });
-};
+      const deposits = await DepositModel.find(query, { privateKey: 0, address_index: 0 })
+        .sort({ createdAt: 'desc' })
+        .limit(250)
+        .lean();
+      resolve({ status: 'success', deposits });
+    } else resolve(verify);
+  } catch (error) {
+    console.error('Error while fetching deposits:', error);
+    resolve({ status: 'failed', message: 'server error: kindly try again' });
+  }
+});
 
 // const consolidatePayment = ({ token, deposit_id }) => {
 //   return new Promise(async (resolve) => {
@@ -260,40 +254,38 @@ const fetchDeposits = ({ token, user }) => {
  * @param {string} params.user - The id of the user.
  * @return {Promise<Object>} - The creation result.
  */
-const createToken = ({ token, token_name, user }) => {
-  return new Promise(async (resolve) => {
-    try {
-      const verify = await validateToken(token);
+const createToken = ({ token, token_name, user }) => new Promise(async (resolve) => {
+  try {
+    const verify = await validateToken(token);
 
-      if (verify.status == 'success') {
-        const token = signToken(
-          { type: 'api_token', token_name },
-          process.env.API_JWT_SECRET,
-          '100y'
-        );
+    if (verify.status == 'success') {
+      const token = signToken(
+        { type: 'api_token', token_name },
+        process.env.API_JWT_SECRET,
+        '100y',
+      );
 
-        const createdAt = new Date();
-        const createToken = await ApiTokenModel.create({
-          token_name,
-          token,
-          user, // The user is associated with the token here
-          createdAt,
-        });
+      const createdAt = new Date();
+      const createToken = await ApiTokenModel.create({
+        token_name,
+        token,
+        user, // The user is associated with the token here
+        createdAt,
+      });
 
-        if (createToken) {
-          resolve({ status: 'success' });
-        } else {
-          resolve({ status: 'failed', message: 'Error Creating Token' });
-        }
+      if (createToken) {
+        resolve({ status: 'success' });
       } else {
-        resolve(verify);
+        resolve({ status: 'failed', message: 'Error Creating Token' });
       }
-    } catch (error) {
-      console.log('error stack', error.stack);
-      resolve({ status: 'failed', message: 'server error: kindly try again' });
+    } else {
+      resolve(verify);
     }
-  });
-};
+  } catch (error) {
+    console.log('error stack', error.stack);
+    resolve({ status: 'failed', message: 'server error: kindly try again' });
+  }
+});
 
 /**
  * Returns all API tokens from the database.
@@ -301,22 +293,20 @@ const createToken = ({ token, token_name, user }) => {
  * @param {string} params.token - The JWT token for authentication.
  * @return {Promise<Object>} - The fetch result.
  */
-const fetchTokens = ({ token }) => {
-  return new Promise(async (resolve) => {
-    try {
-      const verify = await validateToken(token);
-      if (verify.status === 'success' && (verify.role === 'admin' || verify.role === 'superadmin')) {
-        const tokens = await ApiTokenModel.find({ user: new ObjectId(verify.id) }).limit(200).lean();
-        resolve({ status: 'success', tokens });
-      } else {
-        resolve(verify);
-      }
-    } catch (error) {
-      console.error('Error while fetching tokens:', error);
-      resolve({ status: 'failed', message: 'server error: kindly try again' });
+const fetchTokens = ({ token }) => new Promise(async (resolve) => {
+  try {
+    const verify = await validateToken(token);
+    if (verify.status === 'success' && (verify.role === 'admin' || verify.role === 'superadmin')) {
+      const tokens = await ApiTokenModel.find({ user: new ObjectId(verify.id) }).limit(200).lean();
+      resolve({ status: 'success', tokens });
+    } else {
+      resolve(verify);
     }
-  });
-};
+  } catch (error) {
+    console.error('Error while fetching tokens:', error);
+    resolve({ status: 'failed', message: 'server error: kindly try again' });
+  }
+});
 
 /**
  * Deletes an API token from the database.
@@ -325,22 +315,20 @@ const fetchTokens = ({ token }) => {
  * @param {string} params.token_id - The ID of the API token to delete.
  * @return {Promise<Object>} - The deletion result.
  */
-const deleteToken = (token_id, { token }) => {
-  return new Promise(async (resolve) => {
-    try {
-      const verify = await validateToken(token);
-      if (verify.status == 'success') {
-        await ApiTokenModel.findByIdAndDelete(token_id);
-        resolve({ status: 'success' });
-      } else {
-        resolve(verify);
-      }
-    } catch (error) {
-      console.log('error', error.stack);
-      resolve({ status: 'failed', message: 'server error: kindly try again' });
+const deleteToken = (token_id, { token }) => new Promise(async (resolve) => {
+  try {
+    const verify = await validateToken(token);
+    if (verify.status == 'success') {
+      await ApiTokenModel.findByIdAndDelete(token_id);
+      resolve({ status: 'success' });
+    } else {
+      resolve(verify);
     }
-  });
-};
+  } catch (error) {
+    console.log('error', error.stack);
+    resolve({ status: 'failed', message: 'server error: kindly try again' });
+  }
+});
 
 /**
  * Updates the admin information in the database.
@@ -352,107 +340,112 @@ const deleteToken = (token_id, { token }) => {
  * @param {string} params.token - The JWT token for authentication.
  * @return {Promise<Object>} - The update result.
  */
-const update = ({ passphrase, email, username, password, token }) => {
-  return new Promise(async (resolve) => {
-    try {
-      const verify = await validateToken(token);
+const update = ({
+  passphrase, email, username, password, token,
+}) => new Promise(async (resolve) => {
+  try {
+    const verify = await validateToken(token);
 
-      if (verify.status == 'success') {
-        adminObj = {};
-        if (passphrase) {
-          adminObj.passphrase = signToken(
-            { mnemonic: passphrase, type: 'mnemonic-token' },
-            process.env.MNEMONIC_JWT_SECRET,
-            '100y'
-          );
-        }
-        if (password) adminObj.password = await genHash(password);
-        if (email) adminObj.email = email;
-        if (username) adminObj.username = username;
-        adminObj.updatedAt = new Date();
-        await UserModel.updateOne(
-          { _id: verify.id }, // Use _id instead of admin_id
-          adminObj
-        ).exec();
+    if (verify.status == 'success') {
+      adminObj = {};
+      if (passphrase) {
+        adminObj.passphrase = signToken(
+          { mnemonic: passphrase, type: 'mnemonic-token' },
+          process.env.MNEMONIC_JWT_SECRET,
+          '100y',
+        );
+      }
+      if (password) adminObj.password = await genHash(password);
+      if (email) adminObj.email = email;
+      if (username) adminObj.username = username;
+      adminObj.updatedAt = new Date();
+      await UserModel.updateOne(
+        { _id: verify.id }, // Use _id instead of admin_id
+        adminObj,
+      ).exec();
 
-        resolve({ status: 'success' });
-      } else resolve(verify);
-    } catch (error) {
-      console.log('error', error.stack);
-      resolve({ status: 'failed', message: 'server error: kindly try again' });
-    }
-  });
-};
+      resolve({ status: 'success' });
+    } else resolve(verify);
+  } catch (error) {
+    console.log('error', error.stack);
+    resolve({ status: 'failed', message: 'server error: kindly try again' });
+  }
+});
 
-const updateProfile = ({ passphrase, email, username, password, token }) => {
-  return new Promise(async (resolve) => {
-    try {
-      const verify = await validateToken(token);
+const updateProfile = ({
+  passphrase, email, username, password, token,
+}) => new Promise(async (resolve) => {
+  try {
+    const verify = await validateToken(token);
 
-      if (verify.status == 'success') {
-        let adminObj = {};
+    if (verify.status == 'success') {
+      const adminObj = {};
 
-        if (passphrase) {
-          adminObj.passphrase = signToken(
-            { mnemonic: passphrase, type: 'mnemonic-token' },
-            process.env.MNEMONIC_JWT_SECRET,
-            '100y'
-          );
-        }
-
-        if (password) adminObj.password = await genHash(password);
-
-        if (username) adminObj.username = username;
-        console.log('username', username);
-
-        adminObj.updatedAt = new Date();
-        console.log('verify.id', verify.id);
-        await UserModel.updateOne(
-          { _id: verify.id },
-          adminObj
-        ).exec();
-
-        resolve({ status: 'success' });
-      } else resolve(verify);
-    } catch (error) {
-      console.log('error', error.stack);
-      resolve({ status: 'failed', message: 'server error: kindly try again' });
-    }
-  });
-};
-
-const updateUser = (user) => {
-  return new Promise(async (resolve) => {
-    try {
-      if (user.password) {
-        user.password = await genHash(user.password);
-      } else {
-        delete user.password
+      if (passphrase) {
+        adminObj.passphrase = signToken(
+          { mnemonic: passphrase, type: 'mnemonic-token' },
+          process.env.MNEMONIC_JWT_SECRET,
+          '100y',
+        );
       }
 
-      await UserModel.updateOne({ _id: user._id }, user).exec();
-      resolve({ status: 'success' });
-    } catch (error) {
-      console.log('error', error.stack);
-      resolve({ status: 'failed', message: 'server error: kindly try again' });
-    }
-  });
-};
+      if (password) adminObj.password = await genHash(password);
 
-const updateUserStatus = (_id, { status }) => {
-  return new Promise(async (resolve) => {
-    try {
+      if (username) adminObj.username = username;
+      console.log('username', username);
+
+      adminObj.updatedAt = new Date();
+      console.log('verify.id', verify.id);
       await UserModel.updateOne(
-        { _id: _id },
-        { $set: { status: status } },
+        { _id: verify.id },
+        adminObj,
       ).exec();
+
       resolve({ status: 'success' });
-    } catch (error) {
-      console.log('error', error.stack);
-      resolve({ status: 'failed', message: 'server error: kindly try again' });
+    } else resolve(verify);
+  } catch (error) {
+    console.log('error', error.stack);
+    resolve({ status: 'failed', message: 'server error: kindly try again' });
+  }
+});
+const updateUser = (user) => new Promise(async (resolve, reject) => {
+  try {
+    // Conservar el estado KYC original antes de la actualización
+    const originalUser = await UserModel.findById(user._id);
+    const originalKycStatus = originalUser.kyc;
+
+    if (user.password) {
+      user.password = await genHash(user.password);
+    } else {
+      delete user.password;
     }
-  });
-};
+
+    await UserModel.updateOne({ _id: user._id }, user).exec();
+
+    // Comprueba si el estado de KYC ha cambiado y envía un correo electrónico si es así
+    if (user.kyc && user.kyc !== originalKycStatus) {
+      sendKycStatusEmail(user.email, user.kyc); // Asume que el email del usuario está en user.email
+    }
+
+    resolve({ status: 'success' });
+  } catch (error) {
+    console.log('error', error.stack);
+    reject({ status: 'failed', message: 'server error: kindly try again' });
+  }
+});
+
+const updateUserStatus = (_id, { status }) => new Promise(async (resolve) => {
+  try {
+    await UserModel.updateOne(
+      { _id },
+      { $set: { status } },
+    ).exec();
+    resolve({ status: 'success' });
+  } catch (error) {
+    console.log('error', error.stack);
+    resolve({ status: 'failed', message: 'server error: kindly try again' });
+  }
+});
 
 /**
  * Creates a new invoice.
@@ -479,56 +472,54 @@ const createInvoice = ({
   coin_fiat,
   payment_fee,
   type_payment_fee,
-}) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const verify = await validateToken(token);
+}) => new Promise(async (resolve, reject) => {
+  try {
+    const verify = await validateToken(token);
 
-      if (verify.status == 'success') {
-        const deposit_id = Date.now();
+    if (verify.status == 'success') {
+      const deposit_id = Date.now();
 
-        // Fetch the user from the database
-        const userObj = await UserModel.findById(user);
-        if (!userObj) {
-          reject({ message: 'User not found' });
-          return;
-        }
-        const response = await DepositModel.create({
-          amount,
-          amount_usd: amount,
-          status: "pending",
-          balance: 0,
-          deposit_id,
-          network,
-          coin,
-          type: 'invoice',
-          description,
-          title,
-          user,
-          trm,
-          trm_house,
-          amount_fiat,
-          coin_fiat,
-          payment_fee,
-          type_payment_fee
-        });
-
-        // const invoice_url = process.env.APPURL + '/invoice/' + deposit_id;
-        // const invoiceObj = {
-        //   status: 'success',
-        //   invoiceObj: { ...response.depositObj, invoice_url },
-        // };
-        // resolve(invoiceObj);
-      } else {
-        resolve(verify);
+      // Fetch the user from the database
+      const userObj = await UserModel.findById(user);
+      if (!userObj) {
+        reject({ message: 'User not found' });
+        return;
       }
-    } catch (error) {
-      console.log('error create invoice ', error);
-      console.error('Error Stack Trace: ', error.stack); // print the error stack trace
-      reject({ message: 'error creating invoice' });
+      const response = await DepositModel.create({
+        amount,
+        amount_usd: amount,
+        status: 'pending',
+        balance: 0,
+        deposit_id,
+        network,
+        coin,
+        type: 'invoice',
+        description,
+        title,
+        user,
+        trm,
+        trm_house,
+        amount_fiat,
+        coin_fiat,
+        payment_fee,
+        type_payment_fee,
+      });
+
+      // const invoice_url = process.env.APPURL + '/invoice/' + deposit_id;
+      // const invoiceObj = {
+      //   status: 'success',
+      //   invoiceObj: { ...response.depositObj, invoice_url },
+      // };
+      // resolve(invoiceObj);
+    } else {
+      resolve(verify);
     }
-  });
-};
+  } catch (error) {
+    console.log('error create invoice ', error);
+    console.error('Error Stack Trace: ', error.stack); // print the error stack trace
+    reject({ message: 'error creating invoice' });
+  }
+});
 
 /**
  * Returns the admin's statistics.
@@ -536,90 +527,88 @@ const createInvoice = ({
  * @param {string} params.token - The JWT token for authentication.
  * @return {Promise<Object>} - The statistics.
  */
-const adminStats = ({ token }) => {
-  return new Promise(async (resolve) => {
-    try {
-      const verify = await validateToken(token);
-      if (verify.status == 'success') {
-        const query = await UserModel.findOne({
-          _id: verify.id, // Use _id instead of admin_id
-        });
+const adminStats = ({ token }) => new Promise(async (resolve) => {
+  try {
+    const verify = await validateToken(token);
+    if (verify.status == 'success') {
+      const query = await UserModel.findOne({
+        _id: verify.id, // Use _id instead of admin_id
+      });
 
-        if (!query || query.stats === null) {
-          resolve({ status: 'failed', message: 'Admin statistics not found' });
+      if (!query || query.stats === null) {
+        resolve({ status: 'failed', message: 'Admin statistics not found' });
+        return;
+      }
+
+      let s;
+      if (query.stats) {
+        try {
+          s = JSON.parse(query.stats);
+        } catch (error) {
+          console.error('Error parsing stats:', error);
+          resolve({ status: 'failed', message: 'Error parsing stats' });
           return;
         }
-
-        let s;
-        if (query.stats) {
-          try {
-            s = JSON.parse(query.stats);
-          } catch (error) {
-            console.error('Error parsing stats:', error);
-            resolve({ status: 'failed', message: 'Error parsing stats' });
-            return;
-          }
-        } else {
-          // Default values for stats
-          s = {
-            eth_balance: { value: 0 },
-            trx_balance: { value: 0 },
-            eth_usdt_balance: { value: 0 },
-            trx_usdt_balance: { value: 0 },
-            eth_usdc_balance: { value: 0 },
-            trx_usdc_balance: { value: 0 },
-            successful_deposits: { value: 0 },
-            total_paid: { value: 0 }
-          };
-        }
-
-        const updated = query.last_stats_update;
-        const stats = {
-          eth_balance: {
-            value: s.eth_balance.value,
-            updated,
-          },
-          trx_balance: {
-            value: s.trx_balance.value,
-            updated,
-          },
-          eth_usdt_balance: {
-            value: s.eth_usdt_balance.value,
-            updated,
-          },
-          trx_usdt_balance: {
-            value: s.trx_usdt_balance.value,
-            updated,
-          },
-          eth_usdc_balance: {
-            value: s.eth_usdc_balance.value,
-            updated,
-          },
-          trx_usdc_balance: {
-            value: s.trx_usdc_balance.value,
-            updated,
-          },
-          successful_deposits: {
-            value: s.successful_deposits.value,
-            updated,
-          },
-          total_paid: {
-            value: s.total_paid.value,
-            updated,
-          },
-        };
-
-        resolve({ status: 'success', stats });
       } else {
-        resolve(verify);
+        // Default values for stats
+        s = {
+          eth_balance: { value: 0 },
+          trx_balance: { value: 0 },
+          eth_usdt_balance: { value: 0 },
+          trx_usdt_balance: { value: 0 },
+          eth_usdc_balance: { value: 0 },
+          trx_usdc_balance: { value: 0 },
+          successful_deposits: { value: 0 },
+          total_paid: { value: 0 },
+        };
       }
-    } catch (error) {
-      console.log('error stats', error);
-      console.log('error stats', error.stack);
-      resolve({ status: 'failed', message: 'server error: kindly try again' });
+
+      const updated = query.last_stats_update;
+      const stats = {
+        eth_balance: {
+          value: s.eth_balance.value,
+          updated,
+        },
+        trx_balance: {
+          value: s.trx_balance.value,
+          updated,
+        },
+        eth_usdt_balance: {
+          value: s.eth_usdt_balance.value,
+          updated,
+        },
+        trx_usdt_balance: {
+          value: s.trx_usdt_balance.value,
+          updated,
+        },
+        eth_usdc_balance: {
+          value: s.eth_usdc_balance.value,
+          updated,
+        },
+        trx_usdc_balance: {
+          value: s.trx_usdc_balance.value,
+          updated,
+        },
+        successful_deposits: {
+          value: s.successful_deposits.value,
+          updated,
+        },
+        total_paid: {
+          value: s.total_paid.value,
+          updated,
+        },
+      };
+
+      resolve({ status: 'success', stats });
+    } else {
+      resolve(verify);
     }
-  });
-};
+  } catch (error) {
+    console.log('error stats', error);
+    console.log('error stats', error.stack);
+    resolve({ status: 'failed', message: 'server error: kindly try again' });
+  }
+});
 
 /**
  * Retrieves users based on the business they are associated with. If the user making the request is a superadmin,
@@ -633,12 +622,11 @@ const getByBusiness = async (id) => {
     // Fetch the user's role based on their ID
     const { role, business } = await UserModel.findById(id);
 
-    let usersQuery = {};
-
+    const usersQuery = {};
 
     // If the user is a person, just get the same user
     if (role === 'person') {
-      usersQuery._id = id
+      usersQuery._id = id;
 
       // If the user is not a superadmin, fetch their associated business and query users by business
     } else if (role !== 'superadmin') {
@@ -658,8 +646,6 @@ const getByBusiness = async (id) => {
     return { status: 'auth_failed', message: 'server error' };
   }
 };
-
-
 
 module.exports = {
   fetch,

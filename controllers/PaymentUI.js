@@ -2,8 +2,8 @@
  * This file is a module that exports a function for handling payment UI requests.
  * It checks the status of a deposit and renders the corresponding view based on the deposit
  * status and the network and coin of the deposit.
- */const { signToken } = require("../utils");
-const depositController = require("./Deposit");
+ */const { signToken } = require('../utils');
+const depositController = require('./Deposit');
 
 /**
  * Handles payment UI requests.
@@ -15,32 +15,30 @@ const depositController = require("./Deposit");
  * @param {Object} res - The HTTP response object.
  */
 module.exports = async (req, res) => {
-    const _id = req.params._id;
-    const resp = await depositController.status(_id);
+  const { _id } = req.params;
+  const resp = await depositController.status(_id);
 
-    if (resp.status != "success") {
-        res.status(404).json({ message: "PAYMENT NOT FOUND" });
-        return;
-    }
+  if (resp.status != 'success') {
+    res.status(404).json({ message: 'PAYMENT NOT FOUND' });
+    return;
+  }
 
-    const sessionToken = signToken(
-        { _id },
-        process.env.SESSION_SECRET,
-        "7h"
-    );
-    req.session.token = sessionToken;
-    req.session.deposit_id = _id;
-    const depositObj = resp.depositObj;
+  const sessionToken = signToken(
+    { _id },
+    process.env.SESSION_SECRET,
+    '7h',
+  );
+  req.session.token = sessionToken;
+  req.session.deposit_id = _id;
+  const { depositObj } = resp;
 
-    if (depositObj.address == null || depositObj.address == "") {
-        res.render("select-network", depositObj);
-    } else {
-        depositObj.icon =
-            depositObj.coin === "USDT" ? "/images/usdt.png" : "/images/usdc.png";
-        depositObj.network_short =
-            depositObj.network === "TRON" ? "TRC20" : "ERC20";
-        depositObj.is_invoice = depositObj.type === "invoice" ? true : false;
-        //depositObj.amount += 3;
-        res.render("pay", depositObj);
-    }
+  if (depositObj.address == null || depositObj.address == '') {
+    res.render('select-network', depositObj);
+  } else {
+    depositObj.icon = depositObj.coin === 'USDT' ? '/images/usdt.png' : '/images/usdc.png';
+    depositObj.network_short = depositObj.network === 'TRON' ? 'TRC20' : 'ERC20';
+    depositObj.is_invoice = depositObj.type === 'invoice';
+    // depositObj.amount += 3;
+    res.render('pay', depositObj);
+  }
 };
