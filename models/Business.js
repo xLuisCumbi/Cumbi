@@ -44,7 +44,7 @@ const BusinessSchema = new mongoose.Schema(
     },
     kyc: {
       type: String,
-      enum: ['pending', 'accepted', 'denied'],
+      enum: ['initial', 'pending', 'accepted', 'denied'],
       default: 'pending',
     },
     document: {

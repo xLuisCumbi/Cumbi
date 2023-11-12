@@ -160,6 +160,7 @@ Router.post('/update', adminAuthMiddleware, (req, res) => {
  * Returns a response containing the updated admin data.
  */
 Router.post('/update-profile', adminAuthMiddleware, (req, res) => {
+  console.log('req.body', req);
   User.updateProfile(req.body).then(
     (resp) => {
       res.json(resp);

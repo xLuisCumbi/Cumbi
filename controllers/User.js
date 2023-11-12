@@ -116,7 +116,8 @@ const login = ({ email, password }) => new Promise(async (resolve) => {
         resolve({
           status: 'success',
           user: {
-            id: query._id, authToken: token, email, username: query.username, role: query.role, business: query.business,
+            ...query.toObject(), // Usa toObject() para convertir el documento de Mongoose a un objeto
+            authToken: token,
           },
         });
       } else {
@@ -147,6 +148,7 @@ const login = ({ email, password }) => new Promise(async (resolve) => {
  * @return {Promise<Object>} - The signup result.
  */
 const signUp = async (userData, document = {}) => {
+
   try {
     // Primero, crea el usuario en la base de datos
     userData.password = await bcrypt.hash(userData.password, 10);
@@ -408,6 +410,7 @@ const updateProfile = ({
     resolve({ status: 'failed', message: 'server error: kindly try again' });
   }
 });
+
 const updateUser = (user) => new Promise(async (resolve, reject) => {
   try {
     // Conservar el estado KYC original antes de la actualización

@@ -52,6 +52,10 @@ const create = ({
   coin_fiat,
   payment_fee,
   type_payment_fee,
+  gmf,
+  iva,
+  commission_cumbi,
+  amount_to_receive_in_bank,
 }) => new Promise(async (resolve, reject) => {
   try {
     if (!type) {
@@ -64,7 +68,9 @@ const create = ({
       return;
     }
 
+    // ToDo: agregar todos los calculos al backend de forma que no se pueda enviar datos malos desde el front
     if (type === 'api-payment') {
+
       const validate = validateField(reject, {
         amount,
         deposit_id,
@@ -102,7 +108,16 @@ const create = ({
           );
 
           const {
-            trm, trm_house, amount_fiat, coin_fiat, payment_fee, type_payment_fee,
+            trm,
+            trm_house,
+            amount_fiat,
+            coin_fiat,
+            payment_fee,
+            type_payment_fee,
+            commission_cumbi,
+            iva,
+            gmf,
+            amount_to_receive_in_bank
           } = await getExtraData(user, amount);
 
           const depositObj = {
@@ -123,10 +138,15 @@ const create = ({
             trm,
             trm_house,
             amount_fiat,
-            coin_fiat: coin_fiat.toUpperCase(),
+            coin_fiat,
             payment_fee,
             type_payment_fee,
+            commission_cumbi,
+            iva,
+            gmf,
+            amount_to_receive_in_bank,
           };
+
           const save = await saveDepositObj(depositObj);
 
           if (save.success) {
@@ -199,6 +219,10 @@ const create = ({
             coin_fiat: coin_fiat.toUpperCase(),
             payment_fee,
             type_payment_fee,
+            gmf,
+            iva,
+            commission_cumbi,
+            amount_to_receive_in_bank,
           };
 
           const save = await saveDepositObj(depositObj);
@@ -546,11 +570,11 @@ const getExtraData = async (_id, amount) => {
     business_payment_fee = business.payment_fee;
   }
 
-  const { trm } = setting;
-  const trm_house = setting.trm * (((100 - setting.perc_buy_house) / 100));
+  const trm = setting.trm;
+  const trm_house = trm * (((100 - setting.perc_buy_house) / 100));
 
-  let payment_fee = 0; let
-    type_payment_fee = '';
+  let payment_fee = 0;
+  let type_payment_fee = '';
   if (user.payment_fee && user.payment_fee > 0) {
     payment_fee = user.payment_fee;
     type_payment_fee = 'person';
@@ -562,11 +586,23 @@ const getExtraData = async (_id, amount) => {
     type_payment_fee = 'cumbi';
   }
 
-  const amountHouseFiat = trm_house * amount;
-  const amount_fiat = amountHouseFiat * ((100 - payment_fee) / 100);
+  const amountConvertedToFiat = parseFloat((trm_house * amount).toFixed(2));
+  const commissionCumbi = parseFloat((amountConvertedToFiat * (payment_fee / 100)).toFixed(2));
+  const iva = parseFloat((commissionCumbi * 0.19).toFixed(2)); // IVA del 19% sobre la comisión Cumbi
+  const gmf = parseFloat(((amountConvertedToFiat - commissionCumbi - iva) * 0.004).toFixed(2)); // GMF (4x1000)
+  const amountToReceiveInBank = parseFloat((amountConvertedToFiat - (iva + gmf + commissionCumbi)).toFixed(2));
 
   return {
-    trm, trm_house, amount_fiat, coin_fiat: 'COP', payment_fee, type_payment_fee,
+    trm,
+    trm_house,
+    amount_fiat: amountConvertedToFiat, // Monto en fiat antes de la comisión
+    coin_fiat: 'COP',
+    payment_fee,
+    type_payment_fee,
+    commission_cumbi: commissionCumbi,
+    iva: iva,
+    gmf: gmf,
+    amount_to_receive_in_bank: amountToReceiveInBank
   };
 };
 
@@ -680,6 +716,11 @@ async function getEmailByUser(_id) {
   const user = await User.findById(_id).exec();
   return user.email;
 }
+
+const calculateGMF = (amount) => amount * 0.004; // GMF del 4x1000
+const calculateIVA = (commission) => commission * 0.19; // IVA del 19%
+const calculateCommissionCumbi = (amountFiat, paymentFee) => amountFiat * (paymentFee / 100);
+const calculateAmountToReceiveInBank = (amountFiat, gmf, iva, commission) => amountFiat - (gmf + iva + commission);
 
 module.exports = {
   create,
