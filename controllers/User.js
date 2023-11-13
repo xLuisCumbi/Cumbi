@@ -374,42 +374,54 @@ const update = ({
   }
 });
 
-const updateProfile = ({
-  passphrase, email, username, password, token,
-}) => new Promise(async (resolve) => {
+const updateProfile = async (newUserData, currentUser, document = {}) => {
   try {
-    const verify = await validateToken(token);
 
-    if (verify.status == 'success') {
-      const adminObj = {};
+    // Asegúrate de que se proporcionen el userId y el token
+    if (!currentUser._id || !currentUser.token) {
+      return { status: 'failed', message: 'Missing user ID or token' };
+    }
 
-      if (passphrase) {
-        adminObj.passphrase = signToken(
-          { mnemonic: passphrase, type: 'mnemonic-token' },
-          process.env.MNEMONIC_JWT_SECRET,
-          '100y',
-        );
+    // Verifica el token y obtén el ID del usuario
+    const verify = await validateToken(currentUser.token);
+    if (verify.status !== 'success') return verify;
+
+    // Prepara el objeto para actualizar
+    const updateObj = { updatedAt: new Date() };
+    if (newUserData.password) updateObj.password = await genHash(newUserData.password);
+    if (newUserData.username) updateObj.username = newUserData.username;
+    if (newUserData.phone) updateObj.phone = newUserData.phone;
+
+    // Actualiza la información básica del usuario
+    await UserModel.updateOne({ _id: currentUser._id }, updateObj).exec();
+
+    // Si se proporciona un documento, sube el archivo a S3
+    if (document && document.size) {
+      try {
+        const s3Response = await uploadToS3(document);
+        if (s3Response && s3Response.Location) {
+          // Actualiza el usuario con la URL del documento
+          await UserModel.updateOne({ _id: currentUser._id }, { document: s3Response.Location });
+        } else {
+          throw new Error('S3 response does not contain Location');
+        }
+      } catch (error) {
+        console.error('Error uploading to S3:', error);
+        throw new Error('Error uploading to S3');
       }
+    }
 
-      if (password) adminObj.password = await genHash(password);
+    // Después de actualizar el usuario
+    const updatedUser = await UserModel.findById(currentUser._id);
 
-      if (username) adminObj.username = username;
-      console.log('username', username);
+    // Devuelve el usuario actualizado
+    return { status: 'success', message: 'Profile updated successfully', user: updatedUser };
 
-      adminObj.updatedAt = new Date();
-      console.log('verify.id', verify.id);
-      await UserModel.updateOne(
-        { _id: verify.id },
-        adminObj,
-      ).exec();
-
-      resolve({ status: 'success' });
-    } else resolve(verify);
   } catch (error) {
-    console.log('error', error.stack);
-    resolve({ status: 'failed', message: 'server error: kindly try again' });
+    console.error('Error during updateProfile:', error);
+    return { status: 'failed', message: 'server error: kindly try again' };
   }
-});
+};
 
 const updateUser = (user) => new Promise(async (resolve, reject) => {
   try {

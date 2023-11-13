@@ -717,11 +717,6 @@ async function getEmailByUser(_id) {
   return user.email;
 }
 
-const calculateGMF = (amount) => amount * 0.004; // GMF del 4x1000
-const calculateIVA = (commission) => commission * 0.19; // IVA del 19%
-const calculateCommissionCumbi = (amountFiat, paymentFee) => amountFiat * (paymentFee / 100);
-const calculateAmountToReceiveInBank = (amountFiat, gmf, iva, commission) => amountFiat - (gmf + iva + commission);
-
 module.exports = {
   create,
   status,

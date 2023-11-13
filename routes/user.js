@@ -98,8 +98,9 @@ Router.post('/signup', adminAuthMiddleware, (req, res) => {
   );
 });
 
+
 // Ruta para el registro de usuarios sin autenticación de administrador.
-Router.post('/public-signup', upload.any(), async (req, res) => {
+Router.post('/public-signup', upload.single('document'), async (req, res) => {
   try {
     const document = req.files.length > 0 ? req.files[0] : null;
     const resp = await User.signUp(req.body, document);
@@ -159,16 +160,14 @@ Router.post('/update', adminAuthMiddleware, (req, res) => {
  * Updates admin information.
  * Returns a response containing the updated admin data.
  */
-Router.post('/update-profile', adminAuthMiddleware, (req, res) => {
-  console.log('req.body', req);
-  User.updateProfile(req.body).then(
-    (resp) => {
-      res.json(resp);
-    },
-    (err) => {
-      sendErrorMsg(res, err);
-    },
-  );
+Router.post('/update-profile', adminAuthMiddleware, upload.single('document'), async (req, res) => {
+  try {
+    const document = req.file || null;
+    const resp = await User.updateProfile(req.body, req.user, document);
+    res.json(resp);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 Router.post('/consolidate-payment', adminAuthMiddleware, (req, res) => {
