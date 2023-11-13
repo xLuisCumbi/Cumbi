@@ -77,7 +77,7 @@ const validateToken = async (token) => {
     const query = await UserModel.findOne({ _id: id, token });
 
     if (query) {
-      return { status: 'success', id, role: query.role };
+      return { status: 'success', id, role: query.role, user: query };
     }
     return { status: 'auth_failed', message: 'invalid token query' };
   } catch (e) {
@@ -199,25 +199,29 @@ const signUp = async (userData, document = {}) => {
 const fetchDeposits = ({ token, user }) => new Promise(async (resolve) => {
   try {
     const verify = await validateToken(token);
+
     if (verify.status === 'success') {
       const query = {};
 
-      if (user.role !== 'superadmin') {
-        query.user = user.id;
+      // Si el usuario no es un superadmin, limitar la consulta a sus depósitos
+      if (verify.role !== 'superadmin') {
+        query.user = verify.id; // Asegúrate de que 'id' es el ObjectId del usuario en la base de datos
       }
 
+      // Luego, realiza la consulta con el objeto 'query' modificado
       const deposits = await DepositModel.find(query, { privateKey: 0, address_index: 0 })
         .sort({ createdAt: 'desc' })
         .limit(250)
         .lean();
       resolve({ status: 'success', deposits });
-    } else resolve(verify);
+    } else {
+      resolve(verify);
+    }
   } catch (error) {
     console.error('Error while fetching deposits:', error);
     resolve({ status: 'failed', message: 'server error: kindly try again' });
   }
 });
-
 // const consolidatePayment = ({ token, deposit_id }) => {
 //   return new Promise(async (resolve) => {
 //     try {

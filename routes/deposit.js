@@ -21,7 +21,8 @@ Router.post('/create', apiAuthMiddleware, (req, res) => {
   );
 });
 
-Router.post('/create-app', sessionAuthMiddleware, (req, res) => {
+Router.post('/create-deposit', sessionAuthMiddleware, (req, res) => {
+  console.log('req.body', req.body)
   Deposit.create(req.body).then(
     (resp) => {
       res.json(resp);

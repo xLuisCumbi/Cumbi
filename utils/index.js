@@ -64,6 +64,7 @@ const genHash = (str) => new Promise(async (resolve, reject) => {
 const bcryptCompare = (str1, str2) => bcrypt.compareSync(str1, str2);
 
 const validateField = (reject, field) => {
+  console.log('field', field);
   let fieldValidated = true;
   for (const i in field) {
     if (!field[i] || field[i] == '') {

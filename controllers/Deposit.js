@@ -56,6 +56,7 @@ const create = ({
   iva,
   commission_cumbi,
   amount_to_receive_in_bank,
+  kyc
 }) => new Promise(async (resolve, reject) => {
   try {
     if (!type) {
@@ -63,7 +64,7 @@ const create = ({
       return;
     }
 
-    if (!await hasKYC(user)) {
+    if (!await hasKYC(kyc)) {
       reject({ status: 'failed', message: 'Usuario pendiente por validación' });
       return;
     }
@@ -706,9 +707,8 @@ async function runCronJobs() {
   updateAdminStats();
 }
 
-async function hasKYC(_id) {
-  const { user } = await UserController.fetchByID(_id);
-  if (user.kyc && user.kyc === 'accepted') return true;
+async function hasKYC(kyc) {
+  if (kyc === 'accepted') return true;
   return false;
 }
 
