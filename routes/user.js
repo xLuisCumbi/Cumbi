@@ -100,10 +100,9 @@ Router.post('/signup', adminAuthMiddleware, (req, res) => {
 
 
 // Ruta para el registro de usuarios sin autenticación de administrador.
-Router.post('/public-signup', upload.single('document'), async (req, res) => {
+Router.post('/public-signup', async (req, res) => {
   try {
-    const document = req.files.length > 0 ? req.files[0] : null;
-    const resp = await User.signUp(req.body, document);
+    const resp = await User.signUp(req.body);
     res.json(resp);
   } catch (err) {
     res.status(500).json({ error: err.message });

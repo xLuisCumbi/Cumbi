@@ -147,14 +147,13 @@ const login = ({ email, password }) => new Promise(async (resolve) => {
  * @param {string} params.domain - The user's user.
  * @return {Promise<Object>} - The signup result.
  */
-const signUp = async (userData, document = {}) => {
+const signUp = async (userData) => {
 
   try {
     // Primero, crea el usuario en la base de datos
     userData.password = await bcrypt.hash(userData.password, 10);
 
     let query;
-    let userId;
     if (userData.role !== 'person') {
       query = await UserModel.create(userData);
       userId = query._id;
@@ -162,25 +161,6 @@ const signUp = async (userData, document = {}) => {
       const { business, ...userDataWithoutBusiness } = userData;
       query = await UserModel.create(userDataWithoutBusiness);
       userId = query._id;
-    }
-
-    // Si el usuario se crea exitosamente y se proporciona un documento, sube el archivo
-    if (userId && document) {
-      try {
-        const s3Response = await uploadToS3(document);
-
-        if (s3Response && s3Response.Location) {
-          // Actualiza el usuario con la URL del documento
-          await UserModel.updateOne({ _id: userId }, { document: s3Response.Location });
-          // Envía un email de confirmación al usuario
-          sendEmail(userData.email, TYPE_EMAIL.REGISTER);
-        } else {
-          throw { status: 'update_failed', message: 'S3 response does not contain Location' };
-        }
-      } catch (error) {
-        console.error('Error uploading to S3:', error);
-        throw { status: 'update_failed', message: 'Error uploading to S3' };
-      }
     }
 
     return { status: 'signUp_success', user: query };

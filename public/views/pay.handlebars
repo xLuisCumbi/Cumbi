@@ -8,7 +8,7 @@
         <div class="row px-3 status-bar-content">
             <div class="col-8">
                 <div class="spinner-border text-white" role="status"></div>
-                <span class="status-text">Awaiting Payment...</span>
+                <span class="status-text">Esperando la confirmación del pago...</span>
             </div>
             <div class="col-4 text-right" id="countTimer"></div>
         </div>
@@ -16,7 +16,7 @@
 
     <div class="row px-3 align-items-center py-2 mt-2">
         <div class="col-6">
-            <span class="status-text">Paga con</span>
+            <span class="status-text bold">Paga con</span>
         </div>
         <div class="col-6 text-right">
             <img height='25' src="{{icon}}">
@@ -29,7 +29,7 @@
     <hr class="mt-0 p-0 mb-0">
     <div class="row px-3 align-items-center py-2">
         <div class="col-6">
-            <span class="status-text">Titulo de la orden</span>
+            <span class="status-text bold">Titulo de la orden</span>
         </div>
         <div class="col-6 text-right">
             <span class='bold'>
@@ -44,9 +44,9 @@
     <hr class="mt-0 p-0 mb-0">
     <div class="row px-3 align-items-center py-2">
         <div class="col-6">
-            <span class="status-text">Descripción de la Orden</span>
+            <span class="status-text bold">Descripción de la Orden</span>
         </div>
-        <div class="col-12 text-center mt-2">
+        <div class="col-12 mt-2">
             <span>
                 {{description}}
             </span>
@@ -56,7 +56,7 @@
     <hr class="mt-0 p-0 mb-0">
     <div class="row px-3 align-items-center py-2">
         <div class="col-6">
-            <span class="status-text">Total</span>
+            <span class="status-text bold">Total</span>
         </div>
         <div class="col-6 text-right">
             <span class="pay-in-crypto">
@@ -67,7 +67,7 @@
             </span>
         </div>
     </div>
-    <hr class="mt-0 p-0 mb-0">
+    <!--<hr class="mt-0 p-0 mb-0">
     <div class="row px-3 align-items-center py-2">
         <div class="col-6">
             <span class="status-text">Network Gas Fee</span>
@@ -79,12 +79,12 @@
                 </span>
             </span>
         </div>
-    </div>
+    </div>-->
 
     <hr class="mt-0 p-0 mb-0">
     <div class="row px-3 align-items-center py-2">
         <div class="col-6">
-            <span class="status-text">Monto Pagado</span>
+            <span class="status-text bold">Monto Pagado</span>
         </div>
         <div class="col-6 text-right">
             <span id='amount_paid' class='bold'>
@@ -110,9 +110,9 @@
 
     <div class="px-3 small p-3 text-center mt-3 dn success-section">
         <i style="font-size: 70px" class="bi bi-check-circle text-success"></i>
-        <p class="mt-2"> <strong> Your Payment Was Successfully Received</strong></p>
+        <p class="mt-2"> <strong> Su pago se recibió correctamente</strong></p>
         {{#if is_invoice}}
-        <p>Thanks For Your Payment. Your Order is being processed </p>
+        <p>Gracias por tu pago. </p>
         {{else}}
         <p> Redirecting In To Store....</p>
         {{/if}}

@@ -37,7 +37,7 @@ module.exports = async (req, res) => {
   } else {
     depositObj.icon = depositObj.coin === 'USDT' ? '/images/usdt.png' : '/images/usdc.png';
     depositObj.network_short = depositObj.network === 'TRON' ? 'TRC20' : 'ERC20';
-    depositObj.is_invoice = depositObj.type === 'invoice';
+    depositObj.is_invoice = (depositObj.title || depositObj.description) ? true : false;
     // depositObj.amount += 3;
     res.render('pay', depositObj);
   }
