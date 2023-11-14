@@ -56,8 +56,8 @@ const UserSchema = new mongoose.Schema(
     },
     kyc: {
       type: String,
-      enum: ['pending', 'accepted', 'denied'],
-      default: 'pending',
+      enum: ['initial','pending', 'accepted', 'denied'],
+      default: 'initial',
     },
     document: {
       type: String,
@@ -69,6 +69,15 @@ const UserSchema = new mongoose.Schema(
     acceptedTermsConditions: {
       type: Boolean,
       default: false,
+    },
+    acceptedPrivacyPolicy: {
+      type: Boolean,
+      default: false,
+    },
+    phone: {
+      type: String,
+      required: false,
+      default: 0,
     },
   },
   {

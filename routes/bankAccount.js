@@ -1,12 +1,14 @@
 const express = require('express');
 
 const Router = express.Router();
+const multer = require('multer');
 const BankAccount = require('../controllers/BankAccount');
 const { sendErrorMsg } = require('../utils');
 const { adminAuthMiddleware, sessionAuthMiddleware } = require('../middleware/auth');
+const upload = multer();
 
-Router.post('/create', sessionAuthMiddleware, (req, res) => {
-  BankAccount.create(req.body).then(
+Router.post('/create', sessionAuthMiddleware, upload.single('document'), (req, res) => {
+  BankAccount.create(req.body, req.file).then(
     (resp) => {
       res.json(resp);
     },

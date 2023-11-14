@@ -77,7 +77,7 @@ const validateToken = async (token) => {
     const query = await UserModel.findOne({ _id: id, token });
 
     if (query) {
-      return { status: 'success', id, role: query.role };
+      return { status: 'success', id, role: query.role, user: query };
     }
     return { status: 'auth_failed', message: 'invalid token query' };
   } catch (e) {
@@ -116,7 +116,8 @@ const login = ({ email, password }) => new Promise(async (resolve) => {
         resolve({
           status: 'success',
           user: {
-            id: query._id, authToken: token, email, username: query.username, role: query.role, business: query.business,
+            ...query.toObject(), // Usa toObject() para convertir el documento de Mongoose a un objeto
+            authToken: token,
           },
         });
       } else {
@@ -146,13 +147,13 @@ const login = ({ email, password }) => new Promise(async (resolve) => {
  * @param {string} params.domain - The user's user.
  * @return {Promise<Object>} - The signup result.
  */
-const signUp = async (userData, document = {}) => {
+const signUp = async (userData) => {
+
   try {
     // Primero, crea el usuario en la base de datos
     userData.password = await bcrypt.hash(userData.password, 10);
 
     let query;
-    let userId;
     if (userData.role !== 'person') {
       query = await UserModel.create(userData);
       userId = query._id;
@@ -160,25 +161,6 @@ const signUp = async (userData, document = {}) => {
       const { business, ...userDataWithoutBusiness } = userData;
       query = await UserModel.create(userDataWithoutBusiness);
       userId = query._id;
-    }
-
-    // Si el usuario se crea exitosamente y se proporciona un documento, sube el archivo
-    if (userId && document) {
-      try {
-        const s3Response = await uploadToS3(document);
-
-        if (s3Response && s3Response.Location) {
-          // Actualiza el usuario con la URL del documento
-          await UserModel.updateOne({ _id: userId }, { document: s3Response.Location });
-          // Envía un email de confirmación al usuario
-          sendEmail(userData.email, TYPE_EMAIL.REGISTER);
-        } else {
-          throw { status: 'update_failed', message: 'S3 response does not contain Location' };
-        }
-      } catch (error) {
-        console.error('Error uploading to S3:', error);
-        throw { status: 'update_failed', message: 'Error uploading to S3' };
-      }
     }
 
     return { status: 'signUp_success', user: query };
@@ -197,25 +179,29 @@ const signUp = async (userData, document = {}) => {
 const fetchDeposits = ({ token, user }) => new Promise(async (resolve) => {
   try {
     const verify = await validateToken(token);
+
     if (verify.status === 'success') {
       const query = {};
 
-      if (user.role !== 'superadmin') {
-        query.user = user.id;
+      // Si el usuario no es un superadmin, limitar la consulta a sus depósitos
+      if (verify.role !== 'superadmin') {
+        query.user = verify.id; // Asegúrate de que 'id' es el ObjectId del usuario en la base de datos
       }
 
+      // Luego, realiza la consulta con el objeto 'query' modificado
       const deposits = await DepositModel.find(query, { privateKey: 0, address_index: 0 })
         .sort({ createdAt: 'desc' })
         .limit(250)
         .lean();
       resolve({ status: 'success', deposits });
-    } else resolve(verify);
+    } else {
+      resolve(verify);
+    }
   } catch (error) {
     console.error('Error while fetching deposits:', error);
     resolve({ status: 'failed', message: 'server error: kindly try again' });
   }
 });
-
 // const consolidatePayment = ({ token, deposit_id }) => {
 //   return new Promise(async (resolve) => {
 //     try {
@@ -372,42 +358,55 @@ const update = ({
   }
 });
 
-const updateProfile = ({
-  passphrase, email, username, password, token,
-}) => new Promise(async (resolve) => {
+const updateProfile = async (newUserData, currentUser, document = {}) => {
   try {
-    const verify = await validateToken(token);
 
-    if (verify.status == 'success') {
-      const adminObj = {};
+    // Asegúrate de que se proporcionen el userId y el token
+    if (!currentUser._id || !currentUser.token) {
+      return { status: 'failed', message: 'Missing user ID or token' };
+    }
 
-      if (passphrase) {
-        adminObj.passphrase = signToken(
-          { mnemonic: passphrase, type: 'mnemonic-token' },
-          process.env.MNEMONIC_JWT_SECRET,
-          '100y',
-        );
+    // Verifica el token y obtén el ID del usuario
+    const verify = await validateToken(currentUser.token);
+    if (verify.status !== 'success') return verify;
+
+    // Prepara el objeto para actualizar
+    const updateObj = { updatedAt: new Date() };
+    if (newUserData.password) updateObj.password = await genHash(newUserData.password);
+    if (newUserData.username) updateObj.username = newUserData.username;
+    if (newUserData.phone) updateObj.phone = newUserData.phone;
+
+    // Actualiza la información básica del usuario
+    await UserModel.updateOne({ _id: currentUser._id }, updateObj).exec();
+
+    // Si se proporciona un documento, sube el archivo a S3
+    if (document && document.size) {
+      try {
+        const s3Response = await uploadToS3(document);
+        if (s3Response && s3Response.Location) {
+          // Actualiza el usuario con la URL del documento
+          await UserModel.updateOne({ _id: currentUser._id }, { document: s3Response.Location });
+        } else {
+          throw new Error('S3 response does not contain Location');
+        }
+      } catch (error) {
+        console.error('Error uploading to S3:', error);
+        throw new Error('Error uploading to S3');
       }
+    }
 
-      if (password) adminObj.password = await genHash(password);
+    // Después de actualizar el usuario
+    const updatedUser = await UserModel.findById(currentUser._id);
 
-      if (username) adminObj.username = username;
-      console.log('username', username);
+    // Devuelve el usuario actualizado
+    return { status: 'success', message: 'Profile updated successfully', user: updatedUser };
 
-      adminObj.updatedAt = new Date();
-      console.log('verify.id', verify.id);
-      await UserModel.updateOne(
-        { _id: verify.id },
-        adminObj,
-      ).exec();
-
-      resolve({ status: 'success' });
-    } else resolve(verify);
   } catch (error) {
-    console.log('error', error.stack);
-    resolve({ status: 'failed', message: 'server error: kindly try again' });
+    console.error('Error during updateProfile:', error);
+    return { status: 'failed', message: 'server error: kindly try again' };
   }
-});
+};
+
 const updateUser = (user) => new Promise(async (resolve, reject) => {
   try {
     // Conservar el estado KYC original antes de la actualización

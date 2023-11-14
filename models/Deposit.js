@@ -99,6 +99,23 @@ const DepositSchema = new mongoose.Schema({
     type: String,
     enum: ['person', 'business', 'cumbi'],
   },
+  gmf: {
+    type: Number,
+    default: 0,
+  },
+  iva: {
+    type: Number,
+    default: 0,
+  },
+  commission_cumbi: {
+    type: Number,
+    default: 0,
+  },
+  amount_to_receive_in_bank: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
 }, {
   timestamps: { createdAt: 'createdAt', updatedAt: false },
 });
