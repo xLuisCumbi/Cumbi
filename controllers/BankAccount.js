@@ -1,15 +1,39 @@
 const BankAccountModel = require('../models/BankAccount');
+const { uploadToS3 } = require('../utils');
 
-const create = (data) => new Promise(async (resolve, reject) => {
+/**
+ * Crear cuenta de banco del usuario
+ * @param {*} data
+ * @param {*} file
+ * @returns
+ */
+const create = async (data, file = null) => {
   try {
+    // Si se proporciona un archivo, sube el archivo a S3
+    if (file && file.size) {
+      try {
+        const s3Response = await uploadToS3(file);
+        if (s3Response && s3Response.Location) {
+          // Guarda la URL del archivo en data
+          data.docReferenciaBancaria = s3Response.Location;
+        } else {
+          throw new Error('S3 response does not contain Location');
+        }
+      } catch (error) {
+        console.error('Error uploading to S3:', error);
+        throw new Error('Error uploading to S3');
+      }
+    }
+
+    // Crear cuenta bancaria con los datos (y la URL del archivo si está presente)
     const bankAccount = await BankAccountModel.create(data);
     if (bankAccount.active) updateActiveAll(bankAccount._id, data.user);
-    resolve({ status: 'success', bankAccount });
+    return { status: 'success', bankAccount };
   } catch (e) {
     console.error('Error during creation:', e);
-    reject({ status: 'failed', message: 'server error' });
+    return { status: 'failed', message: 'server error' };
   }
-});
+};
 
 /**
  *

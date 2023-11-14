@@ -13,9 +13,6 @@ const BankSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Country',
     },
-    docReferenciaBancaria: {
-      type: String,
-    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },

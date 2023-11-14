@@ -25,6 +25,9 @@ const BankAccountSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    docReferenciaBancaria: {
+      type: String,
+    },
     active: {
       type: Boolean,
       default: false,
