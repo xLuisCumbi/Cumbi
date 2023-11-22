@@ -82,7 +82,7 @@ const create = ({
         reject({ status: 'failed', message: 'Usuario pendiente por validación' });
         return;
       }
-      
+
       const validate = validateField(reject, {
         trm,
         amount,
@@ -155,8 +155,10 @@ const create = ({
             delete depositObj.address_index;
             delete depositObj.privateKey;
             const {
-              _id, deposit_id, url, amount,
+              _id, deposit_id, amount,
             } = save.deposit;
+            // URL where we need to redirect the user to make the payment generated.
+            const url = process.env.APPURL + '/invoice/' + _id;
             const email = await getEmailByUser(user);
             sendEmail(email, TYPE_EMAIL.INVOICE_CREATED, { url });
             resolve({
