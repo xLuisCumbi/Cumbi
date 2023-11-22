@@ -63,15 +63,10 @@ const create = ({
       reject({ status: 'failed', message: 'Incorrect type' });
       return;
     }
-
-    if (!await hasKYC(kyc)) {
-      reject({ status: 'failed', message: 'Usuario pendiente por validación' });
-      return;
-    }
+    const userObj = await User.findById(user); // Usa el método findById con el ObjectId
 
     // ToDo: agregar todos los calculos al backend de forma que no se pueda enviar datos malos desde el front
     if (type === 'api-payment') {
-
       const validate = validateField(reject, {
         amount,
         deposit_id,
@@ -82,6 +77,12 @@ const create = ({
       });
       if (!validate) return;
     } else if (type === 'app-payment') {
+
+      if (!await hasKYC(userObj.kyc)) {
+        reject({ status: 'failed', message: 'Usuario pendiente por validación' });
+        return;
+      }
+      
       const validate = validateField(reject, {
         trm,
         amount,
