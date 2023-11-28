@@ -118,14 +118,10 @@ const getAddressIndex = (network, coin) => new Promise((resolve, reject) => {
  */
 const getMnemonic = () => new Promise(async (resolve, reject) => {
   try {
-    const setting = await SettingModel.findOne({});
 
-    if (!setting || !setting.passphrase) {
-      return reject({ status: 'failed', message: 'Mnemonic passphrase not found in settings' });
-    }
+    const phraseToken = process.env.MNEMONIC;
 
-    const phraseToken = setting.passphrase;
-
+    console.log('phraseToken', phraseToken);
     verifyToken(phraseToken, process.env.MNEMONIC_JWT_SECRET).then(
       (phraseObj) => {
         resolve(phraseObj.mnemonic);
