@@ -162,6 +162,8 @@ const signUp = async (userData) => {
       query = await UserModel.create(userDataWithoutBusiness);
       userId = query._id;
     }
+    
+    sendEmail(userData.email, TYPE_EMAIL.REGISTER);
 
     return { status: 'signUp_success', user: query };
   } catch (e) {
