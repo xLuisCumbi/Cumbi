@@ -30,9 +30,9 @@ function runCronJobs() {
   updateAdminStats();
 }
 
-// runCronJobs();
+runCronJobs();
 
 module.exports = {
-  // start,
-  // stop
+  start,
+  stop
 };
